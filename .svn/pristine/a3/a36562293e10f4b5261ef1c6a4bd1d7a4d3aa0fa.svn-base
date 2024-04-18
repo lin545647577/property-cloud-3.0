@@ -1,0 +1,135 @@
+<template>
+  <div>
+    <div @click="showDia">123</div>
+    <el-dialog title="收货地址" :visible.sync="dialogTableVisible">
+      <el-table
+        border
+        ref="multipleTable"
+        :data="tableData"
+        tooltip-effect="dark"
+        style="width: 100%"
+        @select-all="onSelectAll"
+        @selection-change="selectItem"
+        @row-click="onSelectOp"
+      >
+        <el-table-column type="selection" :reserve-selection="false">
+        </el-table-column>
+        <el-table-column
+          property="date"
+          label="日期"
+          width="150"
+        ></el-table-column>
+        <el-table-column
+          property="name"
+          label="姓名"
+          width="200"
+        ></el-table-column>
+        <el-table-column property="address" label="地址"></el-table-column>
+      </el-table>
+
+      <div class="block pagination-center">
+        <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="pageSizes"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+        >
+        </el-pagination>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "tamp2.0",
+  data() {
+    return {
+      multipleSelection: [],
+      currentPage: 1,
+      pageSizes: [10, 20, 50, 100],
+      pageSize: 10,
+      total: 0,
+      dialogTableVisible: false,
+      tableData: [
+        {
+          date: "2016-05-02",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-04",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-01",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-03",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+      ],
+    };
+  },
+  methods: {
+    showDia() {
+      this.dialogTableVisible = true;
+    },
+    onSelectAll() {
+      this.$refs.multipleTable.clearSelection();
+    },
+    //单选事件
+    selectItem(rows) {
+      if (rows.length > 1) {
+        var newRows = rows.filter((it, index) => {
+          if (index == rows.length - 1) {
+            this.$refs.multipleTable.toggleRowSelection(it, true);
+            return true;
+          } else {
+            this.$refs.multipleTable.toggleRowSelection(it, false);
+            return false;
+          }
+        });
+        this.multipleSelection = newRows;
+      } else {
+        this.multipleSelection = rows;
+      }
+    },
+    //点击行触发选中
+    onSelectOp(row) {
+      this.$refs.multipleTable.clearSelection();
+      this.$refs.multipleTable.toggleRowSelection(row, true);
+      this.multipleSelection = [];
+      this.multipleSelection.push(row);
+    },
+
+    //多选
+    handleSelectionChange(val) {
+      console.log("选中", val);
+      this.multipleSelection = val;
+    },
+    //每页显示条数
+    handleSizeChange(val) {
+      // console.log(`每页 ${val} 条`);
+      this.pageSize = val;
+      this.queryList((this.currentPage = 1));
+    },
+
+    // 分页
+    handleCurrentChange(val) {
+      // console.log(`第 ${val} 页`);
+      this.queryList((this.currentPage = val));
+    },
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped></style>

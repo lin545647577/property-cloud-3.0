@@ -1,0 +1,151 @@
+<template>
+  <el-card
+    class="box-card card-box"
+    v-loading="loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+    element-loading-spinner="2"
+  >
+    <el-row class="item" id="text">
+      <el-col :span="24" class="header-title">
+        <img :src="pointImg" fit="fill" />
+        搜索附近
+      </el-col>
+      <el-col
+        :span="24"
+        id="accessory"
+        name="accessory"
+        v-for="(item, index) in accessory"
+        :key="index"
+      >
+        <div @click="accessoryClick(index)">
+          <el-card shadow="hover">
+            <el-col :span="5" class="accessory-img">
+              <img :src="item.imgSrc" alt="" />
+            </el-col>
+            <el-col :span="19" class="accessory-title">
+              <h1>{{ item.dictLabel }}</h1>
+              <span>{{ item.dictValue }}</span>
+            </el-col>
+          </el-card>
+        </div>
+      </el-col>
+    </el-row>
+  </el-card>
+</template>
+
+<script>
+import {
+  selectCurrentOrganizationCompanyTypesDictData,
+  tygxMapLogoShowPositionDefinitionNearby,
+  findPositionByUser,
+  pathCalculation,
+} from "@/api/location.js";
+export default {
+  name: "sideSearch",
+  props: {
+    loading: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      coordinate: [],
+      accessory: [],
+    };
+  },
+  methods: {
+    selectCurrentOrganizationCompanyTypesDictDatanew() {
+      selectCurrentOrganizationCompanyTypesDictData().then((res) => {
+        this.accessory = res;
+      });
+    },
+    accessoryClick(index) {
+      var accessory = document.getElementsByName("accessory");
+      for (let i = 0; i < accessory.length; i++) {
+        const element = accessory[i];
+        element.style.opacity = 0.5;
+      }
+      var accessorynew = document.getElementsByName("accessory")[index];
+      accessorynew.style.opacity = 1;
+      let formDate = {
+        mapCode: window.localStorage.getItem("mapCode"),
+        businessType: this.accessory[index].dictValue,
+      };
+      let accessoryClick = {};
+      (accessoryClick.name = this.accessory[index].dictLabel),
+        tygxMapLogoShowPositionDefinitionNearby(formDate).then((res) => {
+          for (const j in res) {
+            for (const i in res[j].logosShouldShow) {
+              let formDate = {
+                userId: res[j].logosShouldShow[i].referenceUserId,
+                mapCode: window.localStorage.getItem("mapCode"),
+              };
+              accessoryClick.referenceUserId =
+                res[j].logosShouldShow[i].referenceUserId;
+              findPositionByUser(formDate.userId, formDate.mapCode).then(
+                (res) => {
+                  let data = {
+                    pointFrom: window.localStorage.getItem("code"),
+                    pointTo: res.code,
+                    referenceMapCode: window.localStorage.getItem("mapCode"),
+                  };
+                  (accessoryClick.equipmentCoordinate = [res.x, res.y]),
+                    // 计算距离
+                    pathCalculation(JSON.stringify(data)).then((res) => {
+                      accessoryClick.coordinate = JSON.stringify(res.route);
+                      this.$emit("accessoryClick", accessoryClick);
+                    });
+                }
+              );
+            }
+          }
+        });
+    },
+  },
+  mounted() {
+    this.selectCurrentOrganizationCompanyTypesDictDatanew();
+  },
+};
+</script>
+
+<style scoped>
+.card-box {
+  height: calc(100vh - 2px);
+  position: relative;
+  z-index: 100;
+}
+
+.card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+.card-box .header-title * {
+  vertical-align: middle;
+}
+#accessory {
+  padding-left: 5%;
+  margin-bottom: 5%;
+  line-height: 25px;
+  opacity: 0.5;
+}
+.accessory-img img {
+  width: 100%;
+  margin-right: 5%;
+}
+.accessory-title {
+  padding-left: 2%;
+}
+.accessory-title h1 {
+  font-size: 25px;
+  font-weight: 400;
+}
+.accessory-title span {
+  font-size: 18px;
+  color: #666;
+}
+.el-card__body {
+  padding: 0px;
+}
+</style>

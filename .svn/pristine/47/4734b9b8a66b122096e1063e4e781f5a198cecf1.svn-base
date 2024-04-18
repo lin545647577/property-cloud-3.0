@@ -1,0 +1,265 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="费用名称：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="位置：">
+        <el-input
+          v-model="form.positionName"
+          @focus="handlePositionModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="账单取整方式：" prop="rounType">
+        <el-select
+          v-model="form.rounType"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="四舍五入" :value="0"></el-option>
+          <el-option label="向上取整" :value="1"></el-option>
+          <el-option label="向下取整" :value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="保留小数：" prop="keepDec">
+        <el-select
+          v-model="form.keepDec"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="不保留小数" :value="0"></el-option>
+          <el-option label="保留一位" :value="1"></el-option>
+          <el-option label="保留两位" :value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="金额：">
+        <el-input
+          v-model="form.totalAmoutYuan"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <!--      <el-form-item label="月份：" prop="month">-->
+      <!--        <el-date-picker v-model="form.month" style="width: 100%;" type="month" placeholder="选择月份"-->
+      <!--                        :disabled="checkInfo"></el-date-picker>-->
+      <!--      </el-form-item>-->
+      <el-form-item label="选择现有计算公式：">
+        <el-input
+          :value="form.formula"
+          @focus="handleFormulaModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="备注：">
+        <el-input v-model="form.remark" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="附件：">
+        <li-attachment v-model="form.fileUrls" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import {
+  insertOtherBill,
+  editOtherBill,
+  queryTotalBill,
+} from "@/api/payment.js";
+import { configPositionId } from "@/api/device.js";
+import { dateFormat } from "@/utils/util.js/";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        referenceResidenceId: "",
+        positionName: "",
+        positionInfo: null,
+        formula: "",
+        month: "",
+        fileUrls: "[]",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入名称",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    // 选择位置
+    handlePositionModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "meter/meter/positionTreeModal.vue",
+        params: { referenceResidenceId: this.referenceResidenceId },
+        title: "位置",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log(data);
+          let tempArr = data.chooseTree;
+          let tempData = [];
+          for (let index in tempArr) {
+            tempData.push(tempArr[index].id + ":" + tempArr[index].nodeType);
+          }
+          // console.log(this.form);
+          configPositionId({
+            position: tempData.toString(),
+            residenceId: parseInt(this.form.referenceResidenceId),
+          }).then((res) => {
+            // console.log("解析结果",res)
+            this.form.positionName = res.name;
+            this.form.positionInfo = res;
+            this.$refs["chooseModal"].hide();
+          });
+        },
+      });
+    },
+    // 选择计算公式
+    handleFormulaModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "payment/common/formulaModal.vue",
+        params: { referenceResidenceId: this.referenceResidenceId },
+        title: "计算公式",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log(data)
+          that.form.formula = data.multipleSelection[0].formula;
+          that.form.referenceFormulaId = data.multipleSelection[0].id;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 开发商id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryTotalBill(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          referenceResidenceId: res.referenceResidenceId,
+          name: res.name,
+          month: res.month,
+          totalAmoutYuan: res.totalAmoutYuan,
+          remark: res.remark,
+          referenceFormulaId: res.referenceFormulaId,
+          formula: res.formula,
+          fileUrls: res.fileUrls ? res.fileUrls : "[]",
+          keepDec: res.keepDec,
+          rounType: res.rounType,
+          positionInfo: res.positionInfo,
+          positionName: res.positionName,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      this.form.month = dateFormat("yyyy-MM", this.form.month);
+      insertOtherBill(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editOtherBill(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    // console.log(this.params.month)
+    this.checkInfo = this.params.checkInfo;
+    this.form.referenceResidenceId = this.params.referenceResidenceId;
+    if (this.params.month) {
+      this.form.month = this.params.month;
+    }
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+};
+</script>
+
+<style scoped></style>

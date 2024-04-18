@@ -1,0 +1,373 @@
+<template>
+  <div class="common-box">
+    <!--    头部-->
+    <el-row type="flex" class="row-bg" align="middle">
+      <el-col :span="8">
+        <div class="grid-content">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />办事指南
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <el-input
+            placeholder="请输入您要搜索的问题"
+            prefix-icon="el-icon-search"
+            v-model="searchValue"
+          >
+          </el-input>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <weather></weather>
+        </div>
+      </el-col>
+    </el-row>
+    <!--    内容-->
+    <div class="content-box">
+      <el-row :gutter="40">
+        <el-col :span="16">
+          <div class="grid-content">
+            <el-card class="box-card card-box">
+              <p class="box-title">园区业务办理</p>
+              <div class="text item">
+                <el-row :gutter="20">
+                  <el-col :span="12">
+                    <div class="grid-content">
+                      <el-card class="box-card hot-box">
+                        <div
+                          class="text item cover-box"
+                          v-if="coverData"
+                          @click="toDetail(coverData)"
+                        >
+                          <div>
+                            <el-tag
+                              effect="dark"
+                              style="border: none"
+                              color="#FEC119"
+                              >HOT
+                            </el-tag>
+                            <span
+                              @click.stop="handleCurrentChange(currentPage + 1)"
+                              class="circle-box"
+                              ><i class="el-icon-arrow-right"></i
+                            ></span>
+                            <span
+                              @click.stop="handleCurrentChange(currentPage - 1)"
+                              class="circle-box"
+                              ><i class="el-icon-arrow-left"></i
+                            ></span>
+                          </div>
+                          <p class="title">{{ coverData.workGuideName }}</p>
+                          <p class="ellipsis2">
+                            {{ coverData.simpleContent }}
+                          </p>
+                          <p class="time">{{ coverData.publishStartTime }}</p>
+                          <div class="demo-image__error">
+                            <div class="block">
+                              <el-image
+                                style="width: 100%; height: 100%"
+                                v-if="coverData.image"
+                                :src="coverData.image"
+                              >
+                              </el-image>
+                              <el-image
+                                style="width: 100%; height: 100%"
+                                :src="
+                                  require('@/assets/img/wiseScreen/2.0/guide/guide.png')
+                                "
+                              >
+                                <div slot="error" class="image-slot">
+                                  <i class="el-icon-picture-outline"></i>
+                                </div>
+                              </el-image>
+                            </div>
+                          </div>
+                        </div>
+                      </el-card>
+                    </div>
+                  </el-col>
+                  <el-col :span="12">
+                    <div class="grid-content" v-if="dataList.length > 0">
+                      <el-row
+                        :gutter="20"
+                        v-for="item in dataList"
+                        :key="item.id"
+                        class="notice-item"
+                        @click.native="toDetail(item)"
+                      >
+                        <el-col :span="16">
+                          <div class="grid-content">
+                            <p class="title ellipsis">
+                              {{ item.workGuideName }}
+                            </p>
+                            <p class="time">{{ item.publishStartTime }}</p>
+                            <p class="ellipsis2">
+                              {{ item.simpleContent }}
+                            </p>
+                          </div>
+                        </el-col>
+                        <el-col :span="8">
+                          <div class="grid-content" style="text-align: right">
+                            <div
+                              class="demo-image__error"
+                              style="width: 134px; height: 134px"
+                            >
+                              <div class="block">
+                                <el-image v-if="item.image" :src="item.image">
+                                </el-image>
+                                <el-image
+                                  v-else
+                                  :src="
+                                    require('@/assets/img/wiseScreen/2.0/notice/1.png')
+                                  "
+                                >
+                                  <div slot="error" class="image-slot">
+                                    <i class="el-icon-picture-outline"></i>
+                                  </div>
+                                </el-image>
+                              </div>
+                            </div>
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="grid-content">
+            <el-card class="box-card card-box">
+              <p class="box-title">扶持政策申报</p>
+              <div class="text item">
+                <el-row>
+                  <el-col :span="24">
+                    <div class="grid-content" v-if="policyList.length > 0">
+                      <el-row
+                        :gutter="20"
+                        v-for="item in policyList"
+                        :key="item.id"
+                        class="notice-item"
+                        @click.native="toDetail(item)"
+                      >
+                        <el-col :span="16">
+                          <div class="grid-content">
+                            <p class="title ellipsis">
+                              {{ item.workGuideName }}
+                            </p>
+                            <p class="time">{{ item.publishStartTime }}</p>
+                            <p class="ellipsis2">
+                              {{ item.simpleContent }}
+                            </p>
+                          </div>
+                        </el-col>
+                        <el-col :span="8">
+                          <div class="grid-content" style="text-align: right">
+                            <div
+                              class="demo-image__error"
+                              style="width: 134px; height: 134px"
+                            >
+                              <div class="block">
+                                <el-image v-if="item.image" :src="item.image">
+                                </el-image>
+                                <el-image
+                                  v-else
+                                  :src="
+                                    require('@/assets/img/wiseScreen/2.0/notice/1.png')
+                                  "
+                                >
+                                  <div slot="error" class="image-slot">
+                                    <i class="el-icon-picture-outline"></i>
+                                  </div>
+                                </el-image>
+                              </div>
+                            </div>
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryGuideListByWiseScreen } from "@/api/order.js";
+import weather from "@/components/wiseScreen/weather";
+
+export default {
+  name: "guide",
+  components: {
+    weather,
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+      dataList: [],
+      policyList: [],
+      currentPage: 1,
+      coverData: null,
+      coverTotal: 0,
+    };
+  },
+  methods: {
+    // 分页
+    handleCurrentChange(val) {
+      if (val < 1) {
+        return;
+      }
+      if (val > this.coverTotal) {
+        return;
+      }
+      console.log(val);
+      this.initCover((this.currentPage = val));
+    },
+    // 初始化封面
+    initCover(currentPage) {
+      queryGuideListByWiseScreen({ hot: true, pageNum: 1, pageSize: 1 }).then(
+        (res) => {
+          // console.log(res);
+          this.coverData = res.rows[0];
+          this.coverTotal = res.total;
+        }
+      );
+    },
+    /**
+     * 跳转详细页面
+     * @param item
+     */
+    toDetail(item) {
+      // console.log(item);
+      this.$router.push({
+        path: "/wisdom-oriented/guide/detail",
+        query: { id: item.id, type: item.type },
+      });
+    },
+    // 初始化园区指南列表
+    queryList() {
+      queryGuideListByWiseScreen({ type: 1, pageNum: 1, pageSize: 4 }).then(
+        (res) => {
+          // console.log(res);
+          this.dataList = res.rows;
+        }
+      );
+    },
+    // 初始化政策指南列表
+    queryPolicyList() {
+      queryGuideListByWiseScreen({
+        // type: 2,
+        pageNum: 1,
+        pageSize: 4,
+      }).then((res) => {
+        // console.log(res);
+        this.policyList = res.rows;
+      });
+    },
+  },
+  mounted() {
+    this.queryList();
+    this.queryPolicyList();
+    this.initCover(this.currentPage);
+  },
+};
+</script>
+
+<style scoped>
+.circle-box {
+  background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);
+  width: 35px;
+  height: 35px;
+  color: #ffffff;
+  text-align: center;
+  line-height: 35px;
+  float: right;
+}
+
+.common-box {
+  padding: 3% 4% 0 4%;
+  max-height: 1080px;
+  width: auto;
+}
+
+.card-box /deep/ img {
+  width: 100%;
+  height: 100%;
+}
+
+.common-box .header {
+  font-size: 36px;
+}
+
+.common-box .content-box {
+  padding: 0;
+}
+
+.common-box .content-box .el-card {
+  border: none;
+}
+
+.common-box .content-box .card-box {
+  border-radius: 20px;
+  margin-top: 20px;
+  height: 82vh;
+}
+
+.common-box .content-box .card-box .box-title {
+  color: #42a6f4;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+  width: 100%;
+}
+
+.common-box .content-box .card-box .notice-item {
+  color: #989eb2;
+  font-size: 16px;
+  margin: 11% 0;
+}
+
+.common-box .content-box .card-box .notice-item .title {
+  color: #343f5e;
+  font-size: 18px;
+}
+
+.common-box .content-box .card-box .notice-item .time {
+  margin-bottom: 25px;
+}
+
+.common-box .content-box .card-box .hot-box {
+  background-color: #f5f9fc;
+  height: 70vh;
+  padding: 10px 20px;
+}
+
+.common-box .content-box .card-box .hot-box .cover-box {
+  color: #989eb2;
+  font-size: 18px;
+}
+
+.common-box .content-box .card-box .hot-box .cover-box .title {
+  font-size: 28px;
+  color: #343f5e;
+  margin-top: 10%;
+}
+
+.common-box .content-box .card-box .hot-box .cover-box .time {
+  margin: 10% 0;
+}
+</style>

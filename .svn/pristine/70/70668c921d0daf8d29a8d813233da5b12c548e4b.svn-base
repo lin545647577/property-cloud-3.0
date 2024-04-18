@@ -1,0 +1,116 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      :label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="公司名称：">
+        <el-input :value="form.company" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="楼盘名称：" prop="name">
+        <el-input v-model="form.name"></el-input>
+      </el-form-item>
+      <el-form-item label="英文简称：">
+        <el-input v-model="form.shortName"></el-input>
+      </el-form-item>
+      <el-form-item label="服务电话：">
+        <el-input v-model="form.serviceLine"></el-input>
+      </el-form-item>
+      <el-form-item label="占地面积：" prop="coverArea">
+        <el-input v-model="form.coverArea" type="number"></el-input>
+      </el-form-item>
+      <el-form-item label="建筑面积：" prop="buildArea">
+        <el-input v-model="form.buildArea"></el-input>
+      </el-form-item>
+      <el-form-item label="绿地面积：" prop="greenlandArea">
+        <el-input v-model="form.greenlandArea"></el-input>
+      </el-form-item>
+      <el-form-item label="道路面积：" prop="roadArea">
+        <el-input v-model="form.roadArea"></el-input>
+      </el-form-item>
+      <el-form-item label="楼宇数量：" prop="buildingCnt">
+        <el-input v-model="form.buildingCnt"></el-input>
+      </el-form-item>
+      <el-form-item label="负责人：">
+        <el-input v-model="form.dutyUser"></el-input>
+      </el-form-item>
+    </el-form>
+    <el-form-item label="开发商：">
+      <div v-if="checkInfo">
+        <el-input :value="form.developerName" :disabled="checkInfo"></el-input>
+      </div>
+      <div @click="initdevelopDia" v-else>
+        <el-input :value="form.developerName" :disabled="checkInfo"></el-input>
+      </div>
+    </el-form-item>
+    <li-modal style="min-width: 1200px" ref="developerModal" />
+    <div class="btn-box">
+      <el-button type="primary" @click="hiddenModal">取消</el-button>
+      <el-button
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认</el-button
+      >
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      form: {},
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入楼盘名称",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    hiddenModal() {
+      this.$emit("modal-cancel");
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.$emit("modal-submit");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+  },
+  mounted() {
+    // let keys = Object.keys(this.params)//获取
+    // for(let index in keys){
+    //   console.log(keys[index])
+    // }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

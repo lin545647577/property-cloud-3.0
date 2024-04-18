@@ -1,0 +1,1286 @@
+<template>
+  <div v-if="showForm" v-loading="taskLoading">
+    <div class="title-box">
+      <span class="point-box"></span><span class="title">{{ title }}</span>
+      <el-divider></el-divider>
+    </div>
+    <!--表单-->
+    <div class="title-box" style="font-size: 14px">
+      <span class="point-box"></span><span class="title">基本情况</span>
+      <el-form
+        :model="taskForm"
+        :rules="rules"
+        ref="taskForm"
+        label-width="120px"
+        class="demo-ruleForm"
+        label-position="right"
+        style="margin-top: 20px"
+      >
+        <el-col :span="8">
+          <el-form-item label="任务名称:" prop="name">
+            <el-input
+              v-model="taskForm.name"
+              placeholder="请填写"
+              :disabled="
+                !handleIsAuth('create_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+            ></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="任务类型:" prop="type">
+            <el-select
+              v-model="taskForm.type"
+              placeholder="请选择"
+              :disabled="
+                !handleIsAuth('type_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+            >
+              <el-option
+                v-for="item in selectOptions.typeList"
+                :key="item.dictSort"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="抄送:">
+            <el-input
+              v-model="taskForm.carbonCopyUserNames"
+              :disabled="
+                !handleIsAuth('carbonCopy_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              @focus="handleMultipleSelected(taskForm.usersToCarbonCopy)"
+              clearable
+            ></el-input>
+
+            <!--            <el-select-->
+            <!--              :disabled="-->
+            <!--                !handleIsAuth('carbonCopy_auth') ||-->
+            <!--                tabDictValue === '5' ||-->
+            <!--                tabDictValue === '6' ||-->
+            <!--                tabDictValue === '7'-->
+            <!--              "-->
+            <!--              v-model="taskForm.usersToCarbonCopy"-->
+            <!--              multiple-->
+            <!--              filterable-->
+            <!--              placeholder="请选择"-->
+            <!--              collapse-tags-->
+            <!--              remote-->
+            <!--              :remote-method="handleRemoteDept"-->
+            <!--            >-->
+            <!--              <el-option-->
+            <!--                v-for="user in selectOptions.systemUserOptions"-->
+            <!--                :key="user.userId"-->
+            <!--                :label="user.nickName"-->
+            <!--                :value="user.userId"-->
+            <!--              >-->
+            <!--              </el-option>-->
+            <!--            </el-select>-->
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="24">
+          <el-form-item label="任务说明:" prop="explain">
+            <el-input
+              type="textarea"
+              v-model="taskForm.explain"
+              :disabled="
+                !handleIsAuth('explain_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              placeholder="请填写"
+            ></el-input>
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="创建部门:">
+            <el-select
+              v-model="taskForm.deptId"
+              disabled
+              placeholder="请选择部门"
+              filterable
+              remote
+              :remote-method="handleRemoteDept"
+            >
+              <el-option
+                v-for="user in selectOptions.deptList"
+                :key="user.deptId"
+                :label="user.deptName"
+                :value="user.deptId"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="责任人:" prop="chargeUser">
+            <el-input
+              v-model="taskForm.chargeUser"
+              :disabled="
+                !handleIsAuth('chargeUser_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              @focus="handleSelected(taskForm.chargeUserId)"
+              clearable
+            ></el-input>
+            <!--            <el-select-->
+            <!--              v-model="taskForm.chargeUserId"-->
+            <!--              @change="handleSelectedUser"-->
+            <!--              placeholder="请选择负责人"-->
+            <!--              :disabled="-->
+            <!--                !handleIsAuth('chargeUser_auth') ||-->
+            <!--                tabDictValue === '5' ||-->
+            <!--                tabDictValue === '6' ||-->
+            <!--                tabDictValue === '7'-->
+            <!--              "-->
+            <!--              filterable-->
+            <!--              remote-->
+            <!--              :remote-method="handleRemoteUser"-->
+            <!--            >-->
+            <!--              <el-option-->
+            <!--                v-for="user in selectOptions.systemUserOptions"-->
+            <!--                :key="user.userId"-->
+            <!--                :label="user.nickName"-->
+            <!--                :value="user.userId"-->
+            <!--              >-->
+            <!--              </el-option>-->
+            <!--            </el-select>-->
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="状态:" prop="status">
+            <el-select
+              v-model="taskForm.status"
+              placeholder="请选择"
+              :disabled="
+                !handleIsAuth('status_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+            >
+              <el-option
+                v-for="item in selectOptions.statusList"
+                :key="item.dictSort"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="创建时间:" prop="createTime">
+            <el-date-picker
+              v-model="taskForm.createTime"
+              :disabled="
+                !handleIsAuth('createTime_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              type="date"
+              placeholder="选择日期时间"
+              value-format="yyyy-MM-dd hh:mm:ss"
+            >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="任务开始时间:" prop="startTime">
+            <el-date-picker
+              v-model="taskForm.startTime"
+              :disabled="
+                !handleIsAuth('startTime_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              type="date"
+              placeholder="选择日期时间"
+              value-format="yyyy-MM-dd"
+            >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="任务结束日期:" prop="endTime">
+            <el-date-picker
+              v-model="taskForm.endTime"
+              :disabled="
+                !handleIsAuth('endTime_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              type="date"
+              placeholder="选择日期时间"
+              value-format="yyyy-MM-dd"
+            >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-form>
+    </div>
+    <!--表格-->
+    <div class="title-box" style="font-size: 14px">
+      <span class="point-box"></span><span class="title">任务划分</span>
+      <el-table
+        class="table-box"
+        :data="tableData"
+        row-key="code"
+        border
+        lazy
+        :load="load"
+        :tree-props="{
+          children: 'childrenTaskInstanceList',
+          hasChildren: 'isParent',
+        }"
+      >
+        <el-table-column prop="index" label="序号" width="60" align="center">
+        </el-table-column>
+        <el-table-column label="子任务名称" align="center">
+          <template slot-scope="scope">
+            <el-input
+              :disabled="
+                (scope.row.id
+                  ? !getChildrenAuth(scope.row.id, 'name_auth')
+                  : false) ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              v-model="scope.row.name"
+              placeholder="请输入内容"
+            ></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column label="开始日期" align="center">
+          <template slot-scope="scope">
+            <el-date-picker
+              :disabled="
+                (scope.row.id
+                  ? !getChildrenAuth(scope.row.id, 'startTime_auth')
+                  : false) ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              v-model="scope.row.startTime"
+              style="width: 100%"
+              type="date"
+              placeholder="选择日期时间"
+              value-format="yyyy-MM-dd"
+            >
+            </el-date-picker>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="限办日期" align="center">
+          <template slot-scope="scope">
+            <el-date-picker
+              :disabled="
+                (scope.row.id
+                  ? !getChildrenAuth(scope.row.id, 'endTime_auth')
+                  : false) ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              v-model="scope.row.endTime"
+              style="width: 100%"
+              type="date"
+              placeholder="选择日期时间"
+              value-format="yyyy-MM-dd"
+            >
+            </el-date-picker>
+          </template>
+        </el-table-column>
+        <el-table-column label="任务说明" align="center">
+          <template slot-scope="scope">
+            <el-input
+              :disabled="
+                (scope.row.id
+                  ? !getChildrenAuth(scope.row.id, 'explain_auth')
+                  : false) ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              v-model="scope.row.explain"
+              placeholder="请输入内容"
+            ></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column label="负责人" align="center" width="125">
+          <template slot-scope="scope">
+            <el-input
+              v-model="scope.row.chargeUser"
+              :disabled="
+                (scope.row.id
+                  ? !getChildrenAuth(scope.row.id, 'chargeUser_auth')
+                  : false) ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              @focus="
+                handleRowUserSelected(scope.$index, scope.row.chargeUserId)
+              "
+              clearable
+            ></el-input>
+
+            <!--            <el-select-->
+            <!--              :disabled="-->
+            <!--                (scope.row.id-->
+            <!--                  ? !getChildrenAuth(scope.row.id, 'chargeUser_auth')-->
+            <!--                  : false) ||-->
+            <!--                tabDictValue === '5' ||-->
+            <!--                tabDictValue === '6' ||-->
+            <!--                tabDictValue === '7'-->
+            <!--              "-->
+            <!--              v-model="scope.row.chargeUserId"-->
+            <!--              placeholder="请选择"-->
+            <!--              filterable-->
+            <!--              remote-->
+            <!--              :remote-method="handleRemoteUser"-->
+            <!--            >-->
+            <!--              <el-option-->
+            <!--                v-for="user in selectOptions.systemUserOptions"-->
+            <!--                :key="user.userId"-->
+            <!--                :label="user.nickName"-->
+            <!--                :value="user.userId"-->
+            <!--              >-->
+            <!--              </el-option>-->
+            <!--            </el-select>-->
+          </template>
+        </el-table-column>
+        <!--        <el-table-column label="附件" align="center" width="100">-->
+        <!--          <template slot-scope="scope">{{-->
+        <!--            scope.row.fileUrlJson ? "查看附件" : "暂无附件"-->
+        <!--          }}</template>-->
+        <!--        </el-table-column>-->
+        <el-table-column label="状态" align="center" width="80">
+          <template slot-scope="scope">{{
+            getStatus(scope.row.status)
+          }}</template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="160">
+          <template
+            slot-scope="scope"
+            v-if="
+              tabDictValue != '5' && tabDictValue != '6' && tabDictValue != '7'
+            "
+          >
+            <el-button
+              v-if="getChildrenAuth(scope.row.id, 'delete_auth')"
+              size="mini"
+              type="danger"
+              @click="handleDelete(scope.row)"
+              >删除</el-button
+            >
+            <el-button
+              v-if="getChildrenAuth(scope.row.id, 'store_auth')"
+              size="mini"
+              type="primary"
+              @click="handleItemEditTask(scope.row)"
+              >保存</el-button
+            >
+            <el-button
+              v-if="!scope.row.id && handleIsAuth('childrenCreate_auth')"
+              size="mini"
+              type="primary"
+              @click="handleAdd(scope.row)"
+              >新增</el-button
+            >
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <div
+      class="title-box"
+      style="font-size: 14px"
+      v-if="handleIsAuth('taskSituation_auth')"
+    >
+      <span class="point-box"></span><span class="title">任务办理情况</span>
+      <el-form
+        label-width="120px"
+        class="demo-ruleForm"
+        style="margin-top: 20px"
+      >
+        <el-col :span="24">
+          <el-form-item label="情况汇报:">
+            <el-input
+              type="textarea"
+              :disabled="
+                !handleIsAuth('report_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              v-model="taskForm.report"
+              placeholder="请填写"
+            ></el-input> </el-form-item
+        ></el-col>
+        <!--        <el-col :span="24">-->
+        <!--          <el-form-item label="附件:">-->
+        <!--            <el-select-->
+        <!--              v-model="taskForm.fileUrlJson"-->
+        <!--              placeholder="请选择活动区域"-->
+        <!--            >-->
+        <!--              <el-option label="区域一" value="shanghai"></el-option>-->
+        <!--              <el-option label="区域二" value="beijing"></el-option>-->
+        <!--            </el-select>-->
+        <!--          </el-form-item>-->
+        <!--        </el-col>-->
+      </el-form>
+
+      <el-form
+        :model="applyForm"
+        :rules="applyRules"
+        ref="applyForm"
+        label-width="120px"
+        class="demo-ruleForm"
+      >
+        <el-col :span="18">
+          <el-form-item prop="applyComment" label="申请调整:">
+            <el-input
+              :disabled="
+                !handleIsAuth('applyComment_auth') ||
+                tabDictValue === '5' ||
+                tabDictValue === '6' ||
+                tabDictValue === '7'
+              "
+              placeholder="请填写"
+              v-model="applyForm.applyComment"
+            ></el-input>
+          </el-form-item>
+        </el-col>
+        <!--<el-form-item prop="date2" label="调整期限:">-->
+        <!--            <el-date-picker-->
+        <!--              v-model="taskForm.date2"-->
+        <!--              :disabled="!handleIsAuth('endTime_auth')"-->
+        <!--              type="datetime"-->
+        <!--              placeholder="选择日期时间"-->
+        <!--              value-format="yyyy-MM-dd HH:mm:ss"-->
+        <!--            >-->
+        <!--            </el-date-picker>-->
+        <!--          </el-form-item>-->
+        <el-col :span="6">
+          <el-form-item>
+            <el-button
+              type="primary"
+              v-if="
+                handleIsAuth('apply_auth') &&
+                !(
+                  tabDictValue === '5' ||
+                  tabDictValue === '6' ||
+                  tabDictValue === '7'
+                )
+              "
+              @click="handleApply('applyForm')"
+              >申请</el-button
+            >
+          </el-form-item>
+        </el-col>
+      </el-form>
+    </div>
+
+    <div
+      class="title-box"
+      style="font-size: 14px"
+      v-if="handleIsAuth('examineResult_auth')"
+    >
+      <span class="point-box"></span><span class="title">审批结果</span>
+      <el-form
+        ref="approveForm"
+        style="margin-top: 20px"
+        :model="approveForm"
+        label-width="120px"
+      >
+        <el-form-item label="审批意见:">
+          <el-input
+            type="textarea"
+            v-model="approveForm.auditComment"
+            :disabled="
+              !handleIsAuth('auditComment_auth') ||
+              tabDictValue === '5' ||
+              tabDictValue === '6' ||
+              tabDictValue === '7'
+            "
+            placeholder="请填写"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <div
+      class="btn-box"
+      v-if="
+        !(tabDictValue === '5' || tabDictValue === '6' || tabDictValue === '7')
+      "
+    >
+      <el-button
+        style="background-color: #b3e19d; color: #fff"
+        v-if="!taskForm.id"
+        @click="saveTask('taskForm')"
+        >暂存任务</el-button
+      >
+      <el-button
+        style="background-color: #409eff; color: #fff"
+        @click="handleControl('taskForm', 1)"
+        v-if="handleIsAuth('issued_auth')"
+        >下发任务</el-button
+      >
+      <el-button
+        style="background-color: #b3e19d; color: #fff"
+        v-if="handleIsAuth('update_auth')"
+        @click="editTask('taskForm')"
+        >修改任务</el-button
+      >
+      <el-button
+        type="primary"
+        v-if="handleIsAuth('start_auth')"
+        @click="handleQualityControl('taskForm', 2)"
+        >启动</el-button
+      >
+      <el-button
+        style="background-color: #fab6b6; color: #fff"
+        v-if="handleIsAuth('stopped_auth')"
+        @click="handleQualityControl('taskForm', 7)"
+        >终止任务</el-button
+      >
+      <el-button
+        type="info"
+        v-if="handleIsAuth('remand_auth')"
+        @click="handleQualityControl('taskForm', 9)"
+        >发回重做</el-button
+      >
+      <!--      <el-button type="primary" v-if="handleIsAuth('handle_auth')" @click="handleTask('taskForm')"-->
+      <!--        >处理任务</el-button-->
+      <!--      >-->
+      <el-button
+        style="background-color: #409eff; color: #fff"
+        v-if="handleIsAuth('pass_auth')"
+        @click="passTask('approveForm', 0)"
+        >通过</el-button
+      >
+      <el-button
+        style="background-color: #fab6b6; color: #fff"
+        v-if="handleIsAuth('fail_auth')"
+        @click="passTask('approveForm', 1)"
+        >不通过</el-button
+      >
+      <el-button
+        style="background-color: #409eff; color: #fff"
+        v-if="handleIsAuth('submit_auth')"
+        @click="handleQualityControl('taskForm', 5)"
+        >提交任务</el-button
+      >
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="editModal" />
+  </div>
+</template>
+
+<script>
+import {
+  queryTaskDetail,
+  queryTableList,
+  insertTask,
+  listSystemUser,
+  queryDept,
+  updateTask,
+  deleteTask,
+  controlTask,
+  queryAuth,
+  examineTask,
+  queryTaskNews,
+  applyTask,
+  queryTaskApplyNews,
+} from "@/api/taskProcess";
+import eventBus from "@/utils/eventBus";
+import { dateFormat } from "@/utils/util";
+
+export default {
+  name: "taskForm",
+  props: {
+    tabDictValue: {
+      //页签标识
+      require: true,
+      type: String,
+    },
+    selectOptions: {
+      //下拉数据
+      type: Object,
+    },
+  },
+  data() {
+    return {
+      title: "",
+      showForm: false, //控制表单显示
+      taskLoading: false,
+      taskForm: {
+        status: "",
+        name: "",
+        deptId: "",
+        type: "",
+        explain: "",
+        startTime: "",
+        createTime: "",
+        endTime: "",
+        chargeUserId: "",
+        chargeUser: "",
+      },
+      applyForm: {
+        applyComment: "",
+      },
+      applyRules: {
+        applyComment: [{ required: true, message: "请填写", trigger: "blur" }],
+      },
+      rules: {
+        name: [{ required: true, message: "请填写", trigger: "blur" }],
+        deptId: [{ required: true, message: "请选择", trigger: "change" }],
+        type: [{ required: true, message: "请选择", trigger: "change" }],
+        explain: [{ required: true, message: "请填写", trigger: "blur" }],
+        startTime: [{ required: true, message: "请选择", trigger: "change" }],
+        createTime: [{ required: true, message: "请选择", trigger: "change" }],
+        endTime: [{ required: true, message: "请选择", trigger: "change" }],
+        // chargeUserId: [
+        //   { required: true, message: "请选择", trigger: "change" },
+        // ],
+        chargeUser: [{ required: true, message: "请选择", trigger: "change" }],
+      },
+      tableData: [],
+
+      approveForm: {
+        auditComment: undefined,
+      },
+      parentCode: "",
+
+      authList: [
+        "auditComment_auth",
+        "carbonCopy_auth",
+        "childrenCreate_auth",
+        "createTime_auth",
+        "create_auth",
+        "delete_auth",
+        "dept_auth",
+        "endTime_auth",
+        "explain_auth",
+        "fileUrlJson_auth",
+        "issued_auth",
+        "name_auth",
+        "report_auth",
+        "startTime_auth",
+        "temporaryStorage_auth",
+        "type_auth",
+      ],
+      authListForItem: {},
+    };
+  },
+  methods: {
+    /**
+     * 表单弹窗选择多选（抄送）
+     * @param {Array} ids 用户ids
+     */
+    handleMultipleSelected(ids) {
+      this.$refs["editModal"].show({
+        view: "taskManagement/userModal/multipleModalTable.vue",
+        params: { ids: ids },
+        title: "选择负责人",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log("选择返回：", data.multipleSelection);
+          // console.log(this.taskForm);
+          this.taskForm.usersToCarbonCopy = data.returnData.usersToCarbonCopy;
+          this.taskForm.carbonCopyUserNames =
+            data.returnData.carbonCopyUserNames;
+          this.$refs["editModal"].hide();
+        },
+      });
+    },
+    /**
+     * 表单弹窗选择
+     */
+    handleSelected() {
+      this.$refs["editModal"].show({
+        view: "taskManagement/userModal/singleModalTable.vue",
+        params: { chargeUserId: this.taskForm.chargeUserId },
+        title: "选择负责人",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log("选择返回：", data.multipleSelection[0]);
+          let res = data.multipleSelection[0];
+          this.taskForm.chargeUserId = res.userId;
+          this.taskForm.chargeUser = res.nickName;
+          this.taskForm.deptId = res.deptId;
+          this.$refs["editModal"].hide();
+        },
+      });
+    },
+    /**
+     * 表格行内弹窗选择负责人
+     */
+    handleRowUserSelected(index, chargeUserId) {
+      console.log(index, chargeUserId);
+      this.$refs["editModal"].show({
+        view: "taskManagement/userModal/singleModalTable.vue",
+        params: { chargeUserId: chargeUserId },
+        title: "选择负责人",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log("选择返回：", data.multipleSelection[0]);
+          let res = data.multipleSelection[0];
+          this.tableData[index].chargeUserId = res.userId;
+          this.tableData[index].chargeUser = res.nickName;
+          this.tableData[index].deptId = res.deptId;
+          this.$refs["editModal"].hide();
+        },
+      });
+    },
+
+    getChildrenAuth(id, authType) {
+      if (this.authListForItem[id]) {
+        return this.authListForItem[id].indexOf(authType) >= 0;
+      }
+      return false;
+    },
+    handleSelectedUser(id) {
+      this.selectOptions.systemUserOptions.forEach((item) => {
+        if (item.userId == id) {
+          this.taskForm.deptId = item.deptId;
+          return;
+        }
+      });
+    },
+    //申请调整操作
+    handleQueryTaskApplyNews(taskId) {
+      queryTaskApplyNews(taskId).then((res) => {
+        // console.log("申请信息", res);
+        if (res.operDesc) {
+          this.applyForm.applyComment = res.operDesc;
+        }
+      });
+    },
+    // 审批操作
+    handleQueryTaskNew(taskId) {
+      queryTaskNews(taskId).then((res) => {
+        console.log("审批意见", res);
+        if (res.taskId) this.approveForm.auditComment = res.auditComment;
+      });
+    },
+    handleIsAuth(val) {
+      let auth = false;
+      this.authList.find((item) => {
+        if (item === val) {
+          auth = true;
+          return;
+        }
+      });
+      return auth;
+    },
+    //判断权限加载内容
+    handleQueryAuth(code) {
+      queryAuth(code).then((res) => {
+        // console.log(res);
+        this.authList = res;
+        this.queryForm(code);
+
+        this.queryTable(code);
+      });
+    },
+    // 获取责任人list
+    // handleRemoteUser(value) {
+    //   listSystemUser({ nickName: value }).then((res) => {
+    //     this.selectOptions.systemUserOptions = res.rows;
+    //   });
+    // },
+    // 获取部门list
+    handleRemoteDept(value) {
+      queryDept({ deptName: value }).then((res) => {
+        this.selectOptions.deptList = res;
+      });
+    },
+    // 获取表格状态字段名
+    getStatus(val) {
+      let res = this.selectOptions.statusList.find((item) => {
+        // console.log(typeof item.dictValue);
+        if (item.dictValue == val) {
+          return item;
+        }
+      });
+      return res ? res.dictLabel : "";
+    },
+    // 添加空行
+    handleAddRowWithNull() {
+      this.tableData.push({
+        index: this.tableData.length + 1,
+        status: "",
+        name: "",
+        deptId: "",
+        type: "",
+        explain: "",
+        startTime: "",
+        createTime: "",
+        endTime: "",
+        chargeUserId: "",
+        chargeUser: "",
+        // id: "",
+      });
+    },
+    // 操作修改、下发、提交、发回、终止
+    handleQualityControl(formName, type) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          controlTask({
+            id: this.taskForm.id,
+            operationType: type,
+          }).then((res) => {
+            if (res.code) {
+              this.$message({
+                message: "操作成功",
+                center: true,
+                type: "success",
+              });
+              switch (type) {
+                case 2: //启动操作
+                  eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+                  eventBus.$emit("transmitTree" + "3", true); //刷新办理中tree
+                  break;
+                case 5: //提交操作
+                  eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+                  eventBus.$emit("transmitTree" + "4", true); //刷新审核tree
+                  break;
+                case 7: //终止操作
+                  eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+                  eventBus.$emit("transmitTree" + "6", true); //刷新审核tree
+                  break;
+                case 9: //发回重做操作
+                  eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+                  eventBus.$emit("transmitTree" + "3", true); //刷新办理tree
+                  break;
+                default:
+                  break;
+              }
+            }
+          });
+        } else {
+          // console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    // 申请调整
+    handleApply(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          applyTask({
+            id: this.taskForm.id,
+            applyComment: this.applyForm.applyComment,
+          }).then((res) => {
+            if (res.code) {
+              this.$message({
+                message: "申请成功",
+                center: true,
+                type: "success",
+              });
+            }
+          });
+        } else {
+          // console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    // 添加子任务
+    handleAdd(row) {
+      // console.log(row);
+      if (
+        !row.name ||
+        !row.explain ||
+        !row.startTime ||
+        !row.endTime ||
+        !row.chargeUserId
+      ) {
+        this.$message({
+          message: "请填写内容",
+          center: true,
+          type: "warning",
+        });
+        return;
+      }
+
+      let tempForm = Object.assign({}, row);
+      tempForm.createTime = dateFormat("yyyy-MM-dd hh:mm:ss", new Date());
+      tempForm.type = "0";
+      tempForm.parentTaskCode = this.taskForm.code;
+      // tempForm.operationType = 1;
+      delete tempForm.index;
+
+      insertTask(tempForm).then((res) => {
+        // console.log(res);
+        if (res.code) {
+          this.$message({
+            message: "新增成功",
+            center: true,
+            type: "success",
+          });
+          this.queryTable(this.parentCode);
+          eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+          eventBus.$emit("transmitTree" + "0", true); //刷新全部tree
+        }
+      });
+    },
+    // 删除操作
+    handleDelete(row) {
+      this.$confirm("确认删除?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          deleteTask(row.id).then((res) => {
+            // console.log(res);
+            if (res.code) {
+              this.queryTable(this.parentCode);
+              eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+              eventBus.$emit("transmitTree" + "0", true); //刷新全部tree
+              this.$message({
+                message: "删除成功",
+                center: true,
+                type: "success",
+              });
+            }
+          });
+        })
+        .catch(() => {});
+
+      // console.log(row);
+    },
+
+    /**
+     * 异步加载表格树
+     * @param  {Object} tree //行数据
+     * @param  {Object} treeNode //树节点层级数据
+     * @param  {Function} resolve //回调渲染函数，传入渲染的list
+     */
+    load(tree, treeNode, resolve) {
+      let temp = [];
+      queryTableList(tree.code).then((res) => {
+        // console.log(res);
+        if (res.rows.length > 0) {
+          for (let index in res.rows) {
+            res.rows[index].index = ++index;
+          }
+        }
+        temp = res.rows;
+      });
+      setTimeout(() => {
+        resolve(temp);
+      }, 500);
+    },
+    //审核操作
+    passTask(formName, type) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          examineTask({
+            id: this.taskForm.id,
+            auditResult: type,
+            auditComment: this.approveForm.auditComment,
+          }).then((res) => {
+            if (res.code) {
+              this.$message({
+                message: "操作成功",
+                center: true,
+                type: "success",
+              });
+              if (type) {
+                eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+                eventBus.$emit("transmitTree" + "5", true); //刷新已完成tree
+              } else {
+                eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+                eventBus.$emit("transmitTree" + "3", true); //刷新办理中tree
+              }
+            }
+          });
+        } else {
+          // console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    handleControl(formName) {
+      if (this.taskForm.id) {
+        this.handleQualityControl(formName, 1);
+      } else {
+        this.saveTask(formName, 1);
+      }
+    },
+    // 暂存
+    saveTask(formName, type) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (type) {
+            this.taskForm.operationType = 1;
+          }
+          insertTask(this.taskForm).then((res) => {
+            // console.log(res);
+            if (res.code) {
+              eventBus.$emit("transmitTree" + "1", true);
+              eventBus.$emit("transmitTree" + "0", true);
+
+              this.$message({
+                message: "操作成功",
+                center: true,
+                type: "success",
+              });
+              this.initForm();
+              this.$refs["taskForm"].resetFields();
+            }
+          });
+        } else {
+          // console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+
+    //修改
+    editTask(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          updateTask(this.taskForm).then((res) => {
+            this.queryForm(this.parentCode);
+            this.$message({
+              message: "修改成功",
+              center: true,
+              type: "success",
+            });
+          });
+        } else {
+          // console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    // 表单保存操作
+    handleItemEditTask(row) {
+      if (!row.name || !row.startTime || !row.endTime || !row.explain) {
+        this.$message({
+          message: "内容不能为空",
+          center: true,
+          type: "warning",
+        });
+        return;
+      }
+      updateTask(row).then((res) => {
+        this.queryTable(this.parentCode);
+        eventBus.$emit("transmitTree" + this.tabDictValue, true); //刷新对应tree
+        eventBus.$emit("transmitTree" + "0", true); //刷新全部tree
+        this.$message({
+          message: "保存成功",
+          center: true,
+          type: "success",
+        });
+      });
+    },
+
+    /**
+     * 查询表单详情
+     * @param {String} code
+     */
+    queryForm(code) {
+      this.taskLoading = true;
+      queryTaskDetail(code).then((res) => {
+        // console.log(res);
+        res.status =
+          res.status === 0 ? "0" : res.status ? res.status.toString() : "";
+        res.type = res.type === 0 ? "0" : res.type ? res.type.toString() : "";
+        // res.deptId = res.deptId.toString();
+        this.taskForm = res;
+        this.title = res.name;
+        this.taskLoading = false;
+        // console.log(this.taskForm);
+        this.approveForm.auditComment = "";
+        this.$refs["approveForm"].resetFields();
+        if (this.handleIsAuth("examineResult_auth")) {
+          //判断权限请求审批意见
+          this.handleQueryTaskNew(this.taskForm.id);
+        }
+        this.applyForm.applyComment = "";
+        this.$refs["applyForm"].resetFields();
+        if (this.handleIsAuth("taskSituation_auth")) {
+          this.handleQueryTaskApplyNews(this.taskForm.id);
+        }
+      });
+    },
+    queryTable(code) {
+      this.taskLoading = true;
+      queryTableList(code).then((res) => {
+        // console.log(res);
+        for (let index in res.rows) {
+          res.rows[index].index = ++index;
+        }
+        this.tableData = res.rows;
+        if (
+          this.handleIsAuth("childrenCreate_auth") &&
+          this.tabDictValue != "5" &&
+          this.tabDictValue != "6" &&
+          this.tabDictValue != "7"
+        ) {
+          this.handleAddRowWithNull();
+        }
+        this.taskLoading = false;
+      });
+    },
+    //初始化表单
+    initForm() {
+      this.taskForm = {
+        status: "",
+        name: "",
+        deptId: this.$store.state.auth.loginInfo.user.deptId,
+        type: "",
+        explain: "",
+        startTime: "",
+        createTime: dateFormat("yyyy-MM-dd hh:mm:ss", new Date()),
+        endTime: "",
+        chargeUserId: this.$store.state.auth.loginInfo.user.userId,
+        chargeUser: this.$store.state.auth.loginInfo.user.nickName,
+      };
+      this.authList = [
+        //新增时权限
+        "auditComment_auth",
+        "carbonCopy_auth",
+        "childrenCreate_auth",
+        "createTime_auth",
+        "create_auth",
+        "delete_auth",
+        "dept_auth",
+        "endTime_auth",
+        "explain_auth",
+        "fileUrlJson_auth",
+        "issued_auth",
+        "name_auth",
+        "report_auth",
+        "startTime_auth",
+        "temporaryStorage_auth",
+        "type_auth",
+      ];
+      this.tableData = [];
+      // this.handleAddRowWithNull();
+      this.title = "新增任务";
+    },
+    resetForms() {},
+  },
+  created() {
+    eventBus.$on("transmitKey" + this.tabDictValue, (code) => {
+      if (code) {
+        this.parentCode = code;
+        this.handleQueryAuth(code);
+      } else {
+        this.initForm();
+      }
+      this.showForm = true;
+    });
+  },
+  mounted() {},
+  beforeDestroy() {
+    eventBus.$off("transmitKey" + this.tabDictValue, undefined);
+  },
+  watch: {
+    tableData(v) {
+      let _this = this;
+      for (let i = 0; i < v.length; i++) {
+        (function getAuth(item) {
+          if (item.id) {
+            queryAuth(item.code).then((res) => {
+              let authListForItem = Object.create(_this.authListForItem);
+              authListForItem[item.id] = res;
+              _this.authListForItem = authListForItem;
+              // _this.authListForItem[item.id] = res;
+            });
+          }
+        })(v[i]);
+      }
+    },
+    "taskForm.id": {
+      handler(nval, oval) {
+        if (nval != oval) {
+          this.$refs["taskForm"].resetFields();
+          this.$refs["approveForm"].resetFields();
+        }
+      },
+      deep: true,
+    },
+  },
+};
+</script>
+
+<style scoped lang="less">
+.title-box {
+  overflow: hidden;
+  margin-bottom: 20px;
+  .point-box {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #329dfa;
+    margin: 0 10px 0 20px;
+  }
+  .title {
+    font-size: 16px;
+  }
+  .el-divider--horizontal {
+    width: 97%;
+    margin: 10px auto;
+    justify-content: center;
+  }
+  .table-box {
+    width: 95%;
+    margin: 20px auto;
+    /deep/ .el-input.is-disabled .el-input__inner {
+      background-color: #fff;
+      border: none;
+      color: #333333;
+      cursor: auto;
+    }
+  }
+}
+.btn-box {
+  text-align: center;
+  margin-top: 20px;
+  /deep/ .el-button {
+    border: none;
+  }
+}
+</style>

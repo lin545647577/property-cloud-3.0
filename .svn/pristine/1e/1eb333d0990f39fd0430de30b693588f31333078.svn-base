@@ -1,0 +1,21 @@
+<template>
+  <div class="count">code</div>
+</template>
+
+<script>
+export default {
+  name: "count",
+  data() {
+    return {};
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped lang="less">
+.count {
+  width: 1920px;
+  height: 1080px;
+}
+</style>

@@ -1,0 +1,159 @@
+<template>
+  <div>
+    <div class="title-box">
+      <span class="point-box"></span><span class="title">{{ typeId }}</span>
+      <el-divider></el-divider>
+    </div>
+    <div class="title-box" style="font-size: 14px">
+      <span class="point-box"></span><span class="title">基本情况</span>
+      <el-form
+        :model="taskForm"
+        :rules="rules"
+        ref="ruleForm"
+        label-width="120px"
+        class="demo-ruleForm"
+        label-position="right"
+        style="margin-top: 20px"
+      >
+        <el-col :span="12">
+          <el-form-item label="任务名称:" prop="name">
+            <el-input v-model="taskForm.name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="任务类型:" prop="name">
+            <el-input v-model="taskForm.name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-form-item label="任务说明:" prop="desc">
+          <el-input type="textarea" v-model="taskForm.desc"></el-input>
+        </el-form-item>
+
+        <el-col :span="8">
+          <el-form-item label="创建部门:" prop="name">
+            <el-select v-model="taskForm.region" placeholder="请选择活动区域">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="责任人:" prop="name">
+            <el-select v-model="taskForm.region" placeholder="请选择活动区域">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="抄送:" prop="name">
+            <el-input v-model="taskForm.name"></el-input>
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="创建时间:" prop="name">
+            <el-select v-model="taskForm.region" placeholder="请选择活动区域">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="任务开始时间:" prop="name">
+            <el-select v-model="taskForm.region" placeholder="请选择活动区域">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="任务结束日期:" prop="name">
+            <el-select v-model="taskForm.region" placeholder="请选择活动区域">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+
+        <!--      <el-form-item>-->
+        <!--        <el-button type="primary" @click="submitForm('ruleForm')"-->
+        <!--          >立即创建</el-button-->
+        <!--        >-->
+        <!--        <el-button @click="resetForm('ruleForm')">重置</el-button>-->
+        <!--      </el-form-item>-->
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryTaskDetail } from "@/api/taskProcess";
+
+export default {
+  name: "taskForm",
+  props: {
+    typeId: {
+      require: true,
+      type: String,
+    },
+  },
+  data() {
+    return {
+      formData: "biaodan",
+
+      taskForm: {
+        id: "",
+        name: "",
+        region: "",
+      },
+      rules: {
+        name: [
+          { required: true, message: "请输入活动名称", trigger: "blur" },
+          { min: 3, max: 5, message: "长度在 3 到 5 个字符", trigger: "blur" },
+        ],
+        region: [
+          { required: true, message: "请选择活动区域", trigger: "change" },
+        ],
+      },
+    };
+  },
+  methods: {
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          alert("submit!");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped lang="less">
+.title-box {
+  overflow: hidden;
+  .point-box {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #329dfa;
+    margin: 0 10px 0 20px;
+  }
+  .title {
+    font-size: 16px;
+  }
+  .el-divider--horizontal {
+    width: 97%;
+    margin: 10px auto;
+  }
+}
+</style>

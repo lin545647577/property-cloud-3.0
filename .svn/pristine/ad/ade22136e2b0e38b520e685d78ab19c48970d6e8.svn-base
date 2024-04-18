@@ -1,0 +1,12 @@
+import request from "./modules/request";
+
+/**
+ * 查询费用情况
+ * @param {Object} data
+ */
+export function queryBill(data) {
+  return request({
+    url: "/estate/ShareTotal/displayData",
+    method: "get",
+  });
+}

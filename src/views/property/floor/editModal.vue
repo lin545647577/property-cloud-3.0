@@ -1,0 +1,194 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="所属楼宇：" prop="buildingName">
+        <el-input
+          v-model="form.buildingName"
+          @focus="initModel"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="楼层名称：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="楼层序号：" prop="sort">
+        <el-input v-model="form.sort" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="楼层编号：">
+        <el-input v-model="form.nm" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="户数：">
+        <el-input
+          v-model="form.layerCnt"
+          type="number"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="buildingModal" />
+  </div>
+</template>
+
+<script>
+import { queryFloor, editFloor, insertFloor } from "@/api/property.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        buildingName: "",
+        residenceName: "",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入楼层名称",
+            trigger: "blur",
+          },
+        ],
+        sort: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        buildingNamesort: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    initModel() {
+      this.$refs["buildingModal"].show({
+        view: "property/common/buildingModal.vue",
+        params: { id: "123" },
+        title: "楼宇列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.getCallData,
+      });
+    },
+
+    getCallData(data) {
+      console.log(data.multipleSelection[0]);
+      this.form.buildingName = data.multipleSelection[0].name;
+      this.form.referenceBuildingId = data.multipleSelection[0].id;
+      this.$refs["buildingModal"].hide();
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化楼层
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryFloor(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          nm: res.nm,
+          sort: res.sort,
+          name: res.name,
+          layerCnt: res.layerCnt,
+          referenceBuildingId: res.referenceBuildingId,
+          residenceName: res.residenceName,
+          buildingName: res.buildingName,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertFloor(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editFloor(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

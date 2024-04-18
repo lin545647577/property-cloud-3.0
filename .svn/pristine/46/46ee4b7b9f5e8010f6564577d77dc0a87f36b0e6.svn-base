@@ -1,0 +1,397 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="50%"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item
+        v-for="(item, index) in authorityItems"
+        :key="index"
+        :label="item.remark"
+      >
+        <el-radio-group v-model="item.status">
+          <el-radio :label="0">关</el-radio>
+          <el-radio :label="1">开</el-radio>
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        type="primary"
+        class="control-btn"
+        size="small"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryPermission } from "@/api/member.js";
+
+export default {
+  name: "authorityModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      memberType: this.params.type, //人员类型：1业主；2家庭成员；3物业人员
+      authorityItems: [],
+      form: {},
+      rules: {},
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+
+    /**
+     * 匹配权限选项
+     * @param {Array} arr 匹配list
+     * @param {String} name 比对属性名
+     */
+    findAuthorityValue(arr, name) {
+      let res = arr.find((item) => {
+        return item.permissionName == name;
+      });
+      return res ? res.status : 0;
+    },
+
+    /**
+     * 获取权限
+     * @param {Object} data
+     */
+    queryInfo(data) {
+      this.loading = true;
+      // this.avatarUrl = null;
+      queryPermission(data).then((res) => {
+        // console.log(res);
+        if (res.length > 0) {
+          this.authorityItems = [
+            {
+              remark: "帮业主上传照片",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_update_owner_face",
+              status: this.findAuthorityValue(res, "estate_update_owner_face"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "物管人员上传自己的头像",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_upload_estate_face",
+              status: this.findAuthorityValue(res, "estate_upload_estate_face"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "工程维修单",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_project_repair",
+              status: this.findAuthorityValue(res, "estate_project_repair"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "接待登记",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_reception",
+              status: this.findAuthorityValue(res, "estate_reception"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "缴费账单",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_bill_list",
+              status: this.findAuthorityValue(res, "estate_bill_list"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "蓝牙开门",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_bluetooth",
+              status: this.findAuthorityValue(res, "estate_bluetooth"),
+              memberType: this.memberType,
+            },
+
+            {
+              remark: "投诉建议列表",
+              memberHouseId: data.memberHouseId,
+              permissionName: "suggestion_list",
+              status: this.findAuthorityValue(res, "suggestion_list"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "投诉建议审核",
+              memberHouseId: data.memberHouseId,
+              permissionName: "suggestion_edit",
+              status: this.findAuthorityValue(res, "suggestion_edit"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "场地列表",
+              memberHouseId: data.memberHouseId,
+              permissionName: "reservation_list",
+              status: this.findAuthorityValue(res, "reservation_list"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "场地审核",
+              memberHouseId: data.memberHouseId,
+              permissionName: "reservation_edit",
+              status: this.findAuthorityValue(res, "reservation_edit"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "咨询通知",
+              memberHouseId: data.memberHouseId,
+              permissionName: "notice_list",
+              status: this.findAuthorityValue(res, "notice_list"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "用户场地预约列表",
+              memberHouseId: data.memberHouseId,
+              permissionName: "reservation_user_list",
+              status: this.findAuthorityValue(res, "reservation_user_list"),
+              memberType: this.memberType,
+            },
+            {
+              remark: "扫一扫",
+              memberHouseId: data.memberHouseId,
+              permissionName: "miniapp_scan",
+              status: this.findAuthorityValue(res, "miniapp_scan"),
+              memberType: this.memberType,
+            },
+          ];
+        } else {
+          this.authorityItems = [
+            {
+              remark: "帮业主上传照片",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_estate_reception",
+              status: 0,
+              detail: this.memberNum,
+              memberType: this.memberType,
+            },
+            {
+              remark: "物管人员上传自己的头像",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_upload_estate_face",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "工程维修单",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_project_repair",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "业主上传头像权限",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_reception",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "缴费账单",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_bill_list",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "蓝牙开门",
+              memberHouseId: data.memberHouseId,
+              permissionName: "estate_bluetooth",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "投诉建议列表",
+              memberHouseId: data.memberHouseId,
+              permissionName: "suggestion_list",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "投诉建议审核",
+              memberHouseId: data.memberHouseId,
+              permissionName: "suggestion_edit",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "场地列表",
+              memberHouseId: data.memberHouseId,
+              permissionName: "reservation_list",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "场地审核",
+              memberHouseId: data.memberHouseId,
+              permissionName: "reservation_edit",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "咨询通知",
+              memberHouseId: data.memberHouseId,
+              permissionName: "notice_list",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "用户场地预约列表",
+              memberHouseId: data.memberHouseId,
+              permissionName: "reservation_user_list",
+              status: 0,
+              memberType: this.memberType,
+            },
+            {
+              remark: "扫一扫",
+              memberHouseId: data.memberHouseId,
+              permissionName: "miniapp_scan",
+              status: 0,
+              memberType: this.memberType,
+            },
+          ];
+        }
+        this.loading = false;
+      });
+    },
+    /**
+     * 初始化元素
+     * @param {Object} data
+     */
+    initItem(data) {
+      if (data.memberHouseId.length === 1) {
+        data.memberHouseId = parseInt(data.memberHouseId.toString());
+        this.queryInfo(data);
+      } else {
+        this.authorityItems = [
+          {
+            remark: "帮业主上传照片",
+            memberHouseId: data.memberHouseId,
+            permissionName: "estate_estate_reception",
+            status: 0,
+            detail: this.memberNum,
+            memberType: this.memberType,
+          },
+          {
+            remark: "物管人员上传自己的头像",
+            memberHouseId: data.memberHouseId,
+            permissionName: "estate_upload_estate_face",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "工程维修单",
+            memberHouseId: data.memberHouseId,
+            permissionName: "estate_project_repair",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "业主上传头像权限",
+            memberHouseId: data.memberHouseId,
+            permissionName: "update_owner_face",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "缴费账单",
+            memberHouseId: data.memberHouseId,
+            permissionName: "estate_bill_list",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "蓝牙开门",
+            memberHouseId: data.memberHouseId,
+            permissionName: "estate_bluetooth",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "投诉建议列表",
+            memberHouseId: data.memberHouseId,
+            permissionName: "suggestion_list",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "投诉建议审核",
+            memberHouseId: data.memberHouseId,
+            permissionName: "suggestion_edit",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "场地列表",
+            memberHouseId: data.memberHouseId,
+            permissionName: "reservation_list",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "场地审核",
+            memberHouseId: data.memberHouseId,
+            permissionName: "reservation_edit",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "咨询通知",
+            memberHouseId: data.memberHouseId,
+            permissionName: "notice_list",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "用户场地预约列表",
+            memberHouseId: data.memberHouseId,
+            permissionName: "reservation_user_list",
+            status: 0,
+            memberType: this.memberType,
+          },
+          {
+            remark: "扫一扫",
+            memberHouseId: data.memberHouseId,
+            permissionName: "miniapp_scan",
+            status: 0,
+            memberType: this.memberType,
+          },
+        ];
+      }
+    },
+    submitForm(formName) {
+      this.$emit("modal-submit");
+    },
+  },
+  mounted() {
+    this.initItem(this.params);
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

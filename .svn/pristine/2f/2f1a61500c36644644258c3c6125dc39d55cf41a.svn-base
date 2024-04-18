@@ -1,0 +1,131 @@
+<template>
+  <div>
+    <el-button type="primary" style="width: 100%" @click="handleSelected('4')"
+      >新增任务</el-button
+    >
+    <el-menu
+      :default-active="defaultActive"
+      class="el-menu-vertical-demo"
+      @open="handleOpen"
+      @close="handleClose"
+      text-color="#333333"
+      active-text-color="#329DFA"
+    >
+      <template v-if="taskList && taskList.length > 0">
+        <div
+          v-for="item in taskList"
+          :item="item"
+          :key="item.id"
+          :is="item.isParent ? 'task-menu' : 'task-item'"
+        ></div>
+      </template>
+    </el-menu>
+  </div>
+</template>
+
+<script>
+import taskItem from "./taskItem";
+import taskMenu from "./taskMenu";
+import { queryTaskTree } from "@/api/taskProcess";
+export default {
+  name: "directoryTree",
+  props: ["keyName"],
+  components: {
+    "task-item": taskItem,
+    "task-menu": taskMenu,
+  },
+  data() {
+    return {
+      defaultActive: "",
+      taskList: [
+        // {
+        //   name: "任务A",
+        //   id: 1,
+        //   isParent: true,
+        //   children: [
+        //     {
+        //       name: "子节点A",
+        //       id: 2,
+        //       isParent: true,
+        //       children: [
+        //         { name: "子节点A", id: 4, isParent: false },
+        //         { name: "子任务A", id: 3, isParent: false },
+        //       ],
+        //     },
+        //     { name: "子任务A", id: 5, isParent: false, children: [] },
+        //   ],
+        // },
+        // {
+        //   name: "任务b",
+        //   id: 6,
+        //   isParent: true,
+        //   children: [
+        //     { name: "子节点A", id: 7, isParent: false, children: [] },
+        //     { name: "子任务A", id: 8, isParent: false, children: [] },
+        //   ],
+        // },
+        // {
+        //   name: "任务c",
+        //   id: 9,
+        //   isParent: true,
+        //   children: [
+        //     { name: "子节点A", id: 10, isParent: false, children: [] },
+        //     { name: "子任务A", id: 11, isParent: false, children: [] },
+        //     { name: "子任务B", id: 12, isParent: false, children: [] },
+        //   ],
+        // },
+        // {
+        //   name: "任务d",
+        //   id: 13,
+        //   isParent: false,
+        //   children: [],
+        // },
+      ],
+      tabType: 0,
+      parentCode: "",
+    };
+  },
+  created() {
+    // console.log(this.keyName);
+    this.tabType = this.keyName;
+    this.handleQueryTree();
+  },
+  methods: {
+    handleOpen(key, keyPath) {
+      console.log(key, keyPath);
+      this.defaultActive = key;
+    },
+    handleClose(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    handleSelected(key) {
+      this.defaultActive = key;
+    },
+    handleQueryTree() {
+      queryTaskTree({ type: this.keyName, parentCode: this.parentCode }).then(
+        (res) => {
+          this.taskList = res;
+          // console.log(res);
+        }
+      );
+    },
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped lang="less">
+.points {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #329dfa;
+}
+.el-menu {
+  border-right: none;
+  /deep/ .el-submenu__title {
+    font-size: 16px;
+  }
+}
+</style>

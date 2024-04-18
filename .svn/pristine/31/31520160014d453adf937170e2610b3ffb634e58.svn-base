@@ -1,0 +1,44 @@
+.content-box {
+    position: relative;
+    color: #003881;
+    padding: 15px 40px;
+    width: 80%;
+    margin: 0 auto;
+    background-color: #b8d1eb;
+    text-align: center;
+    border-radius: 16px;
+}
+.title {
+    font-size: 56px;
+    margin-bottom: 15px;
+}
+.content {
+    height: 700px;
+    max-height: 700px;
+    overflow-y: auto;
+    font-size: 24px;
+    text-align: left;
+    line-height: 45px;
+}
+
+/* 设置滚动条的样式 */
+.content::-webkit-scrollbar {
+    width: 15px;
+    background-color: #93b1e4;
+    border-radius: 10px;
+}
+
+/* 滚动条滑块 */
+.content::-webkit-scrollbar-thumb {
+    background-color: #6d86b1;
+    border-radius: 10px;
+}
+.img-box {
+    text-align: center;
+    width: 100%;
+}
+.footer-box {
+    padding-right: 40px;
+    font-size: 18px;
+    line-height: 35px;
+}

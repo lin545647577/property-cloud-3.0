@@ -1,0 +1,152 @@
+<template>
+  <div class="normalForm">
+    <el-form
+        label-position="right"
+        label-width="150px"
+        :model="form"
+        :rules="rules"
+        ref="ruleForm"
+    >
+      <el-form-item label="楼层分摊系数K：">
+        <el-input v-model="form.coefficient" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="开始楼层：">
+        <el-input v-model="form.start" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="截至楼层：">
+        <el-input v-model="form.end" :disabled="checkInfo"></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+          size="small"
+          type="primary"
+          class="control-btn"
+          :style="{ 'background-color': themeColor }"
+          @click="submitForm('ruleForm')"
+      >确认
+      </el-button>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryCoefficientDetail, editCoefficientDetail, insertCoefficientDetail } from "@/api/payment.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      checkInfo: false,
+      form: {
+        referenceCoefficientId:""
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入名称",
+            trigger: "blur",
+          },
+        ],
+      },
+
+    };
+  },
+  methods: {
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 开发商id
+     */
+    queryInfo(id) {
+      queryCoefficientDetail(id).then( (res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          coefficient: res.coefficient,
+          start: res.start,
+          end: res.end,
+          referenceCoefficientId: this.params.referenceCoefficientId
+        };
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertCoefficientDetail(this.form).then( (res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editCoefficientDetail(this.form).then( (res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    this.form.referenceCoefficientId=this.params.referenceCoefficientId;
+    console.log(this.params);
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+      // this.form={
+      //   id: this.params.info.id,
+      //   coefficient: this.params.info.coefficient,
+      //   start: this.params.info.start,
+      //   end: this.params.info.end,
+      //   referenceCoefficientId: this.params.referenceCoefficientId,
+      // }
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

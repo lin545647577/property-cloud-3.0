@@ -1,0 +1,313 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="来访人名称：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="来访车辆：">
+        <el-input v-model="form.carNo" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="性别：">
+        <el-select
+          v-model="form.sex"
+          placeholder="请选择性别"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="男" value="1"></el-option>
+          <el-option label="女" value="2"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="国籍：">
+        <el-input v-model="form.nation" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="住址：">
+        <el-input
+          v-model="form.address"
+          :disabled="checkInfo"
+          type="textarea"
+          autosize
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="身份证号码：">
+        <el-input v-model="form.cardNo" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="来访人电话号码：">
+        <el-input v-model="form.phone" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="预约时间：" prop="visitStartTime">
+        <el-date-picker
+          v-model="form.visitStartTime"
+          type="datetime"
+          placeholder="选择日期"
+          :disabled="checkInfo"
+          style="width: 100%"
+        >
+        </el-date-picker>
+      </el-form-item>
+
+      <el-form-item label="受访业主：" prop="itwMemberName">
+        <el-input
+          :value="form.itwMemberName"
+          @focus="handleOwnerModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="受访物业：">
+        <el-input v-model="form.houseName" readonly></el-input>
+      </el-form-item>
+      <el-form-item label="来访原因：" prop="reason">
+        <el-input
+          v-model="form.reason"
+          :disabled="checkInfo"
+          type="textarea"
+          autosize
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="状态：">
+        <el-select
+          v-model="form.status"
+          placeholder="请选择状态"
+          style="width: 100%"
+          disabled
+        >
+          <el-option
+            v-for="item in states"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="人脸：">
+        <li-portrait v-model="form.fileUrl" :readonly="checkInfo" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import {
+  queryAppointment,
+  editAppointment,
+  insertAppointment,
+} from "@/api/appointment.js";
+import { dateFormat } from "@/utils/util.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        itwMemberName: "",
+        referenceItwMemberId: "",
+        referenceHouseId: "",
+        houseName: "",
+        status: "0",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        itwMemberName: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        reason: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        visitStartTime: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+
+      states: [
+        {
+          id: "0",
+          name: "待审核",
+        },
+        {
+          id: "1",
+          name: "通过",
+        },
+        {
+          id: "2",
+          name: "退回",
+        },
+        {
+          id: "3",
+          name: "已取消",
+        },
+        {
+          id: "4",
+          name: "已过期",
+        },
+        {
+          id: "5",
+          name: "已完成",
+        },
+      ],
+    };
+  },
+  methods: {
+    // 业主选择
+    handleOwnerModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "member/common/ownerModal.vue",
+        params: {},
+        title: "查看业主列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log(data.multipleSelection[0])
+          that.form.itwMemberName = data.multipleSelection[0].memberName;
+          that.form.referenceItwMemberId =
+            data.multipleSelection[0].referenceMemberId;
+          that.form.referenceHouseId =
+            data.multipleSelection[0].referenceHouseId;
+          that.form.houseName = data.multipleSelection[0].houseName;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryAppointment(id).then((res) => {
+        this.form = res;
+        this.loading = false;
+        // this.form = {
+        //   id: res.id,
+        //   name: res.name,
+        //   sex: res.sex,
+        //   nation: res.nation,
+        //   born: res.born,
+        //   address: res.address,
+        //   carNo:res.carNo,
+        //   cardNo: res.cardNo,
+        //   phone: res.phone,
+        //   fileId: res.fileId,
+        //   houseId: res.houseId,
+        //   itwMemberId: res.itwMemberId,
+        //   itwMemberName:res.itwMemberName,
+        //   deviceIds: res.deviceIds,
+        //   status: res.status,
+        //   visitStartTime: res.visitStartTime,
+        //   reason: res.reason,
+        //   deptId: res.deptId,
+        // };
+      });
+    },
+
+    submitForm(formName) {
+      this.form.visitStartTime = dateFormat(
+        "yyyy-MM-dd hh:mm:ss",
+        new Date(this.form.visitStartTime)
+      );
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertAppointment(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editAppointment(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

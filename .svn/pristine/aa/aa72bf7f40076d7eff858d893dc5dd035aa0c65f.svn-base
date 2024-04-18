@@ -1,0 +1,302 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="房屋：">
+        <el-input v-model="form.houseName" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="业主：" prop="ownerName">
+        <el-input
+          v-model="form.ownerName"
+          @focus="handleOwnerModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="人员名称：" prop="memberName">
+        <el-input
+          v-model="form.memberName"
+          @focus="handleMemberModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="与业主关系：" prop="relation">
+        <el-select
+          v-model="form.relation"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in relation"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态：">
+        <el-select
+          v-model="form.status"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="现住" value="now"> </el-option>
+          <el-option label="旧业主" value="old"> </el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        size="small"
+        >确认
+      </el-button>
+    </div>
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import {
+  queryMemberHouse,
+  editMemberHouse,
+  insertMemberHouse,
+} from "@/api/member.js";
+
+export default {
+  name: "memberHouseModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        houseName: "",
+        memberName: "",
+        ownerName: "",
+
+        referenceHouseId: "",
+        referenceMemberId: "",
+        referenceOwnerId: "",
+        status: "",
+        residenceIds: "",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入名称",
+            trigger: "blur",
+          },
+        ],
+      },
+
+      relation: [
+        {
+          id: 0,
+          name: "副业主",
+        },
+        {
+          id: 1,
+          name: "租户",
+        },
+        {
+          id: 3,
+          name: "夫妻",
+        },
+        {
+          id: 4,
+          name: "子女",
+        },
+        {
+          id: 5,
+          name: "父母",
+        },
+        {
+          id: 6,
+          name: "朋友",
+        },
+        {
+          id: 7,
+          name: "其他",
+        },
+      ],
+    };
+  },
+  methods: {
+    //业主选择
+    handleMemberModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "member/common/memberModal.vue",
+        params: {},
+        title: "查看人员列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          that.form.memberName = data.multipleSelection[0].name;
+          that.form.referenceMemberId = data.multipleSelection[0].id;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    //业主选择
+    handleOwnerModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "member/common/ownerModal.vue",
+        params: {},
+        title: "查看人员列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log(data.multipleSelection[0])
+          that.form.ownerName = data.multipleSelection[0].memberName;
+          that.form.referenceOwnerId =
+            data.multipleSelection[0].referenceMemberId;
+          that.form.referenceHouseId =
+            data.multipleSelection[0].referenceHouseId;
+          that.form.houseName = data.multipleSelection[0].houseName;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    //房屋选择
+    handleHouseModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "property/common/houseModal.vue",
+        params: {},
+        title: "查看房屋列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          console.log(data.multipleSelection[0].name);
+          that.form.houseName = data.multipleSelection[0].name;
+          that.form.referenceHouseId = data.multipleSelection[0].id;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化人员
+     * @param {String} id 人员id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      // this.avatarUrl = null;
+      queryMemberHouse(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          referenceHouseId: res.referenceHouseId,
+          referenceMemberId: res.referenceMemberId,
+          relation: res.relation,
+          referenceOwnerId: res.referenceOwnerId,
+          status: res.status,
+          residenceIds: res.residenceIds,
+          memberName: res.memberName,
+          houseName: res.houseName,
+          ownerName: res.ownerName,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      console.log(this.form);
+      insertMemberHouse(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editMemberHouse(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+    if (this.params.referenceMemberId) {
+      this.form = {
+        houseName: this.params.houseName,
+        referenceHouseId: this.params.houseId,
+        referenceOwnerId: this.params.referenceMemberId,
+        ownerName: this.params.memberName,
+        memberName: "",
+        referenceMemberId: "",
+      };
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

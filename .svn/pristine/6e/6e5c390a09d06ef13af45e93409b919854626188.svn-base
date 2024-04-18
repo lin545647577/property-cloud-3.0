@@ -1,0 +1,350 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="房号：" prop="houseName">
+        <el-input
+          v-model="form.houseName"
+          @focus="handleHouseModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="业主：" prop="memberName">
+        <el-input
+          v-model="form.memberName"
+          @focus="handleMemberModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="状态：" prop="status">
+        <el-select
+          v-model="form.status"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="旧业主" value="old"> </el-option>
+          <el-option label="现住" value="now"> </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否贷款：">
+        <el-select
+          v-model="form.loan"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="是" value="1"></el-option>
+          <el-option label="否" value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否银行代扣：">
+        <el-select
+          v-model="form.withHolding"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="是" value="1"></el-option>
+          <el-option label="否" value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="出入卡号：">
+        <el-input v-model="form.accessNo" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="物管费扣费账户：">
+        <el-input
+          v-model="form.managebuckleAccount"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="物管费扣费账号：">
+        <el-input
+          v-model="form.managebuckleAccountnum"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="物管费扣费银行：">
+        <el-input
+          v-model="form.managebuckleBank"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="物管费扣费联系方式：">
+        <el-input
+          v-model="form.managebucklePhone"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="水费扣费账户：">
+        <el-input
+          v-model="form.waterbuckleAccount"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="水费扣费账号：">
+        <el-input
+          v-model="form.waterbuckleAccountnum"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="水费扣费银行：">
+        <el-input
+          v-model="form.waterbuckleBank"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="水费扣费联系方式：">
+        <el-input
+          v-model="form.waterbucklePhone"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="提交水费日期：">
+        <el-date-picker
+          type="date"
+          v-model="form.waterbuckleDate"
+          style="width: 100%"
+          :disabled="checkInfo"
+        ></el-date-picker>
+      </el-form-item>
+      <el-form-item label="电费扣费账户：">
+        <el-input
+          v-model="form.electricbuckleAccount"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="电费扣费账号：">
+        <el-input
+          v-model="form.electricbuckleAccountnum"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="电费扣费银行：">
+        <el-input
+          v-model="form.electricbuckleBank"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="电费扣费联系方式：">
+        <el-input
+          v-model="form.electricbucklePhone"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import { queryOwner, editOwner, insertOwner } from "@/api/member.js";
+
+export default {
+  name: "ownerModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        houseName: "",
+        memberName: "",
+      },
+      rules: {
+        houseName: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        memberName: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        status: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+
+      data: {
+        dKet: "1",
+
+        Yket: "1",
+      },
+    };
+  },
+  methods: {
+    //业主选择
+    handleMemberModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "member/common/memberModal.vue",
+        params: {},
+        title: "查看人员列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          this.form.memberName = data.multipleSelection[0].name;
+          this.form.referenceMemberId = data.multipleSelection[0].id;
+          this.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    //房屋选择
+    handleHouseModal() {
+      this.$refs["chooseModal"].show({
+        view: "property/common/houseModal.vue",
+        params: {},
+        title: "查看房屋列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          console.log(data.multipleSelection[0].name);
+          this.form.houseName = data.multipleSelection[0].name;
+          this.form.referenceHouseId = data.multipleSelection[0].id;
+          this.$refs["chooseModal"].hide();
+        },
+      });
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化人员
+     * @param {String} id 人员id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      // this.avatarUrl = null;
+      queryOwner(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          referenceMemberId: res.referenceMemberId,
+          referenceHouseId: res.referenceHouseId,
+          status: res.status,
+          loan: res.loan,
+          withHolding: res.withHolding,
+          accessNo: res.accessNo,
+          waterbuckleAccount: res.waterbuckleAccount,
+          waterbuckleAccountnum: res.waterbuckleAccountnum,
+          waterbuckleBank: res.waterbuckleBank,
+          waterbucklePhone: res.waterbucklePhone,
+          waterbuckleDate: res.waterbuckleDate,
+          electricbuckleAccount: res.electricbuckleAccountm,
+          electricbuckleAccountnum: res.electricbuckleAccountnum,
+          electricbuckleBank: res.electricbuckleBank,
+          electricbucklePhone: res.electricbucklePhone,
+          managebuckleAccount: res.managebuckleAccount,
+          managebuckleAccountnum: res.managebuckleAccountnum,
+          managebuckleBank: res.managebuckleBank,
+          managebucklePhone: res.managebucklePhone,
+          phone: res.phone,
+          residenceName: res.residenceName,
+          residceIds: res.residceIds,
+          memberName: res.memberName,
+          houseName: res.houseName,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      console.log(this.form);
+      insertOwner(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editOwner(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+    if (this.params.houseId) {
+      this.form = {
+        houseName: this.params.houseName,
+        referenceHouseId: this.params.houseId,
+        referenceMemberId: "",
+        memberName: "",
+      };
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

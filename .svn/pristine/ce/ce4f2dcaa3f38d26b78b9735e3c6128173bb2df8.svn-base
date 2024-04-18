@@ -1,0 +1,214 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="广告名称：" prop="advName">
+        <el-input
+          v-model="form.advName"
+          :disabled="checkInfo"
+          clearable
+        ></el-input>
+      </el-form-item>
+
+      <el-form-item label="广告位置：">
+        <el-select
+          v-model="form.locationKey"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in locations"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="默认：">
+        <el-select
+          v-model="form.orNotDefault"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="否" :value="0"></el-option>
+          <el-option label="是" :value="1"></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="设备：">
+        <el-input
+          v-model="form.deviceId"
+          clearable
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+
+      <el-form-item label="备注：">
+        <el-input
+          type="textarea"
+          autosize
+          v-model="form.remark"
+          :disabled="checkInfo"
+          clearable
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import { queryAdvInfo, editAdvInfo, insertAdvInfo } from "@/api/advert.js";
+import { dateFormat } from "@/utils/util.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {},
+      houseName: "",
+      rules: {
+        advGenre: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        advState: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        advType: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        advName: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+      },
+      locations: [
+        {
+          id: 0,
+          name: "左上角",
+        },
+        {
+          id: 1,
+          name: "右上角",
+        },
+        {
+          id: 2,
+          name: "左下角",
+        },
+        {
+          id: 3,
+          name: "右下角",
+        },
+      ],
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryAdvInfo(id).then((res) => {
+        this.form = res;
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertAdvInfo(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editAdvInfo(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+};
+</script>
+
+<style scoped></style>

@@ -1,0 +1,237 @@
+<template>
+  <el-card
+    class="box-card card-box"
+    v-loading="loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+    element-loading-spinner="2"
+  >
+    <el-row class="item" id="text">
+      <el-col :span="24" class="header-title">
+        <img :src="pointImg" fit="fill" />
+        搜索附近
+      </el-col>
+      <div
+        class="my-scrollbar"
+        style="overflow: auto; height: 900px; width: 100%"
+      >
+        <el-col
+          :span="24"
+          id="accessory"
+          name="accessory"
+          v-for="(item, index) in accessory"
+          :key="index"
+        >
+          <el-collapse
+            v-model="activeName"
+            :accordion="accordion"
+            class="el-menu-vertical-demo"
+            @change="handleOpen(index)"
+          >
+            <el-collapse-item :name="index">
+              <template slot="title">
+                <div>
+                  <el-avatar :src="item.imgSrc"></el-avatar>
+                </div>
+                <div>
+                  <span style="font-size: 20px; margin-left: 30px">{{
+                    item.dictLabel
+                  }}</span>
+                  <p style="font-size: 16px; margin-left: 30px">
+                    {{ item.dictValue }}
+                  </p>
+                </div>
+              </template>
+              <el-button
+                v-for="(item, index) in accessorynew"
+                :key="index"
+                index="index"
+                @click="handleClose(item)"
+                type="text"
+                >{{ item.name }}</el-button
+              >
+            </el-collapse-item>
+          </el-collapse>
+          <!-- <el-menu
+          :default-active="index"
+          class="el-menu-vertical-demo"
+          @open="handleOpen"
+        >
+          <el-submenu :index="JSON.stringify(index)">
+            <template slot="title">
+              <van-col :span="24">
+                <van-col :span="10">
+                  <el-avatar size="12" :src="item.imgSrc"></el-avatar>
+                </van-col>
+                <van-col :span="14">
+                  <span style="font-size: 20px; margin-left: 30px">{{
+                    item.dictLabel
+                  }}</span>
+                  <p style="font-size: 16px; margin-left: 60px">
+                    {{ item.dictValue }}
+                  </p>
+                </van-col>
+              </van-col>
+            </template>
+            <el-menu-item
+              v-for="(item, index) in accessorynew"
+              :key="index"
+              index="index"
+              @click="handleClose(item)"
+              >{{ item.name }}</el-menu-item
+            >
+          </el-submenu>
+        </el-menu> -->
+        </el-col>
+      </div>
+    </el-row>
+  </el-card>
+</template>
+
+<script>
+import {
+  searchOrgFunctionBusinessTypesForWiseScreen,
+  selectShowPointsDataForReservationInWisdomScreen,
+  tygxMapLogoShowPositionDefinitionNearby,
+  findPositionByUser,
+  pathCalculation,
+} from "@/api/location.js";
+export default {
+  name: "sideSearch",
+  props: {
+    loading: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      coordinate: [],
+      accessory: [],
+      accessorynew: [],
+      accordion: true,
+      activeName: "1",
+    };
+  },
+  methods: {
+    selectCurrentOrganizationCompanyTypesDictDatanew() {
+      searchOrgFunctionBusinessTypesForWiseScreen().then((res) => {
+        this.accessory = res;
+      });
+    },
+
+    handleOpen(key) {
+      this.accessorynew = [];
+      let formDate = {
+        businessType: this.accessory[key].dictValue,
+        mapCode: window.localStorage.getItem("mapCode"),
+      };
+      let accessory = document.getElementsByName("accessory");
+      for (let index = 0; index < accessory.length; index++) {
+        const element = accessory[index];
+        console.log(element);
+        element.style.opacity = 0.5;
+      }
+      accessory[key].style.opacity = 1;
+      selectShowPointsDataForReservationInWisdomScreen(formDate).then((res) => {
+        this.accessorynew = [];
+        for (const index in res) {
+          let accessorynew = {
+            value: [res[index].x, res[index].y],
+            name: res[index].params.companyData.compName,
+            code: res[index].code,
+            img: "image://" + res[index].params.companyData.compLogo,
+            manager: res[index].params.companyData.userName,
+            deptId: res[index].params.companyData.deptId,
+            referenceOrganizationId: res[index].referenceOrganizationId,
+          };
+          console.log(accessorynew);
+          this.accessorynew.push(accessorynew);
+        }
+        this.$emit("handleOpen", this.accessorynew);
+      });
+    },
+    handleClose(item) {
+      this.$emit("handleClose", item);
+    },
+  },
+  mounted() {
+    this.selectCurrentOrganizationCompanyTypesDictDatanew();
+  },
+};
+</script>
+
+<style scoped>
+.card-box {
+  height: calc(100vh - 2px);
+  position: relative;
+  z-index: 100;
+}
+
+.card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+.card-box .header-title * {
+  vertical-align: middle;
+}
+#accessory {
+  padding-left: 5%;
+  margin-bottom: 5%;
+  line-height: 25px;
+  opacity: 0.5;
+}
+.accessory-img img {
+  width: 100%;
+  margin-right: 5%;
+}
+.accessory-title {
+  padding-left: 2%;
+}
+.accessory-title h1 {
+  font-size: 25px;
+  font-weight: 400;
+}
+.accessory-title span {
+  font-size: 18px;
+  color: #666;
+}
+.el-card__body {
+  padding: 0px;
+}
+
+.card-box .item /deep/ .el-submenu__title {
+  height: auto;
+  line-height: 20px;
+}
+.card-box .item /deep/ .el-submenu .el-menu-item {
+  font-size: 18px;
+}
+.card-box .item /deep/ .el-submenu__title i {
+  font-size: 25px;
+}
+.card-box .item /deep/ .el-collapse-item__header {
+  line-height: 2;
+}
+.card-box .item /deep/ .el-button + .el-button {
+  margin-left: 0px;
+}
+.card-box .item /deep/ .el-collapse-item__header {
+  height: 80px;
+}
+.card-box .item /deep/ .el-button--text {
+  display: block;
+}
+/* 设置滚动条的样式 */
+.my-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: rgba(146, 161, 183, 0.3);
+  border-radius: 10px;
+}
+
+/* 滚动条滑块 */
+.my-scrollbar::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);
+  border-radius: 10px;
+}
+</style>

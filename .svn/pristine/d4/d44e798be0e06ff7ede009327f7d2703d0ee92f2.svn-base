@@ -1,0 +1,873 @@
+<template>
+  <el-row class="page-location">
+    <!-- 右测主体 -->
+    <el-col :span="20" class="box-map">
+      <el-popover placement="bottom" width="470" height="300" v-model="visible">
+        <el-table :data="gridData">
+          <el-table-column
+            width="100"
+            property="name"
+            label="名称"
+          ></el-table-column>
+          <el-table-column
+            width="250"
+            property="remark"
+            label="备注"
+          ></el-table-column>
+          <el-table-column fixed="right" label="操作" width="120">
+            <template slot-scope="scope">
+              <el-button
+                @click.native.prevent="gridDataClick(scope.$index, gridData)"
+                type="text"
+                size="small"
+              >
+                预约
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-popover>
+      <!-- 二维码 -->
+      <el-dialog
+        title="请扫描二维码进行预约"
+        center
+        :visible.sync="dialogVisible"
+      >
+        <div class="demo-image__placeholder">
+          <div class="block">
+            <el-image :src="src" :fit="fit">
+              <!-- <div slot="placeholder" class="image-slot">
+                加载中<span class="dot">...</span>
+              </div> -->
+            </el-image>
+          </div>
+        </div>
+      </el-dialog>
+      <!-- 地图 -->
+      <div id="map" class="box-map-main"></div>
+      <!-- 右下角菜单 -->
+      <!-- <el-row class="box-menu">
+        <el-col class="item-menu" :span="24">
+          <img
+            class="btn-icon"
+            src="@/assets/img/wiseScreen/location/icon-location-restroom.png"
+          />
+        </el-col>
+        <el-col class="item-menu" :span="24">
+          <img
+            class="btn-icon"
+            src="@/assets/img/wiseScreen/location/icon-location-shop.png"
+          />
+        </el-col>
+        <el-col class="item-menu" :span="24">
+          <img
+            class="btn-icon"
+            src="@/assets/img/wiseScreen/location/icon-location-construction.png"
+          />
+        </el-col>
+        <el-col class="item-menu" :span="24">
+          <img
+            class="btn-icon"
+            src="@/assets/img/wiseScreen/location/icon-location-enterprise.png"
+          />
+        </el-col>
+      </el-row> -->
+      <!-- 工具栏，开发环境才显示，正式环境隐藏 -->
+      <el-row v-if="true" class="box-dev-tools" :gutter="15">
+        <el-form label-width="100px" size="small">
+          <el-form-item label="地图">
+            <el-col :span="18">
+              <el-select
+                v-model="res"
+                placeholder="请选择"
+                @change="geographicalCilck"
+              >
+                <el-option
+                  v-for="item in geographical"
+                  :key="item.srcSuffix"
+                  :label="item.name"
+                  :value="item.srcSuffix"
+                >
+                </el-option>
+              </el-select>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="坐标寻点：">
+            <el-col :span="9">
+              <el-input
+                v-model="mockFixedStart"
+                placeholder="横坐标，默认值0"
+                @change="handleChangeCoords"
+              ></el-input>
+            </el-col>
+            <el-col :span="9">
+              <el-input
+                v-model="mockFixedEnd"
+                placeholder="纵坐标，默认值0"
+                @change="handleChangeCoords"
+              ></el-input>
+            </el-col>
+            <el-col :span="6">
+              <el-button type="primary" @click="handleMockCoordsSave"
+                >保存
+              </el-button>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="寻点记录：">
+            <el-col :span="24">
+              <el-table
+                :data="historyData"
+                height="300"
+                style="width: 100%"
+                @selection-change="handleSelectionChange"
+              >
+                <el-table-column type="selection" width="55" align="center" />
+                <el-table-column prop="name" label="名称" align="center">
+                </el-table-column>
+                <el-table-column prop="coordinate" label="坐标" align="center">
+                  <!-- <template scope="scope">
+                    {{ scope.row }}
+                  </template> -->
+                </el-table-column>
+                <el-table-column fixed="right" label="操作" width="120">
+                  <template slot-scope="scope">
+                    <el-button
+                      @click.native.prevent="
+                        deleteRow(scope.$index, historyData)
+                      "
+                      type="text"
+                      size="small"
+                    >
+                      移除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-col>
+            <el-col :span="24" style="text-align: center; margin-top: 20px">
+              <el-button type="danger" @click="handleClearMockHistory"
+                >初始化坐标
+              </el-button>
+              <el-button type="danger" @click="handleMockApplyHistory"
+                >构建路径
+              </el-button>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="构建路径：">
+            <el-col :span="24">
+              <el-table
+                :data="CoordData"
+                height="300"
+                style="width: 100%"
+                highlight-current-row
+                @current-change="handleSelectionChangenew"
+              >
+                <el-table-column type="index" width="55" align="center" />
+                <el-table-column prop="name" label="坐标" align="center">
+                </el-table-column>
+                <el-table-column fixed="right" label="操作" width="120">
+                  <template slot-scope="scope">
+                    <el-button
+                      @click.native.prevent="remove(scope.$index, CoordData)"
+                      type="text"
+                      size="small"
+                    >
+                      移除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-col>
+            <el-col :span="24" style="text-align: center; margin-top: 20px">
+              <el-button type="danger" @click="handleClearMockHistorynew"
+                >保存坐标信息
+              </el-button>
+            </el-col>
+          </el-form-item>
+        </el-form>
+      </el-row>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import { get } from "@/api/common.js";
+import {
+  addTempPoint,
+  tempPointList,
+  clearTempPointList,
+  deleteTempPoint,
+  initMapPoints,
+  pathCalculation,
+  searchManagerDefinedTypeForWiseScreen,
+  generateToReservationQrc,
+  deviceMapInfo,
+  getPointByDeviceUuid,
+  tempPathList,
+  listByCurrentOrg,
+} from "@/api/location.js";
+
+export default {
+  name: "Location",
+  data() {
+    return {
+      // 加载的地图
+      map: undefined,
+      // 左侧菜单信息
+      information: {
+        location: "腾宇光迅", //所在地
+        destination: "东大门", //目的地
+        startLocation: "起始位置", //查询结果
+        endLocation: undefined,
+        msg: undefined,
+      },
+
+      mockFixedStart: 0, // 虚拟的开始位置起点
+      mockFixedEnd: 0, // 虚拟的开始位置终点
+      mockCoords: [], // 虚拟的线路
+      historyData: [], // 寻点历史记录
+      CoordData: [], //渲染的路线
+      mockCoordsnew: [], //需要保存到本地的路线
+      visible: false,
+      gridData: [],
+      dialogVisible: false, //二维码显示
+      src: "", //二维码图片
+      fit: "cover",
+      geographical: [], //地图
+      res: "static-url/statics/2021/10/12/b1aa575b-9be1-42fc-9e82-d025a2dcec80.svg", //地图路径
+      referenceMapCode: "MAP20210927091904000001", //code
+    };
+  },
+  methods: {
+    /**
+     * 渲染地图
+     * @param {Array} coords 路径坐标点数组
+     */
+    loadMap(coords) {
+      let uuid = "eoNGMdh7giKq54ys6kY09WvVxItTaPwX";
+      // let uuid = "BxyoVZRSTQmjCADsWw6n8GHaqXiEpI1g";
+      get(this.res).then((res) => {
+        // eslint-disable-next-line no-undef
+        echarts.registerMap("MyMap", { svg: res });
+
+        if (!this.map) {
+          // eslint-disable-next-line no-undef
+          this.map = echarts.init(document.getElementById("map"));
+        }
+
+        this.map.clear();
+        var sanData = [
+          // { name: "楼梯", value: "楼梯", LngAndLat: [150.62, 600.179] }
+          // 散点数据
+          // {
+          //   name: "腾宇光迅",
+          //   value: "腾宇光迅",
+          //   LngAndLat: [200.22, 120.479],
+          // },
+          // {
+          //   name: "阿里巴巴",
+          //   value: "阿里巴巴",
+          //   LngAndLat: [120.22, 200.479],
+          // },
+          // {
+          //   name: "腾讯",
+          //   value: "腾讯",
+          //   LngAndLat: [200.32, 300.379],
+          //   img: "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg42.51tietu.net%2Fpic%2F2017-031205%2F201703120531151gzfhftzdy0330994.jpg&refer=http%3A%2F%2Fimg42.51tietu.net&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1634450171&t=493ae678ac80805e0ee89c5c8cf14c40",
+          // },
+          // { name: "网易", value: "网易", LngAndLat: [513.22, 520.479] },
+          // { name: "厕所", value: "厕所", LngAndLat: [300.12, 270.579] },
+          // { name: "楼梯", value: "楼梯", LngAndLat: [150.62, 600.179] },
+        ];
+
+        var convertData = function (data) {
+          // 处理数据函数
+          var res = [];
+          for (var i = 0; i < data.length; i++) {
+            var geoCoord = data[i].LngAndLat;
+            if (geoCoord) {
+              res.push({
+                name: data[i].name,
+                value: geoCoord.concat(data[i].value),
+                img: data[i].img,
+              });
+            }
+          }
+          return res;
+        };
+        let option = {
+          geo: {
+            map: "MyMap",
+            roam: true,
+            layoutCenter: ["50%", "50%"],
+            layoutSize: 1320,
+            emphasis: {
+              itemStyle: {
+                color: null,
+              },
+              label: {
+                show: false,
+              },
+            },
+          },
+          tooltip: {
+            triggerOn: "mousemove",
+            formatter: function (params) {
+              let img =
+                "<img style='height:20px;width:30px' src=" +
+                params.data.img +
+                " alt=''>";
+              return params.name + img;
+            },
+          },
+          series: [
+            {
+              name: "Route",
+              type: "lines",
+              coordinateSystem: "geo",
+              geoIndex: 0,
+              zlevel: 9,
+              emphasis: {
+                label: {
+                  show: false,
+                },
+              },
+              polyline: true,
+              lineStyle: {
+                color: "#c46e54",
+                width: 5,
+                opacity: 1,
+                type: "dotted",
+              },
+              effect: {
+                show: true,
+                period: 8,
+                color: "red",
+                constantSpeed: 300,
+                trailLength: 0,
+                symbolSize: [20, 12],
+                symbol:
+                  "path://M35.5 40.5c0-22.16 17.84-40 40-40s40 17.84 40 40c0 1.6939-.1042 3.3626-.3067 5H35.8067c-.2025-1.6374-.3067-3.3061-.3067-5zm90.9621-2.6663c-.62-1.4856-.9621-3.1182-.9621-4.8337 0-6.925 5.575-12.5 12.5-12.5s12.5 5.575 12.5 12.5a12.685 12.685 0 0 1-.1529 1.9691l.9537.5506-15.6454 27.0986-.1554-.0897V65.5h-28.7285c-7.318 9.1548-18.587 15-31.2715 15s-23.9535-5.8452-31.2715-15H15.5v-2.8059l-.0937.0437-8.8727-19.0274C2.912 41.5258.5 37.5549.5 33c0-6.925 5.575-12.5 12.5-12.5S25.5 26.075 25.5 33c0 .9035-.0949 1.784-.2753 2.6321L29.8262 45.5h92.2098z",
+              },
+              data: [
+                {
+                  animation: true,
+                  coords: coords || [
+                    [0, 0],
+                    [0, 0],
+                  ],
+                },
+              ],
+            },
+            {
+              type: "effectScatter",
+              coordinateSystem: "geo",
+              symbol: "circle",
+              symbolSize: function (val) {
+                return val[2];
+              },
+              data: convertData(sanData),
+              label: {
+                normal: {
+                  show: true,
+                  formatter: function (params) {
+                    //标签内容
+                    return (
+                      "{img|" + "}" + "{b|" + "}" + "{a|" + params.name + "}"
+                    );
+                  },
+                  lineHeight: 20,
+                  backgroundColor: "rgba(255,255,255,.9)",
+                  borderColor: "#80cffd",
+                  borderWidth: "1",
+                  padding: [5, 15, 4],
+                  color: "#000000",
+                  fontSize: 14,
+                  fontWeight: "normal",
+                  rich: {
+                    a: {
+                      color: "red",
+                      lineHeight: 10,
+                    },
+                    img: {
+                      backgroundColor: {
+                        image:
+                          "https://img1.baidu.com/it/u=2721427423,451059174&fm=26&fmt=auto",
+                      },
+                      height: 27,
+                    },
+                  },
+                },
+
+                emphasis: {
+                  show: true,
+                },
+              },
+              itemStyle: {
+                normal: {
+                  color: "#291010",
+                },
+              },
+            },
+          ],
+        };
+        this.map.setOption(option);
+        // 点击事件，点击地图后，要做什么操作，在这里处理
+        this.map.off("click").on("click", (params) => {
+          this.addHistoryCoords(params.value);
+          if (this.visible === true) {
+            this.visible = false;
+          } else {
+            this.visible = true;
+          }
+          let data = {
+            pageNum: 1,
+            pageSize: 15,
+            manager: "admin",
+            referenceOrganizationId: 1,
+          };
+          searchManagerDefinedTypeForWiseScreen(data).then((res) => {
+            // console.log(res);
+            this.gridData = res;
+          });
+        });
+      });
+    },
+
+    /**
+     * 当改变虚拟坐标点时，立即定位
+     */
+    handleChangeCoords() {
+      if (this.mockFixedStart !== "" && this.mockFixedEnd !== "") {
+        let coordsIndex = [
+          parseInt(this.mockFixedStart),
+          parseInt(this.mockFixedEnd),
+        ];
+        this.loadMap([coordsIndex, [coordsIndex[0] + 1, coordsIndex[1] + 1]]);
+      }
+    },
+
+    /**
+     * 添加虚拟坐标点到缓存
+     */
+    handleMockCoordsSave() {
+      this.$prompt("请输入名称", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      })
+        .then(({ value }) => {
+          this.addHistoryCoords([
+            parseInt(this.mockFixedStart),
+            parseInt(this.mockFixedEnd),
+            value,
+          ]);
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "取消输入",
+          });
+        });
+    },
+
+    /**
+     * 渲染路径
+     */
+    // handleMockApply() {
+    //   this.mockCoordsnew.push(this.mockCoords + " ");
+    //   localStorage.setItem("mockCoords", this.mockCoordsnew);
+    //   let mockCoords = JSON.parse(this.mockCoords);
+    //   this.loadMap(mockCoords);
+    //   this.getmockCoords();
+    // },
+    /**
+     * 获取虚拟的线路标点
+     */
+    getmockCoords() {
+      if (window.localStorage.getItem("mockCoords")) {
+        let a = JSON.parse(window.localStorage.getItem("mockCoords"));
+        console.log(a);
+        let b = [];
+        for (let index = 0; index < a.length; index++) {
+          // console.log(JSON.parse(a)[index]);
+          const element = a[index];
+          let mockCoords = {
+            name: element,
+          };
+          b.push(mockCoords);
+          this.CoordData = b;
+        }
+      }
+    },
+
+    /**
+     * 当勾选了坐标点时，路径渲染路径
+     */
+    handleSelectionChange(v) {
+      if (v.length > 1) {
+        let coords = [];
+        for (let index in v) {
+          coords.push(JSON.parse(v[index].coordinate));
+        }
+        this.mockCoords = JSON.stringify(coords);
+        console.log(coords);
+        this.loadMap(coords);
+      } else {
+        this.loadMap();
+      }
+    },
+    /**
+     * 当勾选了坐标点时，路径渲染路径
+     */
+    handleSelectionChangenew(val) {
+      if (val.name) {
+        console.log(JSON.parse(val.name));
+        this.loadMap(JSON.parse(val.name));
+      }
+    },
+
+    /**
+     * 当用户点击构建，将构建的坐标路径保存到本地
+     */
+    handleMockApplyHistory() {
+      console.log(this.mockCoords);
+      this.mockCoordsnew.push(this.mockCoords);
+      localStorage.setItem("mockCoords", JSON.stringify(this.mockCoordsnew));
+      let mockCoords = JSON.parse(this.mockCoords);
+      this.loadMap(mockCoords);
+      this.getmockCoords();
+    },
+    /**
+     * 清空缓存历史
+     */
+    handleClearMockHistory() {
+      this.$confirm("是否清空？", "清空寻点历史")
+        .then(() => {
+          this.clearHistoryCoords();
+        })
+        .catch(() => {});
+    },
+    /**
+     * 清空缓存历史
+     */
+    handleClearMockHistorynew() {
+      this.$confirm("是否初始化地图坐标信息？", "初始化")
+        .then(() => {
+          // console.log(this.pointArr);
+          // console.log(this.CoordData);
+          let pathArr = [];
+          for (let index = 0; index < this.CoordData.length; index++) {
+            const element = this.CoordData[index];
+            pathArr.push(element.name);
+          }
+          let data = {
+            referenceMapCode: this.referenceMapCode,
+            pointArr: JSON.stringify(this.historyData),
+            pathArr: JSON.stringify(pathArr),
+          };
+          // console.log(data);
+          initMapPoints(data).then((res) => {
+            this.getHistoryCoords();
+            localStorage.removeItem("mockCoords");
+            let mockCoords = window.localStorage.getItem("mockCoords");
+            // console.log(mockCoords);
+            this.CoordData = mockCoords;
+          });
+        })
+        .catch(() => {});
+    },
+
+    /**
+     * 增加缓存坐标点
+     */
+    addHistoryCoords(coords) {
+      // console.log(coords);
+      // let historyCoords = this.getHistoryCoords();
+      // historyCoords.push(coords);
+      let data = {
+        x: coords[0],
+        y: coords[1],
+        name: coords[2],
+        referenceMapCode: this.referenceMapCode,
+      };
+      addTempPoint(data).then((res) => {
+        this.getHistoryCoords();
+      });
+      // localStorage.setItem("historyCoords", JSON.stringify(historyCoords));
+    },
+
+    /**
+     * 获取缓存历史标点
+     */
+    getHistoryCoords() {
+      tempPointList(this.referenceMapCode).then((res) => {
+        let historyData = [];
+        for (var key in res) {
+          let a = {
+            x: res[key].x,
+            y: res[key].y,
+            name: res[key].name,
+            coordinate: "[" + res[key].x + "," + res[key].y + "]",
+          };
+          historyData.push(a);
+        }
+        this.historyData = historyData;
+      });
+    },
+    /**
+     * 清楚缓存历史标点
+     */
+    clearHistoryCoords() {
+      clearTempPointList(this.referenceMapCode).then((res) => {
+        this.getHistoryCoords();
+      });
+    },
+    /**
+     * 清楚单个历史标点
+     */
+    deleteRow(index, value) {
+      let data = {
+        x: value[0].x,
+        y: value[0].y,
+        referenceMapCode: this.referenceMapCode,
+      };
+      deleteTempPoint(data).then((res) => {
+        this.getHistoryCoords();
+      });
+    },
+    /**
+     * 清楚单个路径标点
+     */
+    remove(index, value) {
+      let mockCoords = JSON.parse(window.localStorage.getItem("mockCoords"));
+      mockCoords.splice(index, 1);
+      console.log(mockCoords.length);
+      if (mockCoords.length === 0) {
+        this.CoordData = "";
+        localStorage.setItem("mockCoords", "");
+        this.getmockCoords();
+      } else {
+        localStorage.setItem("mockCoords", JSON.stringify(mockCoords));
+        this.getmockCoords();
+      }
+    },
+    /**
+     * 用户离开输入框时
+     */
+    destinationChange(value) {
+      // console.log(value);
+      let data = {
+        referenceMapCode: this.referenceMapCode,
+        pointFrom: "POINT20210916115143000044",
+        pointTo: "POINT20210916115143000042",
+      };
+      pathCalculation(data).then((res) => {
+        this.loadMap(res);
+      });
+    },
+    /**
+     * 用户点击公司服务类型生成二维码
+     */
+    // gridDataSelectionChangenew() {
+    //   console.log("aaaa");
+    // },
+    /**
+     * 用户预约场地
+     */
+    gridDataClick(index, value) {
+      console.log(value[index]);
+      this.dialogVisible = true;
+      let data = {
+        manager: "admin",
+        deptId: 103,
+        referenceOrganizationId: 1,
+        typeCode: value[index].typeCode,
+        typeCodeName: value[index].name,
+      };
+      generateToReservationQrc(data).then((res) => {
+        this.src = res.url;
+      });
+    },
+    /**
+     * 加载页面获取坐标路径
+     */
+    tempPathListnew() {
+      tempPathList(this.referenceMapCode).then((res) => {
+        console.log(res);
+        let a = [];
+        for (const index in res) {
+          a.push(res[index]);
+        }
+        let mockCoords = a;
+        console.log(JSON.stringify(mockCoords));
+        localStorage.setItem("mockCoords", JSON.stringify(mockCoords));
+        this.getmockCoords();
+      });
+    },
+
+    /**
+     * 当前机构定义的地图列表
+     */
+    listByCurrentOrgnew() {
+      listByCurrentOrg().then((res) => {
+        this.geographical = res;
+      });
+    },
+
+    /**
+     * 用户点击切换地图
+     */
+    geographicalCilck() {
+      for (const index in this.geographical) {
+        if (this.geographical[index].srcSuffix === this.res) {
+          this.referenceMapCode = this.geographical[index].code;
+        }
+      }
+      // 进入页面载入地图
+      this.loadMap();
+      this.tempPathListnew();
+
+      this.listByCurrentOrgnew();
+      // 加载localStorage缓存的历史记录
+      this.historyData = this.getHistoryCoords();
+    },
+  },
+  mounted() {
+    this.getmockCoords();
+    // 进入页面载入地图
+    this.loadMap();
+    this.tempPathListnew();
+    this.listByCurrentOrgnew();
+    // 加载localStorage缓存的历史记录
+    this.historyData = this.getHistoryCoords();
+  },
+};
+</script>
+
+<style scoped lang="less">
+.page-location {
+  border: 1px solid #7dd7ff;
+  border-radius: 5px;
+  width: 100%;
+  height: 100%;
+
+  .box-info {
+    height: 100%;
+    position: relative;
+
+    .box-info-bg {
+      height: 100%;
+      background-color: #535a7e;
+      opacity: 0.5;
+    }
+
+    .text-label {
+      position: absolute;
+      color: #b8d1eb;
+      left: 25px;
+      font-size: 22px;
+
+      &:nth-child(2) {
+        top: 30px;
+      }
+
+      &:nth-child(4) {
+        top: 180px;
+      }
+
+      &:nth-child(6) {
+        top: 330px;
+      }
+    }
+
+    .input-content {
+      position: absolute;
+      left: 25px;
+      width: -moz-calc(100% - 50px);
+      width: -webkit-calc(100% - 50px);
+      width: calc(100% - 50px);
+      background-color: #a6abc5;
+
+      &:nth-child(3) {
+        top: 80px;
+      }
+
+      &:nth-child(5) {
+        top: 230px;
+      }
+
+      &:nth-child(7) {
+        top: 380px;
+      }
+
+      ::v-deep .el-input__inner {
+        background-color: #a6abc5;
+        color: #1a2750;
+        font-size: 22px;
+
+        &:focus {
+          border: 1px solid #dcdfe6;
+        }
+      }
+
+      ::v-deep .el-textarea__inner {
+        background-color: #a6abc5;
+        color: #1a2750;
+        font-size: 24px;
+        font-weight: bold;
+
+        &:focus {
+          border: 1px solid #dcdfe6;
+        }
+      }
+    }
+  }
+
+  .box-map {
+    height: 100%;
+    background-color: #ffffff;
+    position: relative;
+
+    .box-map-main {
+      width: 1328px;
+      height: 900px;
+    }
+
+    .box-menu {
+      width: 64px;
+      height: 64px;
+      position: absolute;
+      right: 50px;
+      bottom: 335px;
+
+      .item-menu {
+        width: 100%;
+        height: 100%;
+
+        margin-top: 30px;
+
+        &:first-child {
+          margin-top: 0;
+        }
+
+        .btn-icon {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+
+    .box-dev-tools {
+      width: 500px;
+      position: absolute;
+      top: 30px;
+      right: -245px;
+    }
+  }
+  .el-image {
+    width: 50%;
+    margin-left: 25%;
+  }
+}
+</style>

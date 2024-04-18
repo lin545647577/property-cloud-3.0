@@ -1,0 +1,221 @@
+<template>
+  <div class="count">
+    <div class="header">
+      <img
+        :src="require('@/assets/img/wiseScreen/logo.png')"
+        alt=""
+      />物管云数据可视化分析
+    </div>
+    <div class="item-box">
+      <el-row :gutter="20">
+        <el-col :span="17">
+          <div class="grid-content">
+            <el-row :gutter="20">
+              <!--费用情况-->
+              <el-col :span="16">
+                <div class="grid-content content" style="height: 370px">
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div id="billBox" class="grid-content bill-box"></div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="grid-content">
+                        <p class="second-title">
+                          <span>回款总费用</span>
+                          <span>时间</span>
+                          <el-select v-model="selectMonth" placeholder="请选择">
+                            <el-option
+                              v-for="item in month"
+                              :key="item.value"
+                              :label="item.name"
+                              :value="item.value"
+                            >
+                            </el-option>
+                          </el-select>
+                        </p>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+              <!--工单处理情况-->
+              <el-col :span="8">
+                <div class="grid-content content"></div>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+        <el-col :span="7">
+          <div class="grid-content content">code</div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import echarts from "echarts";
+
+export default {
+  name: "count",
+  data() {
+    return {
+      selectMonth: new Date().getMonth() + 1,
+      month: [
+        {
+          name: "一月",
+          value: 1,
+        },
+        {
+          name: "一月",
+          value: 1,
+        },
+        {
+          name: "二月",
+          value: 2,
+        },
+        {
+          name: "三月",
+          value: 3,
+        },
+        {
+          name: "四月",
+          value: 4,
+        },
+        {
+          name: "五月",
+          value: 5,
+        },
+        {
+          name: "六月",
+          value: 6,
+        },
+        {
+          name: "七月",
+          value: 7,
+        },
+        {
+          name: "八月",
+          value: 8,
+        },
+        {
+          name: "九月",
+          value: 9,
+        },
+        {
+          name: "十月",
+          value: 10,
+        },
+        {
+          name: "十一月",
+          value: 11,
+        },
+        {
+          name: "十二月",
+          value: 12,
+        },
+      ],
+    };
+  },
+  methods: {
+    initBill(id) {
+      let option = {
+        title: {
+          text: "费用情况",
+          left: "0",
+          top: "0",
+          textStyle: {
+            fontSize: 30,
+          },
+        },
+        xAxis: {
+          type: "category",
+          data: ["第一周", "第二周", "第三周", "第四周"],
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            data: [820, 932, 9001, 934, 1290, 1330, 1320],
+            type: "line",
+            smooth: true,
+          },
+        ],
+      };
+
+      echarts.init(document.getElementById(id)).setOption(option);
+    },
+  },
+  mounted() {
+    this.initBill("billBox");
+  },
+};
+</script>
+
+<style scoped lang="less">
+.count {
+  font-family: PingFang;
+  width: 1920px;
+  height: 1080px;
+  background-color: #f5f9fc;
+
+  .header {
+    background-color: #ffffff;
+    width: 100%;
+    height: 120px;
+    text-align: center;
+    font-size: 36px;
+    line-height: 120px;
+    position: relative;
+  }
+
+  img {
+    position: absolute;
+    left: 40px;
+    top: 30px;
+  }
+
+  .item-box {
+    width: 90%;
+    margin: 40px auto;
+
+    .content {
+      position: relative;
+      background-color: #ffffff;
+      padding: 30px;
+
+      .bill-box {
+        width: 100%;
+        height: 390px;
+      }
+
+      .second-title {
+        text-align: right;
+        color: #989eb2;
+        font-size: 14px;
+
+        span {
+          margin-right: 20px;
+        }
+
+        /deep/ .el-select {
+          width: 75px;
+        }
+
+        /deep/ .el-input__inner {
+          border-radius: 20px;
+          background-color: #e5edff;
+          color: #989eb2;
+          height: 30px;
+          line-height: 30px;
+        }
+
+        /deep/ .el-input__icon {
+          line-height: 30px;
+        }
+      }
+    }
+  }
+}
+</style>

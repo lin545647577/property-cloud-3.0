@@ -1,0 +1,175 @@
+<template>
+  <el-card
+    class="box-card card-box"
+    v-loading="loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+    element-loading-spinner="2"
+    v-if="particulars"
+  >
+    <div class="text item" v-if="data">
+      <div class="header-title">
+        <img :src="pointImg" fit="fill" />
+        园区介绍
+      </div>
+      <div class="building-box">
+        <el-image
+          v-if="data.introduceImage"
+          style="width: 100%; height: 100%"
+          :src="data.introduceImage"
+        ></el-image>
+        <el-image
+          v-else
+          style="width: 100%; height: 100%"
+          :src="require('@/assets/img/wiseScreen/2.0/building.png')"
+        ></el-image>
+        <p class="name ellipsis">{{ data.name }}</p>
+        <div class="content">
+          <el-row>
+            <el-col :span="4"><div class="grid-content">电话：</div></el-col>
+            <el-col :span="20"
+              ><div class="grid-content">
+                {{ data.phone ? data.phone : "该项信息暂缺" }}
+              </div></el-col
+            >
+          </el-row>
+          <el-row>
+            <el-col :span="4"><div class="grid-content">地址：</div></el-col>
+            <el-col :span="20"
+              ><div class="grid-content ellipsis">
+                {{ data.address ? data.address : "该项信息暂缺" }}
+              </div></el-col
+            >
+          </el-row>
+          <el-row>
+            <el-col :span="4"><div class="grid-content">标签：</div></el-col>
+            <el-col :span="20"
+              ><div class="grid-content">
+                {{ findType(data.businessType) }}
+              </div></el-col
+            >
+          </el-row>
+          <el-row>
+            <el-col :span="24"><div class="grid-content">简介：</div></el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24"
+              ><div class="grid-content">
+                <div class="introduce-box" v-html="data.profile"></div></div
+            ></el-col>
+          </el-row>
+        </div>
+      </div>
+    </div>
+
+    <el-card class="box-card qr-box" v-if="loading">
+      <div class="text item">
+        <i
+          class="el-icon-circle-close"
+          style="font-size: 40px; margin-left: 90%; margin-bottom: 5%"
+          @click="loading = false"
+        ></i>
+        <img :src="url" alt="" />
+        <p>手机扫码</p>
+      </div>
+    </el-card>
+  </el-card>
+</template>
+
+<script>
+import { queryCompany, queryCompanyType } from "@/api/property.js";
+export default {
+  name: "sideCard",
+  props: {
+    loading: {
+      type: Boolean,
+    },
+    id: {
+      type: String,
+    },
+    url: {
+      type: String,
+    },
+    particulars: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      data: null,
+      type: [],
+    };
+  },
+  methods: {
+    findType(val) {
+      let res = this.type.find((item) => {
+        if (item.dictValue === val) {
+          return item;
+        }
+      });
+      return res ? res.dictLabel : "该项信息暂缺";
+    },
+    initType() {
+      queryCompanyType().then((res) => {
+        this.type = res;
+        this.initData(this.id ? this.id : "");
+      });
+    },
+    initData(id) {
+      queryCompany(id).then((res) => {
+        this.data = res;
+      });
+    },
+  },
+  mounted() {
+    this.initType();
+  },
+};
+</script>
+
+<style scoped>
+.card-box {
+  height: calc(100vh - 2px);
+  position: relative;
+  z-index: 100;
+}
+
+.card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+.card-box .header-title * {
+  vertical-align: middle;
+}
+.card-box .building-box {
+  font-size: 18px;
+  color: #989eb2;
+}
+.card-box .building-box .name {
+  font-size: 22px;
+  color: #000000;
+  margin: 20px 0;
+}
+
+.card-box .building-box .introduce-box {
+  overflow: hidden;
+  height: 445px;
+}
+
+.card-box .qr-box {
+  position: absolute;
+  bottom: 10%;
+  background-color: #1993fc;
+  width: 90%;
+  z-index: 9999;
+  border: none;
+  color: #e5edff;
+  font-size: 26px;
+  text-align: center;
+}
+.card-box .qr-box img {
+  width: 100%;
+  height: 100%;
+}
+</style>

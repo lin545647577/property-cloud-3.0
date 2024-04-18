@@ -1,0 +1,165 @@
+<template>
+  <div class="common-box">
+    <!--    头部-->
+    <el-row type="flex" class="row-bg" align="middle">
+      <el-col :span="8">
+        <div class="grid-content">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />楼层索引
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <el-input
+            placeholder="请输入您要搜索的问题"
+            prefix-icon="el-icon-search"
+            style="width: 100%; border-radius: 10px"
+            v-model="searchValue"
+          >
+          </el-input>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <weather></weather>
+        </div>
+      </el-col>
+    </el-row>
+    <!--    内容-->
+    <div class="content-box">
+      <el-tabs
+        v-model="activeName"
+        @tab-click="handleClick"
+        style="margin-top: 2.5%; font-size: 24px"
+      >
+        <el-tab-pane label="A1座" name="first"></el-tab-pane>
+        <el-tab-pane label="A2座" name="second"></el-tab-pane>
+        <el-tab-pane label="A3座" name="third"></el-tab-pane>
+        <el-tab-pane label="A4座" name="fourth"></el-tab-pane>
+      </el-tabs>
+      <div class="building-content">
+        <div class="building-box">
+          <p class="floor">1F</p>
+          <el-row type="flex" class="row-bg" :gutter="50">
+            <el-col :span="8"
+              ><div class="grid-content ellipsis">
+                广东腾宇光讯网络科技有限公司广东腾宇光讯网络科技有限公司
+              </div></el-col
+            >
+            <el-col :span="8"
+              ><div class="grid-content ellipsis">
+                广东腾宇光讯网络科技有限公司
+              </div></el-col
+            >
+            <el-col :span="8"
+              ><div class="grid-content ellipsis">
+                广东腾宇光讯网络科技有限公司
+              </div></el-col
+            >
+          </el-row>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryBuildingListBywiseScreen } from "@/api/property.js";
+import weather from "@/components/wiseScreen/weather";
+
+export default {
+  name: "building",
+  components: {
+    weather,
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+      buildingList: [],
+      floorList: [],
+      activeName: "second",
+    };
+  },
+  methods: {
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
+    // 初始化楼宇
+    queryBuildingList() {
+      queryBuildingListBywiseScreen("building").then((res) => {
+        // console.log(res);
+        this.buildingList = res.rows;
+      });
+    },
+    // 初始化楼层
+    queryFloorList(id) {
+      queryBuildingListBywiseScreen("floor").then((res) => {
+        this.floorList = res.rows;
+      });
+    },
+  },
+  mounted() {
+    this.queryBuildingList();
+  },
+};
+</script>
+
+<style scoped>
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+}
+.common-box {
+  padding: 3% 4% 0 4%;
+  max-height: 1080px;
+  width: auto;
+}
+
+.common-box .header {
+  font-size: 36px;
+}
+
+.common-box .content-box {
+  font-size: 24px;
+  padding: 0;
+  color: #343f5e;
+}
+
+.common-box .content-box .building-content {
+  height: 79vh;
+  overflow: auto;
+}
+
+/* 设置滚动条的样式 */
+.common-box .content-box .building-content::-webkit-scrollbar {
+  width: 0px;
+  /*width: 15px;*/
+  background-color: #ecf5ff;
+  border-radius: 10px;
+}
+
+/* 滚动条滑块 */
+.common-box .content-box .building-content::-webkit-scrollbar-thumb {
+  background-color: #409eff;
+  border-radius: 10px;
+}
+
+.common-box .content-box .building-box {
+  margin: 2.5% 0;
+}
+
+.common-box .content-box /deep/ .el-tabs__item {
+  font-size: 24px;
+  height: 50px;
+  color: #989eb2;
+}
+
+.common-box .content-box /deep/ .el-tabs__item.is-active {
+  color: inherit;
+}
+
+.common-box .content-box .building-box .floor {
+  margin: 2.5% 0;
+}
+</style>

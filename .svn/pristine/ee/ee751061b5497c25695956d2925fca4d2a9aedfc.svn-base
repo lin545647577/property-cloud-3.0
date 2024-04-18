@@ -1,0 +1,1625 @@
+<template>
+  <div class="count">
+    <div class="header">
+      <img
+        :src="require('@/assets/img/wiseScreen/logo.png')"
+        alt=""
+      />物管云数据可视化分析
+    </div>
+    <div class="item-box">
+      <el-row :gutter="20">
+        <el-col :span="17">
+          <div class="grid-content">
+            <el-row :gutter="20">
+              <!--费用情况-->
+              <el-col :span="16">
+                <div class="grid-content content" style="height: 370px">
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <p class="first-title">费用情况</p>
+                      <div
+                        id="billBox"
+                        class="grid-content bill-box"
+                        @click="
+                          toPage('http://192.168.66.101:5031/#/bill?type=4')
+                        "
+                      ></div>
+                    </el-col>
+                    <el-col :span="12" v-if="billData">
+                      <div class="grid-content">
+                        <p class="second-title">
+                          <span><span class="square"></span>回款总费用</span>
+                          <span><span class="circle"></span>时间</span>
+                          <el-date-picker
+                            v-model="billMonth"
+                            @change="queryBillCount"
+                            type="month"
+                            value-format="yyyy-MM"
+                            placeholder="选择月"
+                          >
+                          </el-date-picker>
+                        </p>
+                        <el-row
+                          style="
+                            text-align: center;
+                            font-size: 18px;
+                            color: #989eb2;
+                          "
+                          @click.native="
+                            toPage('http://192.168.66.101:5031/#/bill?type=4')
+                          "
+                        >
+                          <el-col :span="12">
+                            <div class="grid-content">
+                              <p class="big-money">
+                                {{
+                                  billData.totalAmount
+                                    ? billData.totalAmount
+                                    : 0
+                                }}
+                              </p>
+                              <p>总费用</p>
+                            </div>
+                          </el-col>
+                          <el-col :span="12">
+                            <div class="grid-content">
+                              <p class="big-money">
+                                {{
+                                  billData.collectAmount
+                                    ? billData.collectAmount
+                                    : 0
+                                }}
+                              </p>
+                              <p>已回款</p>
+                            </div>
+                          </el-col>
+                        </el-row>
+
+                        <el-row
+                          @click.native="
+                            toPage('http://192.168.66.101:5031/#/bill?type=4')
+                          "
+                          style="color: #989eb2; margin-top: 50px"
+                        >
+                          <el-col :span="24">
+                            <div class="grid-content">
+                              <div
+                                class="type-box"
+                                style="
+                                  border-bottom: 1px solid #bec4d3;
+                                  padding-bottom: 20px;
+                                "
+                              >
+                                <p
+                                  style="
+                                    line-height: 35px;
+                                    color: #3480f7;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  {{
+                                    billData.payTypeTotalAmountList[0]
+                                      ? billData.payTypeTotalAmountList[0]
+                                      : 0
+                                  }}元
+                                </p>
+                                <p>小程序</p>
+                              </div>
+                              <div
+                                class="type-box"
+                                style="
+                                  border-left: 1px solid #bec4d3;
+                                  border-bottom: 1px solid #bec4d3;
+                                  padding-bottom: 20px;
+                                "
+                              >
+                                <p
+                                  style="
+                                    color: #43c492;
+                                    line-height: 35px;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  {{
+                                    billData.payTypeTotalAmountList[1]
+                                      ? billData.payTypeTotalAmountList[1]
+                                      : 0
+                                  }}元
+                                </p>
+                                <p>扫码</p>
+                              </div>
+                              <div
+                                class="type-box"
+                                style="
+                                  padding-top: 20px;
+                                  border-right: 1px solid #bec4d3;
+                                "
+                              >
+                                <p
+                                  style="
+                                    color: #e89b3f;
+                                    line-height: 35px;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  {{
+                                    billData.payTypeTotalAmountList[2]
+                                      ? billData.payTypeTotalAmountList[2]
+                                      : 0
+                                  }}元
+                                </p>
+                                <p>银行代扣</p>
+                              </div>
+                              <div class="type-box" style="padding-top: 20px">
+                                <p
+                                  style="
+                                    color: #f77a55;
+                                    line-height: 35px;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  {{
+                                    billData.payTypeTotalAmountList[3]
+                                      ? billData.payTypeTotalAmountList[3]
+                                      : 0
+                                  }}元
+                                </p>
+                                <p>现金</p>
+                              </div>
+                            </div>
+                          </el-col>
+                        </el-row>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+              <!--工单处理情况-->
+              <el-col :span="8">
+                <div class="grid-content content" style="height: 370px">
+                  <p class="first-title">工单处理情况</p>
+                  <div
+                    id="projectBox"
+                    style="height: 350px; width: 100%"
+                    @click="
+                      toPage('http://192.168.66.101:5031/#/project?type=2')
+                    "
+                  ></div>
+                  <div
+                    class="float-box"
+                    style="left: 44%; top: 47%; color: #3480f7"
+                    v-if="projectData"
+                    @click="
+                      toPage('http://192.168.66.101:5031/#/project?type=2')
+                    "
+                  >
+                    <p class="float-num">
+                      {{
+                        projectData.monthProjectHandlePercent
+                          ? projectData.monthProjectHandlePercent
+                          : "0%"
+                      }}
+                    </p>
+                    <p class="float-title">及时完成</p>
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <!--人脸信息系统-->
+              <el-col :span="8">
+                <div
+                  class="grid-content content"
+                  style="
+                    height: 370px;
+                    background-color: initial;
+                    padding: 30px 0;
+                  "
+                >
+                  <el-row>
+                    <el-col :span="24" style="position: relative">
+                      <p class="first-title">
+                        人脸信息系统
+                        <el-date-picker
+                          v-model="faceMonth"
+                          type="month"
+                          @change="queryFace"
+                          value-format="yyyy-MM"
+                          placeholder="选择月"
+                        >
+                        </el-date-picker>
+                      </p>
+                      <div class="triangle-up"></div>
+                      <div class="face-box" v-if="faceData">
+                        <p>
+                          人脸识别总次数：<span
+                            class="size36"
+                            style="color: #6ad7b0"
+                            >{{
+                              faceData.monthFaceTotal
+                                ? faceData.monthFaceTotal
+                                : 0
+                            }}</span
+                          >次
+                        </p>
+                        <el-row style="margin: 35px 0">
+                          <el-col :span="20">
+                            <div class="grid-content" style="overflow: hidden">
+                              <div
+                                class="swiper mySwiper"
+                                v-if="faceData && faceData.monthFaceFaceList"
+                              >
+                                <div class="swiper-wrapper">
+                                  <div
+                                    class="swiper-slide"
+                                    v-for="url in faceData.monthFaceFaceList"
+                                    :key="url"
+                                  >
+                                    <el-avatar :size="66" :src="url">
+                                    </el-avatar>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </el-col>
+                          <el-col :span="4">
+                            <div class="grid-content">
+                              <el-avatar
+                                :size="66"
+                                v-if="
+                                  faceData && faceData.monthFaceFaceList > 4
+                                "
+                              >
+                                <span style="font-size: 22px">{{
+                                  faceData.monthFaceTotal
+                                }}</span>
+                              </el-avatar>
+                            </div>
+                          </el-col>
+                        </el-row>
+
+                        <el-row :gutter="20">
+                          <el-col :span="12">
+                            <div
+                              class="grid-content"
+                              style="text-align: center"
+                            >
+                              <p class="size36">
+                                {{
+                                  faceData.monthFaceMember
+                                    ? faceData.monthFaceMember
+                                    : 0
+                                }}
+                              </p>
+                              <p>社区住户识别次数</p>
+                            </div>
+                          </el-col>
+                          <el-col :span="12">
+                            <div
+                              class="grid-content"
+                              style="text-align: center"
+                            >
+                              <p class="size36">
+                                {{
+                                  faceData.monthFaceStranger
+                                    ? faceData.monthFaceStranger
+                                    : 0
+                                }}
+                              </p>
+                              <p>陌生到访识别次数</p>
+                            </div>
+                          </el-col>
+                        </el-row>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+
+              <!--费用对比及回款情况-->
+              <el-col :span="8">
+                <div class="grid-content content" style="height: 370px">
+                  <el-row>
+                    <el-col :span="24">
+                      <p class="first-title">
+                        费用对比及回款情况
+                        <el-date-picker
+                          v-model="shareMonth"
+                          type="month"
+                          @change="queryShareBillData"
+                          value-format="yyyy-MM"
+                          placeholder="选择月"
+                        >
+                        </el-date-picker>
+                      </p>
+                      <div
+                        style="font-size: 14px; margin-top: 20px"
+                        v-if="shareData"
+                      >
+                        <el-row>
+                          <el-col :span="shareData.totalPercentage1[0]">
+                            <div
+                              class="grid-content per-box"
+                              style="
+                                background-color: #009eff;
+                                border-top-left-radius: 10px;
+                                border-bottom-left-radius: 10px;
+                              "
+                            ></div>
+                          </el-col>
+                          <el-col :span="shareData.totalPercentage1[1]">
+                            <div
+                              class="grid-content per-box"
+                              style="background-color: #6ad7b0"
+                            ></div>
+                          </el-col>
+                          <el-col :span="shareData.totalPercentage1[2]">
+                            <div
+                              class="grid-content per-box"
+                              style="background-color: #f9bd65"
+                            ></div>
+                          </el-col>
+                          <el-col :span="shareData.totalPercentage1[3]">
+                            <div
+                              class="grid-content per-box"
+                              style="
+                                background-color: #f77a55;
+                                border-top-right-radius: 10px;
+                                border-bottom-right-radius: 10px;
+                              "
+                            ></div>
+                          </el-col>
+                        </el-row>
+
+                        <el-row :gutter="20">
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #009eff"
+                            ></div>
+                            住宅管理费{{
+                              (shareData.totalPercentage[0] * 100).toFixed(2)
+                            }}%
+                            <div class="grid-content"></div>
+                          </el-col>
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #6ad7b0"
+                            ></div>
+                            住宅公摊费{{
+                              (shareData.totalPercentage[1] * 100).toFixed(2)
+                            }}%
+                            <div class="grid-content"></div>
+                          </el-col>
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #f9bd65"
+                            ></div>
+                            车位管理费{{
+                              (shareData.totalPercentage[2] * 100).toFixed(2)
+                            }}%
+                            <div class="grid-content"></div>
+                          </el-col>
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #f77a55"
+                            ></div>
+                            车位公摊费{{
+                              (shareData.totalPercentage[3] * 100).toFixed(2)
+                            }}%
+                            <div class="grid-content"></div>
+                          </el-col>
+                        </el-row>
+                      </div>
+                      <div
+                        class="progress-box"
+                        @click="
+                          toPage('http://192.168.66.101:5031/#/bill?type=4')
+                        "
+                        v-if="shareData"
+                      >
+                        <p>
+                          住宅管理费
+                          <span>
+                            {{
+                              shareData.eachPercentage[0].collection +
+                              "/" +
+                              shareData.eachPercentage[0].total
+                            }}
+                          </span>
+                        </p>
+                        <el-progress
+                          :percentage="
+                            shareData.eachPercentage[0].total
+                              ? (shareData.eachPercentage[0].collection /
+                                  shareData.eachPercentage[0].total) *
+                                100
+                              : 0
+                          "
+                          color="#409eff"
+                        ></el-progress>
+                      </div>
+                      <div></div>
+                      <div
+                        class="progress-box"
+                        v-if="shareData"
+                        @click="
+                          toPage('http://192.168.66.101:5031/#/bill?type=4')
+                        "
+                      >
+                        <p>
+                          住宅公摊费
+                          <span>{{
+                            shareData.eachPercentage[1].collection +
+                            "/" +
+                            shareData.eachPercentage[1].total
+                          }}</span>
+                        </p>
+                        <el-progress
+                          :percentage="
+                            shareData.eachPercentage[1].total
+                              ? (shareData.eachPercentage[1].collection /
+                                  shareData.eachPercentage[1].total) *
+                                100
+                              : 0
+                          "
+                          color="#6AD7B0"
+                        ></el-progress>
+                      </div>
+                      <div
+                        class="progress-box"
+                        v-if="shareData"
+                        @click="
+                          toPage('http://192.168.66.101:5031/#/bill?type=4')
+                        "
+                      >
+                        <p>
+                          车位管理费
+                          <span>{{
+                            shareData.eachPercentage[2].collection +
+                            "/" +
+                            shareData.eachPercentage[2].total
+                          }}</span>
+                        </p>
+                        <el-progress
+                          :percentage="
+                            shareData.eachPercentage[2].total
+                              ? (shareData.eachPercentage[2].collection /
+                                  shareData.eachPercentage[2].total) *
+                                100
+                              : 0
+                          "
+                          color="#F9BD65"
+                        ></el-progress>
+                      </div>
+                      <div
+                        class="progress-box"
+                        v-if="shareData"
+                        @click="
+                          toPage('http://192.168.66.101:5031/#/bill?type=4')
+                        "
+                      >
+                        <p>
+                          车位公摊费
+                          <span>{{
+                            shareData.eachPercentage[3].collection +
+                            "/" +
+                            shareData.eachPercentage[3].total
+                          }}</span>
+                        </p>
+                        <el-progress
+                          :percentage="
+                            shareData.eachPercentage[3].total
+                              ? (shareData.eachPercentage[3].collection /
+                                  shareData.eachPercentage[3].total) *
+                                100
+                              : 0
+                          "
+                          color="#F77A55"
+                        ></el-progress>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+              <!--物业品质控制-->
+              <el-col :span="8">
+                <div class="grid-content content" style="height: 370px">
+                  <p class="first-title">物业品质控制</p>
+                  <div
+                    style="height: 360px; width: 100%"
+                    id="qualityBox"
+                    @click="toPage('/taskProcess/instance')"
+                  ></div>
+                  <div
+                    class="float-box"
+                    style="left: 41%; top: 47%; color: #6ad7b0"
+                    v-if="qualityData"
+                    @click="toPage('/taskProcess/instance')"
+                  >
+                    <p class="float-num">
+                      {{
+                        qualityData.percentage
+                          ? qualityData.percentage * 100 + "%"
+                          : "0%"
+                      }}
+                    </p>
+                    <p class="float-title">及时完成</p>
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+        <el-col :span="7">
+          <div class="grid-content content" style="padding: 30px 30px 0 30px">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content" style="height: 485px">
+                  <div style="width: 100%; height: 277px; position: relative">
+                    <iframe
+                      src="http://ha.tank-light.com/ehome/iframe.html"
+                      class="device"
+                      frameborder="0"
+                      scrolling="no"
+                    ></iframe>
+                    <div class="float-title-box" @click="toPage('/monitors')">
+                      <div class="circle" style="background-color: red"></div>
+                      更多
+                    </div>
+                  </div>
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div
+                        class="grid-content"
+                        @click="
+                          toPage(
+                            'http://192.168.66.101:5031/#/baseSetting?type=10'
+                          )
+                        "
+                      >
+                        <div
+                          id="rentProperty"
+                          style="width: 100%; height: 238px"
+                        ></div>
+                        <div
+                          class="float-box"
+                          style="left: 16%; top: 35%; color: #6ad7b0"
+                          v-if="rendData"
+                        >
+                          <p class="float-num">
+                            {{
+                              rendData.monthHouseSellPercent
+                                ? rendData.monthHouseSellPercent
+                                : "0%"
+                            }}
+                          </p>
+                          <p class="float-title">已售/已租物业</p>
+                        </div>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div
+                        class="grid-content"
+                        @click="
+                          toPage(
+                            'http://192.168.66.101:5031/#/baseSetting?type=10'
+                          )
+                        "
+                      >
+                        <div
+                          id="rentParking"
+                          style="width: 100%; height: 238px"
+                        ></div>
+                        <div
+                          class="float-box"
+                          style="left: 66%; top: 35%; color: #3480f7"
+                          v-if="rendData"
+                        >
+                          <p class="float-num">
+                            {{
+                              rendData.monthParkingSellPercent
+                                ? rendData.monthParkingSellPercent
+                                : "0%"
+                            }}
+                          </p>
+                          <p class="float-title">已售/已租车位</p>
+                        </div>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+          <div class="grid-content content" style="margin-top: 20px">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content" style="height: 121px">
+                  <p class="first-title">
+                    物业接待情况
+                    <el-date-picker
+                      v-model="peceptionMonth"
+                      type="month"
+                      value-format="yyyy-MM"
+                      @change="queryPeception"
+                      placeholder="选择月"
+                    >
+                    </el-date-picker>
+                  </p>
+                  <el-row
+                    style="margin-top: 30px"
+                    v-if="peceptionData"
+                    @click.native="
+                      toPage('http://192.168.66.101:5031/#/project?type=1')
+                    "
+                  >
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        接待次数
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        {{
+                          peceptionData.monthProjectTotal
+                            ? peceptionData.monthProjectTotal
+                            : "0"
+                        }}
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        及时完成数量
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        {{
+                          peceptionData.monthProjectHandle
+                            ? peceptionData.monthProjectHandle
+                            : "0"
+                        }}
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+            </el-row>
+            <el-row style="margin-top: 10px">
+              <el-col :span="24">
+                <div
+                  class="grid-content"
+                  style="height: 101px; margin-top: 20px"
+                >
+                  <p class="first-title">
+                    业主/小程序使用情况
+                    <el-date-picker
+                      v-model="appMonth"
+                      @change="queryMini"
+                      type="month"
+                      value-format="yyyy-MM"
+                      placeholder="选择月"
+                    >
+                    </el-date-picker>
+                  </p>
+                  <el-row
+                    style="margin-top: 30px"
+                    v-if="appData"
+                    @click.native="
+                      toPage('http://192.168.66.101:5031/#/wx?type=2')
+                    "
+                  >
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        总使用人次
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        {{
+                          appData.yearMiniAppUsed
+                            ? appData.yearMiniAppUsed
+                            : "0"
+                        }}
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        本月使用人次
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        {{
+                          appData.monthMiniAppUsed
+                            ? appData.monthMiniAppUsed
+                            : "0"
+                        }}
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import echarts from "echarts";
+import Swiper from "swiper";
+import "swiper/swiper-bundle.min.css";
+
+import {
+  queryBill,
+  queryCount,
+  queryQuality,
+  queryShareBill,
+} from "@/api/count";
+import { dateFormat } from "@/utils/util";
+
+export default {
+  name: "count",
+  data() {
+    return {
+      imgList: [
+        "http://testwx.tank-light.com/profile/upload/2021/10/24/2021_10_24_19_15_20_467d7b16-a2c5-4e42-aacc-f44e1d9e57d8.jpg",
+        "http://testwx.tank-light.com/profile/upload/2021/10/24/2021_10_24_18_36_15_821d6b6f-69fa-48d9-9b2a-e7b8c6ba307b.jpg",
+        "http://testwx.tank-light.com/profile/upload/2021/10/24/2021_10_24_18_34_29_cb27b9dc-ddc3-4f1b-b214-e2e46de89144.jpg",
+        "http://testwx.tank-light.com/profile/upload/2021/10/24/2021_10_24_09_55_46_80222bcc-d4e9-4de1-82d0-c7c8f6215706.jpg",
+      ],
+      selectMonth: new Date(),
+      month: dateFormat("yyyy-MM", new Date()),
+      billMonth: dateFormat("yyyy-MM", new Date()),
+      billData: null,
+      rendData: null,
+      faceMonth: dateFormat("yyyy-MM", new Date()),
+      faceData: null,
+      appMonth: dateFormat("yyyy-MM", new Date()),
+      appData: null,
+      peceptionMonth: dateFormat("yyyy-MM", new Date()),
+      peceptionData: null,
+      projectMonth: dateFormat("yyyy-MM", new Date()),
+      projectData: null,
+      qualityData: null,
+      shareData: null,
+      shareMonth: dateFormat("yyyy-MM", new Date()),
+      visible: true,
+    };
+  },
+  methods: {
+    // 2.0页面
+    toPage(url) {
+      window.open(url, "_blank");
+    },
+    queryShareBillData(month) {
+      queryShareBill({ month: month }).then((res) => {
+        this.shareData = res.data.data;
+        // console.log(res);
+        this.shareData.totalPercentage1 = [0, 0, 0, 0];
+        for (let i in this.shareData.totalPercentage) {
+          if (this.shareData.totalPercentage[i]) {
+            // console.log(this.shareData.totalPercentage[i] * 24);
+            this.shareData.totalPercentage1[i] = Math.ceil(
+              this.shareData.totalPercentage[i] * 24
+            );
+          } else {
+            this.shareData.totalPercentage1[i] = 1;
+          }
+        }
+        // console.log(this.shareData);
+        for (let i in this.shareData.totalPercentage1) {
+          if (this.shareData.totalPercentage1[i] === 1) {
+            for (let a in this.shareData.totalPercentage1)
+              if (this.shareData.totalPercentage1[a] > 12) {
+                this.shareData.totalPercentage1[a]--;
+                break;
+              }
+          }
+        }
+
+        // console.log("费用对比", this.shareData);
+      });
+    },
+    // 查询品控
+    queryQuality() {
+      queryQuality({}).then((res) => {
+        // console.log("品控", res);
+        this.qualityData = res;
+        this.initQuality("qualityBox");
+      });
+    },
+    /**
+     * 获取费用情况数据
+     * @param {date} month 月份
+     */
+    queryBillCount(month) {
+      queryBill({ month: month }).then((res) => {
+        // console.log("费用", res);
+        this.billData = res.data.data;
+        this.initBill("billBox");
+      });
+    },
+
+    // 查询租售数据
+    queryRentCount() {
+      queryCount({ type: "PARK_AND_HOUSE" })
+        .then((res) => {
+          // console.log(res);
+          this.rendData = res.data.data;
+          this.initRentProperty("rentProperty");
+          this.initRentParking("rentParking");
+        })
+        .catch((error) => {
+          this.$message({
+            message: error.data.msg,
+            center: true,
+            type: "error",
+          });
+        });
+    },
+    // 查询人脸
+    queryFace(month) {
+      queryCount({
+        date: month,
+        type: "FACE",
+      })
+        .then((res) => {
+          this.faceData = res.data.data;
+          this.faceData.monthFaceFaceList =
+            this.faceData.monthFaceFaceList.split(",");
+          console.log("人脸相片", this.faceData.monthFaceFaceList);
+
+          // console.log("人脸", this.faceData);
+        })
+        .catch((error) => {
+          this.$message({
+            message: error.data.msg,
+            center: true,
+            type: "error",
+          });
+        });
+    },
+    // 查询业主/小程序使用数据
+    queryMini(month) {
+      queryCount({
+        date: month,
+        type: "MINI_APP",
+      })
+        .then((res) => {
+          this.appData = res.data.data;
+          // console.log(this.appData);
+        })
+        .catch((error) => {
+          this.$message({
+            message: error.data.msg,
+            center: true,
+            type: "error",
+          });
+        });
+    },
+    // 查询物业接待数据
+    queryPeception(month) {
+      queryCount({
+        date: month,
+        type: "RECEPTION",
+      })
+        .then((res) => {
+          this.peceptionData = res.data.data;
+          // console.log("物业接待", res);
+        })
+        .catch((error) => {
+          this.$message({
+            message: error.data.msg,
+            center: true,
+            type: "error",
+          });
+        });
+    },
+    // 工单处理
+    queryProject() {
+      queryCount({
+        type: "PROJECT",
+      })
+        .then((res) => {
+          // console.log("工单处理", res);
+          this.projectData = res.data.data;
+          this.initProject("projectBox");
+        })
+        .catch((error) => {
+          this.$message({
+            message: error.data.msg,
+            center: true,
+            type: "error",
+          });
+        });
+    },
+
+    // 初始化费用情况折线图
+    initBill(id) {
+      let option = {
+        title: {
+          text: "已回款（元）",
+          left: "30",
+          top: "0",
+          textStyle: {
+            fontSize: 14,
+            color: "#989EB2",
+          },
+          subtext: "¥" + this.billData.collectAmount,
+          subtextStyle: {
+            color: "#000000",
+            fontSize: "20",
+          },
+        },
+        xAxis: {
+          name: "时间",
+          type: "category",
+          data: this.billData.weeks.data,
+          axisLine: {
+            lineStyle: {
+              color: "#989EB2",
+            },
+          },
+        },
+        yAxis: {
+          // name: "回款总费用",
+          type: "value",
+          axisLine: {
+            lineStyle: {
+              color: "#989EB2",
+            },
+          },
+        },
+        series: [
+          {
+            data: this.billData.series.data,
+            type: "line",
+            smooth: true,
+            lineStyle: {
+              color: "#707070",
+            },
+            label: {
+              // show: true,
+              position: "top",
+              color: "#3D53FB",
+
+              textStyle: {
+                fontSize: 20,
+              },
+            },
+            emphasis: {
+              label: {
+                show: true,
+                borderWidth: "200",
+                borderType: "solid",
+                backgroundColor: "#ffffff",
+                padding: 20,
+                // shadowColor: "#000000",
+                // shadowOffsetX: 5,
+                // shadowOffsetY: 5,
+              },
+            },
+          },
+        ],
+      };
+
+      echarts.init(document.getElementById(id)).setOption(option);
+    },
+    // 初始化工单处理情况,
+    initProject(id) {
+      let option = {
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b} : {c} ({d}%)",
+        },
+
+        legend: {
+          // 脚部分类
+          icon: "circle",
+          bottom: 10,
+          left: "center",
+          data: ["未处理工单", "已处理工单"],
+        },
+        series: [
+          {
+            name: "数据来源",
+            type: "pie",
+            color: ["#F6FBFF"],
+            silent: true, //饼图不响应鼠标事件
+            radius: ["50%", "70%"],
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              {
+                value: 1500,
+                name: "背景",
+              },
+            ],
+          },
+          {
+            name: "数据",
+            type: "pie",
+            color: ["#E2EEFE", "#3480F7"],
+            // 设置值域的标签
+            label: {
+              normal: {
+                position: "outer", // 设置标签位置，默认在饼状图外 可选值：'outer' ¦ 'inner（饼状图上）'
+                // formatter: '{a} {b} : {c}个 ({d}%)'   设置标签显示内容 ，默认显示{b}
+                // {a}指series.name  {b}指series.data的name
+                // {c}指series.data的value  {d}%指这一部分占总数的百分比
+                formatter: "{b}",
+              },
+            },
+            labelLine: {
+              length: 10,
+            },
+            // silent: true, //饼图不响应鼠标事件
+            radius: ["45%", "50%"],
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              {
+                value:
+                  this.projectData.monthProjectTotal -
+                  this.projectData.monthProjectHandle,
+                name: "未处理工单",
+                emphasis: {
+                  itemStyle: {
+                    color: "#E2EEFE",
+                  },
+                },
+              }, //选中（放大）某一数据
+              {
+                value: this.projectData.monthProjectHandle,
+                name: "已处理工单",
+                emphasis: {
+                  itemStyle: {
+                    color: "#3480F7",
+                  },
+                },
+              },
+            ],
+            emphasis: {
+              scale: true,
+              scaleSize: 20,
+            },
+          },
+        ],
+      };
+      var temp = echarts.init(document.getElementById(id));
+      temp.setOption(option);
+      temp.dispatchAction({
+        type: "highlight",
+        seriesIndex: 1,
+        name: "已处理工单",
+      });
+    },
+    // 初始化品控
+    initQuality(id) {
+      let option = {
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b} : {c} ({d}%)",
+        },
+
+        legend: {
+          // 脚部分类
+          icon: "circle",
+          bottom: 10,
+          left: "center",
+          data: ["已下达任务", "已完成任务"],
+        },
+        series: [
+          {
+            name: "数据来源",
+            type: "pie",
+            color: ["#F6FBFF"],
+            silent: true, //饼图不响应鼠标事件
+            radius: ["50%", "70%"],
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              {
+                value: 1500,
+                name: "背景",
+              },
+            ],
+          },
+          {
+            name: "数据",
+            type: "pie",
+            color: ["#E2EEFE", "#6AD7B0"],
+            // 设置值域的标签
+            label: {
+              normal: {
+                position: "outer", // 设置标签位置，默认在饼状图外 可选值：'outer' ¦ 'inner（饼状图上）'
+                // formatter: '{a} {b} : {c}个 ({d}%)'   设置标签显示内容 ，默认显示{b}
+                // {a}指series.name  {b}指series.data的name
+                // {c}指series.data的value  {d}%指这一部分占总数的百分比
+                formatter: "{b}",
+              },
+            },
+            labelLine: {
+              length: 10,
+            },
+            // silent: true, //饼图不响应鼠标事件
+            radius: ["45%", "50%"],
+            // roseType: "area",
+            // radius: [40, 70],
+
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              {
+                value: this.qualityData.totalRows,
+                name: "已下达任务",
+                emphasis: {
+                  itemStyle: {
+                    color: "#E2EEFE",
+                  },
+                },
+              }, //选中（放大）某一数据
+              {
+                value: this.qualityData.completeRows,
+                name: "已完成任务",
+                emphasis: {
+                  itemStyle: {
+                    color: "#6AD7B0",
+                  },
+                },
+              },
+            ],
+            emphasis: {},
+          },
+        ],
+      };
+
+      let temp = echarts.init(document.getElementById(id));
+      temp.setOption(option);
+      temp.dispatchAction({
+        type: "highlight",
+        seriesIndex: 1,
+        name: "已处理任务单",
+      });
+    },
+    // 初始化楼盘租售
+    initRentProperty(id) {
+      let option = {
+        title: {
+          // 标题
+          text: "物业租售情况",
+          // subtext: "Fake Data",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "item",
+          // formatter: '{a} {b} : {c}个 ({d}%)'   设置标签显示内容 ，默认显示{b}
+          // {a}指series.name  {b}指series.data的name
+          // {c}指series.data的value  {d}%指这一部分占总数的百分比
+          formatter: "{a}<br> {b} : {c}个 ({d}%)",
+        },
+
+        legend: {
+          // 脚部分类
+          icon: "circle",
+          bottom: 10,
+          left: "center",
+          data: ["已租售物业", "未租售物业"],
+        },
+        series: [
+          {
+            name: "数据",
+            type: "pie",
+            color: ["#E2EEFE", "#6AD7B0"],
+            // 设置值域的标签
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: false,
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            // silent: true, //饼图不响应鼠标事件
+            radius: ["55%", "65%"],
+            // roseType: "area",
+            // radius: [40, 70],
+
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              {
+                value:
+                  this.rendData.monthHouseTotal - this.rendData.monthHouseSell,
+                name: "未租售物业",
+                emphasis: {
+                  itemStyle: {
+                    color: "#6AD7B0",
+                  },
+                },
+              },
+              {
+                value: this.rendData.monthHouseSell,
+                name: "已租售物业",
+                emphasis: {
+                  itemStyle: {
+                    color: "#E2EEFE",
+                  },
+                },
+              }, //选中（放大）某一数据
+            ],
+          },
+        ],
+      };
+
+      let temp = echarts.init(document.getElementById(id));
+      temp.setOption(option);
+    },
+    // 初始化车位租售
+    initRentParking(id) {
+      let option = {
+        title: {
+          // 标题
+          text: "车位租售情况",
+          // subtext: "Fake Data",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b} : {c} ({d}%)",
+        },
+
+        legend: {
+          // 脚部分类
+          icon: "circle",
+          bottom: 10,
+          left: "center",
+          data: ["已租售车位", "未租售车位"],
+        },
+        series: [
+          {
+            name: "数据",
+            type: "pie",
+            color: ["#E2EEFE", "#3480F7"],
+            // 设置值域的标签
+            label: {
+              show: false,
+            },
+            labelLine: {
+              show: false,
+            },
+            // silent: true, //饼图不响应鼠标事件
+            radius: ["55%", "65%"],
+            // roseType: "area",
+            // radius: [40, 70],
+
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              {
+                value:
+                  this.rendData.monthParkingTotal -
+                  this.rendData.monthParkingSell,
+                name: "未租售车位",
+                emphasis: {
+                  itemStyle: {
+                    color: "#3480F7",
+                  },
+                },
+              },
+              {
+                value: this.rendData.monthParkingSell,
+                name: "已租售车位",
+                emphasis: {
+                  itemStyle: {
+                    color: "#E2EEFE",
+                  },
+                },
+              }, //选中（放大）某一数据
+            ],
+            emphasis: {},
+          },
+        ],
+      };
+
+      let temp = echarts.init(document.getElementById(id));
+      temp.setOption(option);
+    },
+
+    // 获取头像
+    initAvator() {
+      new Swiper(".mySwiper", {
+        observer: true,
+        observeParents: true,
+        slidesPerView: 4,
+        spaceBetween: 5,
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true,
+        },
+      });
+    },
+  },
+  mounted() {
+    this.queryBillCount(this.billMonth);
+    this.queryRentCount();
+    this.queryFace(this.faceMonth);
+    this.queryMini(this.appMonth);
+    this.queryPeception(this.peceptionMonth);
+    this.queryProject();
+    this.queryQuality();
+    this.queryShareBillData(this.shareMonth);
+    this.initAvator();
+  },
+};
+</script>
+
+<style scoped lang="less">
+.triangle-up {
+  position: absolute;
+  left: 50px;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 30px solid #3d53fb;
+}
+
+.square {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #d3ddef;
+}
+
+.circle {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #d3ddef;
+  border-radius: 50%;
+}
+
+.count {
+  .device {
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+  }
+
+  font-family: PingFang;
+  width: 1920px;
+  height: 1080px;
+  background-color: #f5f9fc;
+
+  .header {
+    background-color: #ffffff;
+    width: 100%;
+    height: 120px;
+    text-align: center;
+    font-size: 36px;
+    line-height: 120px;
+    position: relative;
+  }
+
+  img {
+    position: absolute;
+    left: 40px;
+    top: 30px;
+  }
+
+  .item-box {
+    width: 95%;
+    margin: 35px auto;
+
+    .content {
+      .float-title-box {
+        color: #ffffff;
+        position: absolute;
+        top: 20px;
+        left: 10px;
+      }
+      .float-box {
+        position: absolute;
+        text-align: center;
+        .float-num {
+          font-size: 37px;
+        }
+        .float-title {
+          font-size: 14px;
+          color: #989eb2;
+        }
+      }
+      .per-box {
+        height: 20px;
+      }
+
+      .progress-box {
+        margin: 25px 0 5px 0;
+        font-size: 14px;
+        color: #989eb2;
+
+        p {
+          margin: 5px 0;
+        }
+
+        span {
+          float: right;
+          font-size: 12px;
+        }
+
+        /deep/ .el-progress-bar {
+          padding-right: 0;
+        }
+
+        /deep/ .el-progress__text {
+          display: none;
+        }
+      }
+
+      .type-box {
+        display: inline-block;
+        width: 49.5%;
+        text-align: center;
+      }
+
+      .face-box {
+        line-height: 40px;
+        color: #ffffff;
+        width: 360px;
+        height: 285px;
+        background-color: #3d53fb;
+        margin-top: 25px;
+        border-radius: 25px;
+        font-size: 14px;
+        padding: 30px;
+
+        .size36 {
+          font-size: 36px;
+        }
+      }
+
+      position: relative;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 5px;
+
+      .first-title {
+        color: #343f5e;
+        font-size: 22px;
+
+        /deep/ .el-date-editor {
+          width: 75px;
+          float: right;
+          font-size: 14px;
+        }
+
+        /deep/ .el-input__icon {
+          display: none;
+        }
+
+        /deep/ .el-input__inner {
+          border-radius: 20px;
+          background-color: #e5edff;
+          color: #989eb2;
+          height: 30px;
+          line-height: 30px;
+          padding: 0 10px;
+        }
+
+        /deep/ .el-input__icon {
+          line-height: 30px;
+        }
+      }
+
+      .bill-box {
+        margin-top: 20px;
+        width: 100%;
+        height: 360px;
+      }
+
+      .second-title {
+        text-align: right;
+        color: #989eb2;
+        font-size: 14px;
+
+        span {
+          margin-right: 20px;
+        }
+
+        /deep/ .el-date-editor {
+          width: 75px;
+        }
+
+        /deep/ .el-input__icon {
+          display: none;
+        }
+
+        /deep/ .el-input__inner {
+          border-radius: 20px;
+          background-color: #e5edff;
+          color: #989eb2;
+          height: 30px;
+          line-height: 30px;
+          padding: 0 10px;
+        }
+
+        /deep/ .el-input__icon {
+          line-height: 30px;
+        }
+      }
+
+      .big-money {
+        font-size: 36px;
+        color: #000000;
+        margin-top: 50px;
+      }
+    }
+  }
+}
+</style>

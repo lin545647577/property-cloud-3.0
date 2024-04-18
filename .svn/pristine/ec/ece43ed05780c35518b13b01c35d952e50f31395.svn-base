@@ -1,0 +1,113 @@
+import Vue from "vue";
+import Vuex from "vuex";
+import el from "element-ui/src/locale/lang/el";
+
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+  state: {
+    treeOpenIds: [], //物业树展开id存储，作默认展开用
+    treeViewUrl: "", //物业树点击跳转路劲
+    node: { nodeId: "", nodeType: "" }, //物业树懒加载传参数据
+    propertyTreeSelected: [], //物业树展开数据存储，作记录操作小区用
+
+    residenceTreeSelected: "", //小区树选中id
+
+    keyPlaceholder: "ZAxC",
+  },
+  mutations: {
+    setTreeData(state, info) {
+      state.treeOpenIds = info.tempArr;
+      state.propertyTreeSelected = info.tempObjArr;
+      localStorage.setItem("treeOpenIds", JSON.stringify(info.tempArr));
+      localStorage.setItem(
+        "propertyTreeSelected",
+        JSON.stringify(info.tempObjArr)
+      );
+    },
+    setNode(state, info) {
+      state.node = info;
+    },
+    setTreeViewUrl(state, info) {
+      state.treeViewUrl = info;
+    },
+    /**
+     * 赋值小区树选中ID
+     * @param state
+     * @param info 参数
+     */
+    setResidenceTreeSelected(state, info) {
+      state.residenceTreeSelected = info;
+    },
+    //赋值cookie treeIds
+    setTreeIdsByLocalStorage(state, info) {
+      state.treeOpenIds = info;
+    },
+    //赋值cookie propertyTreeSelected
+    setPropertyTreeSelectedByLocalStorage(state, info) {
+      state.propertyTreeSelected = info;
+    },
+  },
+  actions: {
+    /**
+     * 更新已点开物业树id
+     * @param context
+     * @param data
+     */
+    updateTreeIds(context, data) {
+      let tempArr = context.state.treeOpenIds;
+      let tempObjArr = context.state.propertyTreeSelected;
+      let index = data.level - 1;
+      if (data.level > tempArr.length) {
+        tempArr.push(data.data.id);
+        tempObjArr.push({ nodeId: data.data.id, nodeType: data.data.nodeType });
+      } else {
+        tempArr[index] = data.data.id;
+        tempArr = tempArr.slice(0, index + 1);
+
+        tempObjArr[index] = {
+          nodeId: data.data.id,
+          nodeType: data.data.nodeType,
+        };
+        tempObjArr = tempObjArr.slice(0, index + 1);
+      }
+      context.commit("setTreeData", {
+        tempArr: tempArr,
+        tempObjArr: tempObjArr,
+      });
+    },
+    updateNode(context, data) {
+      context.commit("setNode", data);
+    },
+    updateTreeViewUrl(context, data) {
+      context.commit("setTreeViewUrl", data);
+    },
+    /**
+     * 赋值已选中小区树
+     * @param context
+     * @param data 参数
+     */
+    updateResidenceTreeSelected(context, data) {
+      context.commit("setResidenceTreeSelected", data);
+    },
+    updatePropertyTreeSelectedByLocalStorage(context) {
+      if (localStorage.getItem("propertyTreeSelected")) {
+        context.commit(
+          "setPropertyTreeSelectedByLocalStorage",
+          JSON.parse(localStorage.getItem("propertyTreeSelected"))
+        );
+      }
+    },
+    // 获取cookietreeIds
+    updateTreeIdsByLocalStorage(context) {
+      if (localStorage.getItem("treeOpenIds")) {
+        context.commit(
+          "setTreeIdsByLocalStorage",
+          JSON.parse(localStorage.getItem("treeOpenIds"))
+        );
+      }
+      // console.log("cookie", JSON.parse(localStorage.getItem("treeOpenIds")));
+    },
+  },
+  modules: {},
+});

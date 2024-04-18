@@ -1,0 +1,226 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="物业：" prop="residenceId">
+        <el-input
+          v-model="form.residenceName"
+          @focus="handleResidenceModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="人员：" prop="memberId">
+        <el-input
+          v-model="form.memberName"
+          @focus="handleMemberModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="职位：" prop="job">
+        <el-input v-model="form.job" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="在职状态：">
+        <el-select
+          v-model="form.status"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="是" value="1"></el-option>
+          <el-option label="否" value="0"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="入职时间：">
+        <el-date-picker
+          type="date"
+          v-model="form.entryTime"
+          style="width: 100%"
+          :disabled="checkInfo"
+        ></el-date-picker>
+      </el-form-item>
+      <el-form-item label="备注：">
+        <el-input v-model="form.remark" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <!--      <el-form-item label="分配角色：" style="text-align: left;">-->
+      <!--        <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>-->
+      <!--        <div style="margin: 15px 0;"></div>-->
+      <!--        <el-checkbox-group v-model="rolesChoose" @change="handleCheckedChange">-->
+      <!--          <el-checkbox v-for="item in rolesList" :label="item.roleId" :key="item.roleId">{{item.roleName}}</el-checkbox>-->
+      <!--        </el-checkbox-group>-->
+      <!--      </el-form-item>-->
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        size="small"
+        >确认
+      </el-button>
+    </div>
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import {
+  queryPropertyMember,
+  editPropertyMember,
+  insertPropertyMember,
+} from "@/api/member.js";
+
+export default {
+  name: "memberHouseModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        residenceName: "",
+        memberName: "",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入名称",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    //人员选择
+    handleMemberModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "member/common/memberModal.vue",
+        params: {},
+        title: "查看人员列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          that.form.memberName = data.multipleSelection[0].name;
+          that.form.referenceMemberId = data.multipleSelection[0].id;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    //小区选择
+    handleResidenceModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "property/common/residenceModal.vue",
+        params: {},
+        title: "查看物业列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          console.log(data.multipleSelection[0].name);
+          that.form.residenceName = data.multipleSelection[0].name;
+          that.form.referenceResidenceId = data.multipleSelection[0].id;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化人员
+     * @param {String} id 人员id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryPropertyMember(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          referenceResidenceId: res.referenceResidenceId,
+          referenceMemberId: res.referenceMemberId,
+          job: res.job,
+          status: res.status,
+          entryTime: res.entryTime,
+          remark: res.remark,
+          memberName: res.memberName,
+          residenceName: res.residenceName,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      console.log(this.form);
+      insertPropertyMember(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editPropertyMember(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

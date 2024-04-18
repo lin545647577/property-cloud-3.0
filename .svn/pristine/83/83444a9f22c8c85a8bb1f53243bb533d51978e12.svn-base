@@ -1,0 +1,409 @@
+<template>
+  <div>
+    <div class="search-btn">
+      <p v-if="pageSize == 1" style="padding-right: 50px">
+        设备：
+        <el-select
+          v-model="cameraChoosed"
+          filterable
+          placeholder="请选择"
+          @change="chooseCarema"
+        >
+          <el-option
+            v-for="(item, index) in cameraList"
+            :key="index"
+            :label="item.name"
+            :value="index"
+          ></el-option>
+        </el-select>
+      </p>
+      <span>分屏：</span>
+      <i
+        class="el-icon-s-marketing icon-text"
+        :style="{ color: pageSize === 1 ? activeColor : '' }"
+        @click="changeImg(1)"
+      ></i>
+      <i
+        class="el-icon-menu icon-text"
+        :style="{ color: pageSize === 4 ? activeColor : '' }"
+        @click="changeImg(4)"
+      ></i>
+      <i
+        class="el-icon-s-grid icon-text"
+        :style="{ color: pageSize === 9 ? activeColor : '' }"
+        @click="changeImg(9)"
+      ></i>
+    </div>
+
+    <div style="margin-top: 10px">
+      <!--      一宫格-->
+      <el-row :gutter="10" v-if="pageSize === 1">
+        <el-col :span="24"
+          ><div
+            class="grid-content"
+            style="background-color: #999999; height: 780px"
+          >
+            1
+          </div></el-col
+        >
+      </el-row>
+      <!--      四宫格-->
+      <el-row :gutter="10" v-if="pageSize === 4">
+        <el-col :span="12" v-for="item in 4" :key="item"
+          ><div
+            class="grid-content"
+            style="margin: 5px 0; background-color: #999999; height: 380px"
+          >
+            1
+          </div></el-col
+        >
+      </el-row>
+      <!--      九宫格-->
+      <el-row :gutter="10" v-if="pageSize === 9">
+        <el-col :span="8" v-for="item in 9" :key="item"
+          ><div
+            class="grid-content"
+            style="margin: 5px 0; background-color: #999999; height: 250px"
+          >
+            1
+          </div></el-col
+        >
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "monitor",
+  data() {
+    return {
+      activeColor: "",
+
+      cameraList: [], //选择摄像头列表
+      cameraChoosed: 0, //摄像头选中
+      isChoosed: false, //是否选择
+
+      videoItems: [],
+      currentPage: 1,
+      pageSize: 1,
+      total: 0,
+
+      videoWebsocketService: {},
+    };
+  },
+  methods: {
+    chooseCarema(index) {
+      this.closeMonitorAll();
+      this.cameraList[index].index = 1;
+      this.videoItems = [];
+      this.videoItems.push(this.cameraList[index]);
+      setTimeout(() => {
+        this.renderVideo(this.videoItems);
+      }, 300);
+    },
+
+    changeImg(type) {
+      this.pageSize = type;
+      if (type == 1) {
+        this.chooseCarema(this.cameraChoosed);
+      }
+      if (type == 4) {
+        this.closeMonitorAll();
+        this.initCaremaList((this.currentPage = 1));
+      }
+      if (type == 9) {
+        this.closeMonitorAll();
+        this.initCaremaList((this.currentPage = 1));
+      }
+    },
+    /**
+     * 渲染视频
+     * @param videoItems 视频地址源
+     */
+    renderVideo(videoItems) {
+      for (let index in videoItems) {
+        this.addMonitor(videoItems[index]);
+      }
+      // 开启视频对象检测
+      // setInterval("heart()", 4000);
+      setInterval(this.heart(), 4000);
+    },
+
+    /**
+     * 增加一个视频监视器
+     * @param item 视频地址源信息
+     */
+    addMonitor(item) {
+      let ms = new MediaSource(); // 媒体源
+      let videoId = this.createUUID(); // 视频ID
+      let videoUrl = item.addr; // 视频地址源
+      let VideoBox = document.getElementById("VideoBox" + item.index); // 装视频模块的盒子
+      let msUrl = window.URL.createObjectURL(ms); // 媒体流地址
+      let newVideo = document.createElement("video");
+      // let html = '<video class="video-item" id="' + videoId + '" controls autoplay muted></video>'; // 视频模板
+      newVideo.id = videoId;
+      newVideo.src = msUrl;
+      newVideo.controls = true;
+      newVideo.autoplay = true;
+      newVideo.muted = true;
+      newVideo.classList.add("videoBox1");
+      VideoBox.appendChild(newVideo);
+      // VideoBox.append(html);
+      // 注册一个媒体源监听事件
+      ms.addEventListener(
+        "sourceopen",
+        this.createVideoWebsocket(videoId, videoUrl, ms),
+        false
+      );
+      // document.getElementById(videoId).attr("src", msUrl);
+    },
+
+    /**
+     * 移除当前活跃的所有监视器
+     */
+    closeMonitorAll() {
+      for (let key in this.videoWebsocketService) {
+        this.videoWebsocketService[key].close();
+      }
+      for (let index in this.videoItems) {
+        document.getElementById(
+          "VideoBox" + this.videoItems[index].index
+        ).innerHTML = "";
+      }
+    },
+
+    /**
+     * 创建一个视频源Websocket长连接
+     * @param videoId 注入的视频ID
+     * @param videoUrl 视频地址源
+     * @param ms 媒体源
+     */
+    createVideoWebsocket(videoId, videoUrl, ms) {
+      let that = this;
+      let ws = new WebSocket(videoUrl);
+      let queue = []; // 消息队列
+      let sourceBuffer; // 数据源Buffer
+      let streamingStarted = false; // 是否首次推送
+      ws.binaryType = "arraybuffer";
+      ws.onopen = function () {
+        // console.log("视频源已连接：" + videoUrl);
+        that.videoWebsocketService[videoId] = ws;
+        // console.log("videoWebsocketService：", that.videoWebsocketService);
+      };
+      ws.onmessage = function (event) {
+        let data = new Uint8Array(event.data);
+        if (data[0] === 9) {
+          let decoded_arr = data.slice(1);
+          let mimeCodec = new TextDecoder("utf-8").decode(decoded_arr);
+          sourceBuffer = ms.addSourceBuffer(
+            'video/mp4; codecs="' + mimeCodec + '"'
+          );
+          sourceBuffer.mode = "segments";
+          sourceBuffer.addEventListener(
+            "updateend",
+            that.loadPackets(streamingStarted, sourceBuffer, queue)
+          );
+        } else {
+          that.pushPackets(streamingStarted, sourceBuffer, queue, event.data);
+        }
+      };
+      ws.onerror = function () {
+        console.log("视频源错误：" + videoUrl);
+      };
+
+      ws.onclose = function () {
+        // console.log("视频源已断开，准备发起重连操作：" + videoUrl);
+        // that.reconnection(videoId, videoUrl)
+      };
+    },
+
+    /**
+     * 重连操作
+     * @param videoId
+     * @param videoUrl
+     */
+    reconnection(videoId, videoUrl) {
+      if (this.videoWebsocketService[videoId]) {
+        this.videoWebsocketService[videoId].close();
+      }
+      let ms = new MediaSource(); // 媒体源
+      let msUrl = window.URL.createObjectURL(ms); // 媒体流地址
+      // 注册一个媒体源监听事件
+      ms.addEventListener(
+        "sourceopen",
+        this.createVideoWebsocket(videoId, videoUrl, ms),
+        false
+      );
+      document.getElementById(videoId).src = msUrl;
+    },
+
+    /**
+     * 推送流数据
+     * @param streamingStarted 是否首次推送
+     * @param sourceBuffer  数据源Buffer
+     * @param queue 消息队列
+     * @param data 注入数据
+     */
+    pushPackets(streamingStarted, sourceBuffer, queue, data) {
+      if (!streamingStarted) {
+        sourceBuffer.appendBuffer(data);
+        streamingStarted = true;
+        return;
+      }
+      queue.push(data, queue);
+      if (!sourceBuffer.updating) {
+        this.loadPackets(streamingStarted, sourceBuffer, queue);
+      }
+    },
+
+    /**
+     * 装载流数据
+     * @param streamingStarted 是否首次推送
+     * @param sourceBuffer 数据源Buffer
+     * @param queue 消息队列
+     */
+    loadPackets(streamingStarted, sourceBuffer, queue) {
+      if (!sourceBuffer.updating) {
+        if (queue.length > 0) {
+          let inp = queue.shift();
+          sourceBuffer.appendBuffer(inp);
+        } else {
+          streamingStarted = false;
+        }
+      }
+    },
+
+    /**
+     * 视频对象检测
+     */
+    heart() {
+      let targets = document.getElementsByClassName("videoBox1");
+      for (let i = 0; i < targets.length; i++) {
+        let target = document.getElementById(targets[i].id);
+        if (
+          target.buffered.length > 0 &&
+          target.buffered.end(0) - target.currentTime > 2
+        ) {
+          target.currentTime = target.buffered.end(0);
+        }
+      }
+    },
+
+    /**
+     * 生成一个UUID
+     * @return {String} 一个新的 UUID
+     */
+    createUUID() {
+      function S4() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+      }
+
+      return (
+        S4() +
+        S4() +
+        "-" +
+        S4() +
+        "-" +
+        S4() +
+        "-" +
+        S4() +
+        "-" +
+        S4() +
+        S4() +
+        S4()
+      );
+    },
+    initCaremaList(currentPage) {
+      var that = this;
+      // Service.getMonitorList({
+      //   pageNum: currentPage,
+      //   pageSize: this.pageSize
+      // }, res => {
+      //   //console.log(res);
+      //   that.videoItems = res.data.rows;
+      //   that.total = res.data.total;
+      //   for (let index in that.videoItems) {
+      //     that.videoItems[index].index = parseInt(index) + 1;
+      //   }
+      //   setTimeout(() => {
+      //     that.renderVideo(that.videoItems);
+      //   }, 300)
+      // });
+    },
+
+    initCaremas(pageSize) {
+      var that = this;
+      // Service.getMonitorList({
+      //   pageNum: 1,
+      //   pageSize: pageSize
+      // }, res => {
+      //   that.cameraList = res.data.rows;
+      // });
+    },
+    //翻页
+    handleCurrentChange(val) {
+      this.closeMonitorAll();
+      this.initCaremaList(val);
+    },
+
+    //获取主题背景颜色
+    getThemeInfo() {
+      let theme = this.newTheme;
+      let themeInfo = this.$store.state.app.themeColorMatching;
+      this.activeColor = themeInfo[theme].backgroundColor;
+      // console.log(themeInfo[theme]);
+    },
+  },
+  mounted() {
+    this.initCaremaList(this.currentPage);
+    this.initCaremas(99);
+    this.getThemeInfo();
+  },
+  computed: {
+    // styleObject() {
+    //   return {
+    //     "--default-color": this.defaultColor,
+    //     "--active-color": this.activeColor,
+    //   };
+    // },
+    newTheme() {
+      return this.$store.state.app.theme;
+    },
+  },
+  watch: {
+    /**
+     * 监听主题变化
+     * @param {String} nval 新值
+     * @param {String} oval 旧值
+     */
+    newTheme(nval, oval) {
+      if (nval !== oval) {
+        this.getThemeInfo();
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.icon-text {
+  font-size: 40px;
+  color: #d0cccc;
+}
+
+.icon-text-active {
+  color: var(--active-color);
+}
+
+.vertical-middle * {
+  vertical-align: middle;
+}
+
+.search-btn {
+  margin: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+</style>

@@ -1,0 +1,997 @@
+<template>
+  <el-row class="page-location">
+    <!-- 左上侧搜索框 -->
+    <div class="box-top">
+      <el-col :span="24">
+        <img
+          src="https://w3c.tank-light.com/static/大屏机/tengyuguangxun5.jpg"
+          style="margin-right: 3%"
+          alt=""
+        />
+        <span style="color: #666; margin-right: 2%">当前位置</span>
+        <span style="color: #3d53fb">{{ equipment.name }}</span>
+        <i class="el-icon-arrow-right" style="margin-left: 2%"></i>
+      </el-col>
+      <el-col
+        :span="24"
+        style="margin: 2% 0 2% -2%; display: flex; align-items: center"
+      >
+        <img
+          src="https://w3c.tank-light.com/static/大屏机/tengyuguangxun3.jpg"
+          style="margin-left: 2%"
+          alt=""
+        />
+        <el-select
+          v-li-keyboard
+          class="input-content"
+          v-model="information.destination"
+          filterable
+          remote
+          clearable
+          reserve-keyword
+          placeholder="请输入关键词"
+          :remote-method="destinationChange"
+          @change="findPositionByUserCilck"
+        >
+          <el-option
+            v-for="item in options"
+            :key="item.referenceUserId"
+            :label="item.name"
+            :value="item.referenceUserId"
+          >
+          </el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="24" v-if="calculate">
+        <el-col :span="12">
+          <span
+            style="
+              font-weight: 400;
+              font-size: 20px;
+              color: #63c3b4;
+              margin-right: 10px;
+            "
+            >{{ searchDistancenew.distance }}</span
+          >
+          <span style="font-weight: 400; color: #666">M</span>
+          <span
+            style="font-weight: 400; color: #666; font-size: 15px; margin: 20px"
+            >步行预估{{ searchDistancenew.walkingTime }}分钟</span
+          >
+        </el-col>
+      </el-col>
+    </div>
+    <!-- 右测主体 -->
+    <el-col :span="24" class="box-map">
+      <!-- 地图 -->
+      <el-col :span="19" style="height: 100vh">
+        <div id="map" class="box-map-main"></div>
+      </el-col>
+      <!-- 右边详情 -->
+      <el-col :span="5">
+        <Side-card
+          :particulars="particulars"
+          :loading="dialogVisible"
+          :url="url"
+          :id="id"
+          ref="child"
+        />
+        <!-- <SideSearch v-on:accessoryClick="accessoryClick" /> -->
+        <Course
+          :origin="equipment.name"
+          :destination="destination"
+          :loading="CourseVisible"
+          :routeExplain="routeExplain"
+          :urlnew="urlnew"
+        />
+      </el-col>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import { get } from "@/api/common.js";
+import sideCard from "@/components/wiseScreen/sideCard";
+// import sideSearch from "@/components/wiseScreen/sideSearch";
+import course from "@/components/wiseScreen/course";
+import { getAuthToken } from "@/cookie/auth.js";
+import {
+  pathCalculation,
+  deviceMapInfo,
+  getPointByDeviceUuid,
+  tygxMapPointDefinition,
+  listForWisdomScreen,
+  findPositionByUser,
+  getLogoPointList,
+  generateQrcCode,
+  generateUrlQrc,
+  getWechatApp,
+  getPublicUtilitiesByMapCode,
+  saveScreenshot,
+} from "@/api/location.js";
+
+export default {
+  name: "Location",
+  components: {
+    "Side-card": sideCard,
+    // SideSearch: sideSearch,
+    Course: course,
+  },
+  data() {
+    return {
+      // 加载的地图
+      map: undefined,
+      // 左侧菜单信息
+      information: {
+        destination: "", //目的地
+        startLocation: "起始位置", //查询结果
+        endLocation: undefined,
+        msg: undefined,
+      },
+
+      mockFixedStart: 0, // 虚拟的开始位置起点
+      mockFixedEnd: 0, // 虚拟的开始位置终点
+      mockCoords: [], // 虚拟的线路
+      historyData: [], // 寻点历史记录
+      CoordData: [], //渲染的路线
+      mockCoordsnew: [], //需要保存到本地的路线
+      visible: false,
+      gridData: [],
+      dialogVisible: false, //二维码显示
+      src: "", //二维码图片
+      fit: "cover",
+      res: "", //地图路径
+      restaurants: [], //搜索公司
+      timeout: null,
+      options: [], //搜索列表
+      equipment: {}, //设备坐标
+      current: {}, //搜索的公司坐标
+      logoCoordinate: [],
+      url: "", //二维码图片
+      id: "", //公司详情id
+      distancenew: {}, //地图的距离跟时间
+      calculate: false, //显示距离跟时间
+      searchDistancenew: {}, //搜索的距离跟时间
+      show: false, //地图显示工具栏组件
+      route: "",
+      CourseVisible: false, //导航路线组件显示
+      particulars: true, //园区组件显示
+      destination: "", //组件终点
+      routeExplain: [], //导航路线
+      urlnew: "", //二维码路径
+      appid: "", //微信appid
+      public_equipment: [], //公共设备
+    };
+  },
+  created() {},
+  methods: {
+    /**
+     * 渲染地图
+     * @param {Array} coords 路径坐标点数组
+     */
+    loadMap(coords) {
+      // let uuid = "BxyoVZRSTQmjCADsWw6n8GHaqXiEpI1g";
+      deviceMapInfo().then((res) => {
+        this.res = res.srcSuffix;
+        localStorage.setItem("mapCode", res.code);
+        get(this.res).then((res) => {
+          // eslint-disable-next-line no-undef
+          echarts.registerMap("MyMap", { svg: res });
+
+          if (!this.map) {
+            // eslint-disable-next-line no-undef
+            this.map = echarts.init(document.getElementById("map"));
+          }
+
+          this.map.clear();
+          // var placeData = [
+          //   {
+          //     LngAndLat: [500.22, 1040.479],
+          //     name: "民间金融街",
+          //   },
+          // ];
+          var originData = [
+            // {
+            //   name: "楼梯",
+            //   value: [150.62, 600.179],
+            //   img: "image://https://w3c.tank-light.com/static/大屏机/tengyuguangxun6.png",
+            // },
+            // 散点数据
+            {
+              value: this.equipment.equipmentCoordinate,
+              name: this.equipment.name,
+              img: "image://https://w3c.tank-light.com/static/大屏机/tengyuguangxun6.png",
+              route: this.equipment.route,
+            },
+          ];
+          var destinationData = [
+            {
+              value: this.current.currentCoordinate,
+              name: this.current.name,
+              img: "image://https://w3c.tank-light.com/static/大屏机/tengyuguangxun2.png",
+              route: this.current.route,
+              referenceUserId: this.current.referenceUserId,
+              referenceCompanyCode: this.current.referenceCompanyCode,
+            },
+          ];
+          var logoCoordinatenew = this.logoCoordinate;
+          var public_equipment = this.public_equipment;
+          let that = this;
+          // var convertData = function (data) {
+          //   // 处理数据函数
+          //   var res = [];
+          //   for (var i = 0; i < data.length; i++) {
+          //     var geoCoord = data[i].LngAndLat;
+          //     console.log(geoCoord);
+          //     if (geoCoord) {
+          //       res.push({
+          //         name: data[i].name,
+          //         value: geoCoord.concat(data[i].value),
+          //         img: data[i].img,
+          //       });
+          //     }
+          //   }
+          //   console.log(res);
+          //   return res;
+          // };
+          let option = {
+            geo: {
+              map: "MyMap",
+              roam: true,
+              layoutCenter: ["50%", "50%"],
+              layoutSize: 1320,
+              scaleLimit: {
+                min: 0.7,
+              },
+              emphasis: {
+                itemStyle: {
+                  color: null,
+                },
+                label: {
+                  show: false,
+                },
+              },
+            },
+            tooltip: {
+              triggerOn: "click",
+              enterable: true,
+              extraCssText:
+                "border-color:#fff;border-width:0;padding: 0px;background:rgba(0,0,0,0);box-shadow: rgb(0 0 0 / 0%) 1px 2px 10px;",
+              formatter: function (params) {
+                if (that.equipment.name != params.name) {
+                  that.destination = params.name;
+                }
+                let img =
+                  '<div id="tooltip" style="padding: 20px;background-color: #fff; display: none;    border-radius: 12px;">' +
+                  '<h1 style="font-size: 24px;font-weight: 400;color:#343434;margin-bottom:20px;width: 400px;">' +
+                  params.name +
+                  "</h1>" +
+                  '<div style="width: 100%; display: flex;">' +
+                  '<div style="width: 50%;"><span id="distance" style="font-weight: 400;font-size: 20px;color:#63c3b4;margin-right:10px">' +
+                  that.distancenew.distance +
+                  "</span>" +
+                  '<span style="font-weight: 400;color: #666;">M</span><h5 id="walkingTime" style="font-weight: 400;color: #666;font-size: 15px;margin: 0;">步行预估' +
+                  that.distancenew.walkingTime +
+                  "分钟</h5></div>" +
+                  "</div>" +
+                  ' <div><h1 style="font-weight: 400;color: #666;font-size: 15px;margin: 30px 0 20px 0;">地址：广东省佛山市南海区</h1></div>' +
+                  '  <div style="width: 100%; display: flex;justify-content: space-between;"><div style="width: 40%;">' +
+                  '<button name="导航" accessKey=' +
+                  params.data.route +
+                  '  class="navigation" style="width: 100%;border: none;background-color: #4bbaa9; color: #fff;padding: 10px 0;border-radius: 10px;"><i class="el-icon-location-outline"></i>到这里去</button>' +
+                  '</div><div style="width: 40%;"><button name="预约" accessKey=' +
+                  params.data.referenceCompanyCode +
+                  '  class="subscribe" style="width: 100%;border: none;background-color: #ff317b; color: #fff;padding: 10px 0;border-radius: 10px;"><i class="el-icon-time">预约</button></div></div>' +
+                  "</div>";
+                let imgnew =
+                  '<div id="tooltip" style="padding: 20px;background-color: #fff; display: none;    border-radius: 12px;">' +
+                  '<h1 style="font-size: 24px;font-weight: 400;color:#343434;margin-bottom:20px;width: 400px;">' +
+                  params.name +
+                  "</h1>" +
+                  '<div style="width: 100%; display: flex;">' +
+                  '<div style="width: 50%;"><span id="distance" style="font-weight: 400;font-size: 20px;color:#63c3b4;margin-right:10px">' +
+                  that.distancenew.distance +
+                  "</span>" +
+                  '<span style="font-weight: 400;color: #666;">M</span><h5 id="walkingTime" style="font-weight: 400;color: #666;font-size: 15px;margin: 0;">步行预估' +
+                  that.distancenew.walkingTime +
+                  "分钟</h5></div>" +
+                  "</div>" +
+                  ' <div><h1 style="font-weight: 400;color: #666;font-size: 15px;margin: 30px 0 20px 0;">地址：广东省佛山市南海区</h1></div>' +
+                  '  <div style="width: 100%; display: flex;justify-content: space-between;"><div style="width: 100%;">' +
+                  '<button name="导航" accessKey=' +
+                  params.data.route +
+                  '  class="navigation" style="width: 100%;border: none;background-color: #4bbaa9; color: #fff;padding: 10px 0;border-radius: 10px;"><i class="el-icon-location-outline"></i>到这里去</button>' +
+                  "</div></div>" +
+                  "</div>";
+                if (params.data.referenceUserId) {
+                  return img;
+                } else {
+                  return imgnew;
+                }
+              },
+            },
+            series: [
+              {
+                type: "lines",
+                coordinateSystem: "geo",
+                polyline: true,
+
+                emphasis: {
+                  label: {
+                    show: false,
+                  },
+                },
+                lineStyle: {
+                  color: "#fff",
+                  width: 4,
+                },
+                progressiveThreshold: 500,
+                progressive: 200,
+
+                data: [
+                  {
+                    animation: true,
+                    coords: coords || [
+                      [0, 0],
+                      [0, 0],
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "lines",
+                coordinateSystem: "geo", // 这句的意思是连线是基于地理坐标的,geo组件将在下面给出
+                polyline: true, // 这表示连线是否为多端点的连线
+                data: [
+                  {
+                    animation: true,
+                    coords: coords || [
+                      [0, 0],
+                      [0, 0],
+                    ],
+                  },
+                ],
+                geoIndex: 0,
+                zlevel: 1,
+                lineStyle: {
+                  color: "#1993fc",
+                  width: 4,
+                  type: "dashed",
+                },
+                effect: {
+                  show: true,
+                  period: 8,
+                  color: "#1993fc",
+                  constantSpeed: 100,
+                  trailLength: 0.6,
+                  symbolSize: [20, 12],
+                  symbol:
+                    "path://M35.5 40.5c0-22.16 17.84-40 40-40s40 17.84 40 40c0 1.6939-.1042 3.3626-.3067 5H35.8067c-.2025-1.6374-.3067-3.3061-.3067-5zm90.9621-2.6663c-.62-1.4856-.9621-3.1182-.9621-4.8337 0-6.925 5.575-12.5 12.5-12.5s12.5 5.575 12.5 12.5a12.685 12.685 0 0 1-.1529 1.9691l.9537.5506-15.6454 27.0986-.1554-.0897V65.5h-28.7285c-7.318 9.1548-18.587 15-31.2715 15s-23.9535-5.8452-31.2715-15H15.5v-2.8059l-.0937.0437-8.8727-19.0274C2.912 41.5258.5 37.5549.5 33c0-6.925 5.575-12.5 12.5-12.5S25.5 26.075 25.5 33c0 .9035-.0949 1.784-.2753 2.6321L29.8262 45.5h92.2098z",
+                },
+                progressiveThreshold: 500,
+                progressive: 200,
+              },
+
+              {
+                type: "scatter",
+                coordinateSystem: "geo",
+                data: originData,
+                symbol: function (value, params) {
+                  return params.data.img;
+                },
+                label: {
+                  show: true,
+                  position: "insideTopLeft",
+                  distance: -50,
+                  offset: [80, -10],
+                  formatter: function (params) {
+                    let div = params.data.name + " " + ">";
+                    return div;
+                  },
+                  backgroundColor: "#3d53fb",
+                  height: 20,
+                  fontSize: 20,
+                  padding: [15, 20, 10, 20],
+                  borderRadius: [20, 20, 20, 0],
+                },
+                symbolSize: [20, 30],
+                itemStyle: {
+                  normal: {
+                    color: "#291010",
+                  },
+                },
+              },
+              {
+                type: "scatter",
+                coordinateSystem: "geo",
+                data: destinationData,
+                symbol: function (value, params) {
+                  return params.data.img;
+                },
+                label: {
+                  show: true,
+                  position: "insideTopLeft",
+                  distance: -50,
+                  offset: [80, -10],
+                  formatter: function (params) {
+                    let div = params.data.name + " " + ">";
+                    return div;
+                  },
+                  backgroundColor: "#4bbaa9",
+                  height: 20,
+                  fontSize: 20,
+                  padding: [15, 20, 10, 20],
+                  borderRadius: [20, 20, 20, 0],
+                },
+                symbolSize: [20, 30],
+                itemStyle: {
+                  normal: {
+                    color: "#291010",
+                  },
+                },
+              },
+              {
+                type: "scatter",
+                coordinateSystem: "geo",
+                data: logoCoordinatenew,
+                symbol: function (value, params) {
+                  let img = params.data.img;
+                  return img;
+                },
+                symbolSize: [30, 30],
+                itemStyle: {
+                  normal: {
+                    color: "#291010",
+                  },
+                },
+              },
+              {
+                type: "scatter",
+                coordinateSystem: "geo",
+                data: public_equipment,
+                symbol: function (value, params) {
+                  let img = params.data.img;
+                  return img;
+                },
+                symbolSize: [30, 30],
+                itemStyle: {
+                  normal: {
+                    color: "#291010",
+                  },
+                },
+              },
+            ],
+          };
+          this.map.setOption(option);
+          // 点击事件，点击地图后，要做什么操作，在这里处理
+          this.map.off("click").on("click", (params) => {
+            if (params.data.referencePointCode) {
+              let data = {
+                pointFrom: window.localStorage.getItem("code"),
+                pointTo: params.data.referencePointCode,
+                referenceMapCode: window.localStorage.getItem("mapCode"),
+              };
+              // 生成二维码
+              let formDate = {
+                url:
+                  "http://tygx.tank-light.com/wechat/oauth/mp/" +
+                  that.appid +
+                  "/oauthInfo?backUrl=" +
+                  "http://tygx-app.tank-light.com/navigation_route?uuid=" +
+                  this.$store.state.auth.deviceUUID +
+                  "%26pointFrom=" +
+                  window.localStorage.getItem("code") +
+                  "%26pointTo=" +
+                  params.data.referencePointCode +
+                  "%26referenceMapCode=" +
+                  window.localStorage.getItem("mapCode"),
+                width: "290",
+                height: "290",
+              };
+              generateUrlQrc(formDate).then((res) => {
+                this.urlnew = res.url;
+                console.log(this.urlnew);
+              });
+              // 计算距离
+              pathCalculation(JSON.stringify(data)).then((res) => {
+                var tooltip = document.getElementById("tooltip");
+                setTimeout(function () {
+                  document.getElementById("distance").innerHTML = res.distance;
+                  document.getElementById("walkingTime").innerHTML =
+                    "预计步行：" + res.walkingTime + "分钟";
+                  tooltip.style.display = "block";
+                }, 200);
+                this.routeExplain = res.routeExplain;
+                this.route = JSON.stringify(res.route);
+              });
+            }
+            if (params.data.referenceUserId) {
+              let formDate = {
+                userId: params.data.referenceUserId,
+                mapCode: window.localStorage.getItem("mapCode"),
+              };
+              findPositionByUser(formDate.userId, formDate.mapCode).then(
+                (res) => {
+                  let data = {
+                    pointFrom: window.localStorage.getItem("code"),
+                    pointTo: res.code,
+                    referenceMapCode: window.localStorage.getItem("mapCode"),
+                  };
+
+                  // 生成二维码
+                  let formDate = {
+                    url:
+                      "http://tygx.tank-light.com/wechat/oauth/mp/" +
+                      that.appid +
+                      "/oauthInfo?backUrl=" +
+                      "http://tygx-app.tank-light.com/navigation_route?uuid=" +
+                      this.$store.state.auth.deviceUUID +
+                      "%26pointFrom=" +
+                      window.localStorage.getItem("code") +
+                      "%26pointTo=" +
+                      res.code +
+                      "%26referenceMapCode=" +
+                      window.localStorage.getItem("mapCode"),
+                    width: "290",
+                    height: "290",
+                  };
+                  generateUrlQrc(formDate).then((res) => {
+                    this.urlnew = res.url;
+                    console.log(this.urlnew);
+                  });
+                  // 计算距离
+                  pathCalculation(JSON.stringify(data)).then((res) => {
+                    var tooltip = document.getElementById("tooltip");
+                    setTimeout(function () {
+                      document.getElementById("distance").innerHTML =
+                        res.distance;
+                      document.getElementById("walkingTime").innerHTML =
+                        "预计步行：" + res.walkingTime + "分钟";
+                      tooltip.style.display = "block";
+                    }, 200);
+                    this.routeExplain = res.routeExplain;
+                    this.route = JSON.stringify(res.route);
+                  });
+                }
+              );
+            }
+            that.dialogVisible = false;
+            that.CourseVisible = false;
+            that.particulars = true;
+            if (params.data.id) {
+              this.id = JSON.stringify(params.data.id);
+              let that = this;
+              setTimeout(function () {
+                that.$refs.child.initData(that.id);
+              }, 1000);
+            } else {
+              that.id = "";
+              setTimeout(function () {
+                that.$refs.child.initData(that.id);
+              }, 1000);
+            }
+          });
+        });
+      });
+    },
+
+    /**
+     * 当改变虚拟坐标点时，立即定位
+     */
+    handleChangeCoords() {
+      if (this.mockFixedStart !== "" && this.mockFixedEnd !== "") {
+        let coordsIndex = [
+          parseInt(this.mockFixedStart),
+          parseInt(this.mockFixedEnd),
+        ];
+        this.loadMap([coordsIndex, [coordsIndex[0] + 1, coordsIndex[1] + 1]]);
+      }
+    },
+
+    /**
+     * 获取虚拟的线路标点
+     */
+    // getmockCoords() {
+    //   // this.historyData
+    //   let a = window.localStorage.getItem("mockCoords");
+    //   if (a) {
+    //     let mockCoords = a.split(" ,");
+    //     let b = [];
+    //     for (const index in mockCoords) {
+    //       let a = {
+    //         name: mockCoords[index] + "",
+    //       };
+    //       b.push(a);
+    //     }
+    //     this.CoordData = b;
+    //   }
+    // },
+
+    /**
+     * 用户点击公司服务类型生成二维码
+     */
+    // gridDataSelectionChangenew() {
+    //   console.log("aaaa");
+    // },
+    /**
+     * 用户预约场地
+     */
+    // gridDataClick(index, value) {
+    //   console.log(value[index]);
+    //   this.dialogVisible = true;
+    //   let data = {
+    //     manager: "admin",
+    //     deptId: 103,
+    //     referenceOrganizationId: 1,
+    //     typeCode: value[index].typeCode,
+    //     typeCodeName: value[index].name,
+    //   };
+    //   generateToReservationQrc(data).then((res) => {
+    //     this.src = res.url;
+    //   });
+    // },
+    /**
+     * 设备获取地图坐标
+     */
+    // getPointByDeviceUuidnew() {
+    //   let uuid = "eoNGMdh7giKq54ys6kY09WvVxItTaPwX";
+    //   // let uuid = "BxyoVZRSTQmjCADsWw6n8GHaqXiEpI1g";
+    //   getPointByDeviceUuid(uuid).then((res) => {});
+    // },
+    /**
+     * 获取设备当前坐标
+     */
+    tygxMapPointDefinitionNew() {
+      tygxMapPointDefinition().then((res) => {
+        this.equipment = {
+          equipmentCoordinate: [res.x, res.y],
+          name: res.name,
+        };
+        localStorage.setItem("code", res.code);
+      });
+    },
+
+    // listForWisdomScreenNew() {
+    //   listForWisdomScreen().then((res) => {
+    //     console.log(res);
+    //   });
+    // },
+
+    /**
+     * 智慧屏查询公司接口
+     */
+    querySearch(queryString, cb) {
+      var restaurants = this.restaurants;
+      var results = queryString
+        ? restaurants.filter(this.createFilter(queryString))
+        : restaurants;
+      // 调用 callback 返回建议列表的数据
+      cb(results);
+    },
+    createFilter(queryString) {
+      return (restaurant) => {
+        return (
+          restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) ===
+          0
+        );
+      };
+    },
+    loadAll() {},
+    destinationChange(query) {
+      if (query !== "") {
+        this.loading = true;
+        let data = {
+          name: query,
+        };
+        listForWisdomScreen(data).then((res) => {
+          // console.log(res.rows);
+          this.options = res.rows;
+        });
+      } else {
+        this.options = [];
+      }
+    },
+    /**
+     * 用户选择公司之后获取的坐标
+     */
+    findPositionByUserCilck(value) {
+      let formDate = {
+        userId: value,
+        mapCode: window.localStorage.getItem("mapCode"),
+      };
+      findPositionByUser(formDate.userId, formDate.mapCode).then((res) => {
+        this.current = {
+          currentCoordinate: [res.x, res.y],
+          name: res.name,
+          referenceUserId: value,
+          referenceCompanyCode: res.referenceMapCode,
+        };
+        let data = {
+          pointFrom: window.localStorage.getItem("code"),
+          pointTo: res.code,
+          referenceMapCode: window.localStorage.getItem("mapCode"),
+        };
+        console.log(data);
+        // 计算距离
+        pathCalculation(JSON.stringify(data)).then((res) => {
+          this.calculate = true;
+          this.searchDistancenew.distance = res.distance;
+          this.searchDistancenew.walkingTime = res.walkingTime;
+          this.current.route = JSON.stringify(res.route);
+        });
+        this.loadMap();
+      });
+    },
+    /**
+     * 用户点击导航
+     */
+    navigation(coordinates) {
+      this.particulars = false;
+      this.CourseVisible = true;
+      let coordinatesnew =
+        JSON.parse(this.route) === ""
+          ? JSON.parse(coordinates)
+          : JSON.parse(this.route);
+      this.loadMap(coordinatesnew);
+      let formDate = {
+        deviceUuid: this.$store.state.auth.deviceUUID,
+        json: JSON.stringify(coordinatesnew),
+        referenceMapCode: window.localStorage.getItem("mapCode"),
+      };
+      saveScreenshot(formDate).then((res) => {
+        console.log(res);
+      });
+    },
+    /**
+     * 用户点击预约
+     */
+    subscribe(referenceCompanyCode) {
+      this.dialogVisible = true;
+      this.CourseVisible = false;
+      this.particulars = true;
+      generateQrcCode(referenceCompanyCode).then((res) => {
+        this.url = res.url;
+      });
+    },
+
+    /**
+     * 地图logo显示信息列表
+     */
+    getLogoPointListnew() {
+      getLogoPointList(window.localStorage.getItem("mapCode")).then((res) => {
+        let logoCoordinate = [];
+        for (const index in res) {
+          let logoCoordinatenew = {
+            value: [res[index].x, res[index].y],
+          };
+          for (const j in res[index].logosShouldShow) {
+            logoCoordinatenew.name = res[index].logosShouldShow[j].companyName;
+            logoCoordinatenew.referenceCompanyCode =
+              res[index].logosShouldShow[j].referenceCompanyCode;
+            logoCoordinatenew.img =
+              "image://" + res[index].logosShouldShow[j].logoSrc;
+            logoCoordinatenew.referenceUserId =
+              res[index].logosShouldShow[j].referenceUserId;
+            logoCoordinatenew.id =
+              res[index].logosShouldShow[j].referenceCompanyId;
+            logoCoordinate.push(logoCoordinatenew);
+          }
+        }
+        this.logoCoordinate = logoCoordinate;
+        this.loadMap();
+      });
+    },
+
+    /**
+     * 获取微信appid
+     */
+    getWechatAppnew() {
+      getWechatApp().then((res) => {
+        this.appid = res.appid;
+      });
+    },
+
+    /**
+     * 获取公共设备
+     */
+    getPublicUtilitiesByMapCodenew() {
+      getPublicUtilitiesByMapCode(window.localStorage.getItem("mapCode")).then(
+        (res) => {
+          let public_equipmentnew = [];
+          for (let index = 0; index < res.length; index++) {
+            let public_equipment = {};
+            public_equipment.value = [res[index].x, res[index].y];
+            public_equipment.img = "image://" + res[index].icon;
+            public_equipment.name = res[index].pointName;
+            public_equipment.referenceMapCode = res[index].referenceMapCode;
+            public_equipment.referencePointCode = res[index].referencePointCode;
+            console.log(public_equipment);
+            public_equipmentnew.push(public_equipment);
+          }
+          this.public_equipment = public_equipmentnew;
+          this.loadMap();
+        }
+      );
+    },
+  },
+  mounted() {
+    this.loadMap();
+    // 进入页面载入地图
+    // this.getmockCoords();
+    // this.getPointByDeviceUuidnew();
+    this.tygxMapPointDefinitionNew();
+    this.getLogoPointListnew();
+    this.getWechatAppnew();
+    this.getPublicUtilitiesByMapCodenew();
+
+    let that = this;
+    document.getElementById("map").onclick = function (e) {
+      console.log(e);
+      if (e.target.name === "导航") {
+        that.navigation(e.target.accessKey);
+      }
+      if (e.target.name === "预约") {
+        that.subscribe(e.target.accessKey);
+      }
+      // if (e.target.accessKey === "位置详情") {
+      //   that.location(e.target.align);
+      // }
+    };
+  },
+};
+</script>
+
+<style scoped lang="less">
+.page-location {
+  // border: 1px solid #7dd7ff;
+  border-radius: 5px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #eeeeee;
+  .box-top {
+    width: 30%;
+    background: #ffffff;
+    position: absolute;
+    z-index: 99;
+    margin: 2%;
+    padding: 1% 2%;
+    border-radius: 12px;
+    .input-content {
+      font-size: 15px;
+      margin-left: 2%;
+    }
+  }
+
+  // .box-info {
+  //   height: 100%;
+  //   position: relative;
+
+  //   .box-info-bg {
+  //     height: 100%;
+  //     background-color: #535a7e;
+  //     opacity: 0.5;
+  //   }
+
+  //   .text-label {
+  //     position: absolute;
+  //     color: #b8d1eb;
+  //     left: 25px;
+  //     font-size: 22px;
+
+  //     &:nth-child(2) {
+  //       top: 30px;
+  //     }
+
+  //     &:nth-child(4) {
+  //       top: 180px;
+  //     }
+
+  //     &:nth-child(6) {
+  //       top: 330px;
+  //     }
+  //   }
+
+  //   .input-content {
+  //     position: absolute;
+  //     left: 25px;
+  //     width: -moz-calc(100% - 50px);
+  //     width: -webkit-calc(100% - 50px);
+  //     width: calc(100% - 50px);
+  //     background-color: #a6abc5;
+
+  //     &:nth-child(3) {
+  //       top: 80px;
+  //     }
+
+  //     &:nth-child(5) {
+  //       top: 230px;
+  //     }
+
+  //     &:nth-child(7) {
+  //       top: 380px;
+  //     }
+
+  //     ::v-deep .el-input__inner {
+  //       background-color: #a6abc5;
+  //       color: #1a2750;
+  //       font-size: 22px;
+
+  //       &:focus {
+  //         border: 1px solid #dcdfe6;
+  //       }
+  //     }
+
+  //     ::v-deep .el-textarea__inner {
+  //       background-color: #a6abc5;
+  //       color: #1a2750;
+  //       font-size: 24px;
+  //       font-weight: bold;
+
+  //       &:focus {
+  //         border: 1px solid #dcdfe6;
+  //       }
+  //     }
+  //   }
+  // }
+
+  .box-map {
+    height: 100%;
+    background-color: #ffffff;
+
+    .box-map-main {
+      width: 100%;
+      height: 100%;
+      background-color: #f0f3f7;
+    }
+
+    .box-menu {
+      width: 64px;
+      height: 64px;
+      position: absolute;
+      right: 50px;
+      bottom: 335px;
+
+      .item-menu {
+        width: 100%;
+        height: 100%;
+
+        margin-top: 30px;
+
+        &:first-child {
+          margin-top: 0;
+        }
+
+        .btn-icon {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+
+    .box-dev-tools {
+      width: 400px;
+      position: absolute;
+      top: 80px;
+      right: 25px;
+      padding: 1%;
+      .image {
+        width: 100%;
+        margin-top: 10%;
+      }
+      .clearfix {
+        color: #999;
+        font-size: 14px;
+        line-height: 22px;
+      }
+    }
+  }
+  .input-content {
+    width: 100%;
+  }
+  .el-image {
+    width: 50%;
+    margin-left: 25%;
+  }
+}
+</style>

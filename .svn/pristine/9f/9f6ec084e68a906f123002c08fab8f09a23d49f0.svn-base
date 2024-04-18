@@ -1,0 +1,254 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="公司名称：" prop="name">
+        <el-input
+          v-model="form.name"
+          clearable
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="业务类型：" prop="businessType">
+        <el-select
+          v-model="form.businessType"
+          placeholder="请选择"
+          :disabled="checkInfo"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in type"
+            :key="item.id"
+            :label="item.dictLabel"
+            :value="item.dictValue"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="管理员：">
+        <el-select
+          v-model="form.manager"
+          placeholder="请输入三个英文字符触发查询"
+          :disabled="this.form.id"
+          style="width: 100%"
+          filterable
+          :filterMethod="changeManager"
+          clearable
+          @change="selectedItem"
+        >
+          <el-option
+            v-for="item in manager"
+            :key="item.id"
+            :label="item.userName"
+            :value="item"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="地址：">
+        <el-input
+          clearable
+          v-model="form.address"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="联系电话：">
+        <el-input
+          clearable
+          v-model="form.phone"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="公司图标：">
+        <li-portrait v-model="form.logo" :readonly="checkInfo" />
+      </el-form-item>
+      <el-form-item label="介绍图片：">
+        <li-portrait v-model="form.introduceImage" :readonly="checkInfo" />
+      </el-form-item>
+      <el-form-item label="公司简介：">
+        <li-rich-text v-model="form.profile" :disabled="checkInfo" />
+      </el-form-item>
+      <el-form-item label="状态：" prop="status">
+        <el-select
+          v-model="form.status"
+          placeholder="请选择"
+          :disabled="checkInfo"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in status"
+            :key="item.id"
+            :label="item.dictLabel"
+            :value="item.dictValue"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="floorModal" />
+  </div>
+</template>
+
+<script>
+import {
+  queryCompany,
+  editCompany,
+  insertCompany,
+  queryCompanyStatus,
+  queryCompanyType,
+} from "@/api/property.js";
+import { queryUser } from "@/api/common.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {},
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        businessType: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        status: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+      type: [],
+      status: [],
+      manager: [],
+      searchUserName: "",
+    };
+  },
+  methods: {
+    selectedItem(val) {
+      this.form.referenceUserId = val.userId;
+      this.form.manager = val.userName;
+      // console.log(val);
+    },
+    changeManager(val) {
+      if (val.length < 3) return;
+      this.searchUserName = val;
+
+      queryUser({ userName: this.searchUserName }).then((res) => {
+        this.manager = res;
+      });
+    },
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 开发商id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryCompany(id).then((res) => {
+        // console.log(res);
+        this.form = res;
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertCompany(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editCompany(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    // 初始化状态
+    initStatus() {
+      queryCompanyStatus().then((res) => {
+        this.status = res;
+      });
+    },
+    // 初始化服务类型
+    initType() {
+      queryCompanyType().then((res) => {
+        // console.log(res);
+        this.type = res;
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    this.initStatus();
+    this.initType();
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+};
+</script>
+
+<style scoped></style>

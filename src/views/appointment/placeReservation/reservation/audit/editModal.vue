@@ -1,0 +1,297 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      ref="ruleForm"
+    >
+      <!--      场地选择-->
+      <template v-for="item in placeItems">
+        <el-form-item
+          :key="item.id"
+          :label="item.referenceServiceTypeName"
+          prop="roomAssigned.placeName"
+          :rules="[{ required: true, message: '请选择' }]"
+        >
+          <el-input
+            v-model="form.roomAssigned.placeName"
+            @focus="handleChoosedPlace(item.referenceServiceTypeCode)"
+            clearable
+          ></el-input>
+        </el-form-item>
+      </template>
+      <!--      服务选择-->
+      <template v-if="serviceItems.length > 0">
+        <el-form-item
+          v-for="(domain, index) in form.serviceAssigned"
+          :label="serviceItems[index].referenceServiceTypeName"
+          :key="index"
+          :prop="'serviceAssigned.' + index + '.serviceName'"
+          :rules="{
+            required: true,
+            message: '请输入',
+            trigger: 'change',
+          }"
+        >
+          <el-input
+            v-model="domain.serviceName"
+            @focus="
+              handleChoosedService(
+                serviceItems[index].referenceServiceTypeCode,
+                index
+              )
+            "
+          ></el-input>
+        </el-form-item>
+      </template>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import { confirmReservation, queryReservation } from "@/api/appointment.js";
+import { dateFormat } from "@/utils/util.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      info: null,
+      form: {
+        id: null,
+        roomAssigned: {
+          roomType: "",
+          roomId: "",
+          placeName: "",
+        },
+        serviceAssigned: [
+          { serviceType: "", serviceId: "", serviceName: "" },
+          { serviceType: "", serviceId: "", serviceName: "" },
+        ],
+      },
+      // rules: {
+      //   placeName: [
+      //     {
+      //       required: true,
+      //       message: "请选择",
+      //       trigger: "change",
+      //     },
+      //   ],
+      //   serviceName: [
+      //     {
+      //       required: true,
+      //       message: "请选择",
+      //       trigger: "change",
+      //     },
+      //   ],
+      // },
+      // data: {
+      //   id: 1,
+      //   roomAssigned: { roomType: "type1", roomId: 1 },
+      //   serviceAssigned: [{ serviceType: "type1", serviceId: 1 },{ serviceType: "type1", serviceId: 1 }],
+      // },
+      serviceItems: [],
+      placeItems: [],
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 选择场地
+     * @param {String} referenceServiceTypeCode
+     */
+    handleChoosedPlace(referenceServiceTypeCode) {
+      this.$refs["chooseModal"].show({
+        view: "appointment/placeReservation/place/common/placeModal.vue",
+        params: {
+          info: this.info,
+          referenceServiceTypeCode: referenceServiceTypeCode,
+        },
+        title: "选择场地",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.modalCallFunctionPlace,
+      });
+    },
+
+    /**
+     * 选择场地后数据处理
+     * @param {Object} data 回调数据
+     */
+    modalCallFunctionPlace(data) {
+      // console.log("选择场地：", data.multipleSelection[0]);
+      this.loading = true;
+      let res = data.multipleSelection[0];
+      this.form.roomAssigned = {
+        roomType: res.typeCode,
+        roomId: res.id,
+        placeName: res.name,
+      };
+      // console.log(this.form);
+      this.loading = false;
+      this.$refs["chooseModal"].hide();
+    },
+    /**
+     * 选择服务
+     * @param {String} referenceServiceTypeCode
+     * @param {number} index 选中下标
+     */
+    handleChoosedService(referenceServiceTypeCode, index) {
+      this.$refs["chooseModal"].show({
+        view: "appointment/placeReservation/additional/common/additionalModal.vue",
+        params: {
+          info: this.info,
+          referenceServiceTypeCode: referenceServiceTypeCode,
+          index: index,
+        },
+        title: "选择服务",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.modalCallFunctionService,
+      });
+    },
+    /**
+     * 选择服务后数据处理
+     * @param {Object} data 回调数据
+     */
+    modalCallFunctionService(data) {
+      // console.log("服务选择：", data);
+      // this.form.serviceAssigned[data.index] = null;
+      this.loading = true;
+      this.form.serviceAssigned[data.index].serviceType =
+        data.multipleSelection[0].typeCode;
+      this.form.serviceAssigned[data.index].serviceId =
+        data.multipleSelection[0].id;
+      this.form.serviceAssigned[data.index].serviceName =
+        data.multipleSelection[0].name;
+      // this.form.serviceAssigned[data.index]={
+      //   serviceType: data.multipleSelection[0].typeCode,
+      //   serviceId: data.multipleSelection[0].id,
+      //   serviceName: data.multipleSelection[0].name,
+      // };
+
+      this.$refs["chooseModal"].hide();
+      this.loading = false;
+    },
+
+    /**
+     * 确认操作
+     * @param {Object} data
+     */
+    confirmReservation(data) {
+      confirmReservation(data).then((res) => {
+        // console.log(res);
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.form.serviceAssigned = JSON.stringify(this.form.serviceAssigned);
+          this.form.roomAssigned = JSON.stringify(this.form.roomAssigned);
+          this.confirmReservation(this.form);
+        } else {
+          return false;
+        }
+      });
+    },
+
+    /**
+     * 初始化
+     * @param {String} id id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      this.form.id = id;
+      queryReservation(id).then((res) => {
+        // console.log(res);
+        this.info = res;
+        this.initSelectItems(res);
+      });
+    },
+    /**
+     * 初始化选择元素
+     * @param {Object} res
+     */
+    initSelectItems(res) {
+      // console.log(res.params);
+
+      this.serviceItems = res.params.additionalService;
+      this.placeItems = res.params.functionRoom;
+      this.form.serviceAssigned = [];
+      if (this.serviceItems.length > 0) {
+        for (let index in this.serviceItems) {
+          this.form.serviceAssigned.push({
+            serviceType: "",
+            serviceId: "",
+            serviceName: "",
+          });
+        }
+      }
+
+      this.form.roomAssigned = null;
+      if (this.placeItems.length > 0) {
+        this.form.roomAssigned = {
+          roomType: undefined,
+          roomId: undefined,
+          placeName: undefined,
+        };
+        // for (let index in this.placeItems) {
+        //   this.queryPlaceOptions(
+        //     this.placeItems[index].referenceServiceTypeCode,
+        //     res.referenceOrganizationId,
+        //     res.manager
+        //   );
+        // }
+      }
+      // console.log("初始化表单", this.form);
+      this.loading = false;
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    this.queryInfo(this.params.id);
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

@@ -1,0 +1,287 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="类型：">
+        <el-select
+          v-model="typeChoosed"
+          :disabled="checkInfo"
+          placeholder="请选择"
+          style="width: 100%"
+          @change="handleChangeType"
+        >
+          <el-option
+            v-for="item in types"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <template v-for="(item, index) in formJson">
+        <el-form-item
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+        >
+          <!--输入框-->
+          <el-input
+            :disabled="checkInfo"
+            v-if="item.__config__.tag === 'el-input'"
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+          ></el-input>
+          <!--时间选择器-->
+          <el-time-picker
+            :disabled="checkInfo"
+            v-if="item.__config__.tag === 'el-time-picker'"
+            v-model="form[item.__vModel__]"
+            :picker-options="item.picker - options"
+          >
+          </el-time-picker>
+          <!--单选框组-->
+          <el-radio-group
+            :disabled="checkInfo"
+            v-model="form[item.__vModel__]"
+            v-if="item.__config__.tag === 'el-radio-group'"
+          >
+            <el-radio
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictValue"
+              >{{ opItem.dictLabel }}
+            </el-radio>
+          </el-radio-group>
+
+          <!--下来框-->
+          <el-select
+            :disabled="checkInfo"
+            v-if="item.__config__.tag === 'el-select'"
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictLabel"
+              :value="opItem.dictValue"
+            >
+            </el-option>
+          </el-select>
+          <!--多选框-->
+          <el-checkbox-group
+            :disabled="checkInfo"
+            v-model="form[item.__vModel__]"
+            v-if="item.__config__.tag === 'el-checkbox-group'"
+          >
+            <el-checkbox
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictValue"
+              >{{ opItem.dictLabel }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </template>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import {
+  queryForm,
+  insertAdditional,
+  queryAdditionalType,
+  queryAdditional,
+  editAdditional,
+} from "@/api/appointment.js";
+import { dateFormat } from "@/utils/util.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        typeCode: "",
+      },
+      typeChoosed: "",
+      rules: {
+        type: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+      types: [],
+      status: [
+        {
+          id: 0,
+          name: "未提交",
+        },
+        {
+          id: 1,
+          name: "审核中",
+        },
+        {
+          id: 2,
+          name: "拒绝",
+        },
+        {
+          id: 3,
+          name: "正常",
+        },
+        {
+          id: 4,
+          name: "下线",
+        },
+      ],
+      formJson: [],
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+
+    submitForm(formName) {
+      // console.log(this.form);
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertAdditional(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editAdditional(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    // 获取类型列表
+    queryType() {
+      queryAdditionalType().then((res) => {
+        // console.log("选项元素：", res);
+        this.types = res;
+        if (this.params.id) {
+          this.queryFormData(this.params.id);
+        }
+      });
+    },
+    // 类型选中处理
+    handleChangeType(val) {
+      // console.log(val);
+      this.typeChoosed = val;
+      let res = this.types.find((item) => {
+        if (item.id === val) {
+          return item;
+        }
+      });
+      this.form.typeCode = res.typeCode;
+      this.form.typeCodeZAxC = res.name;
+      this.queryFormElement(res.id);
+    },
+    // 查询表单格式
+    queryFormElement(id) {
+      this.loading = true;
+      queryForm(id).then((res) => {
+        // console.log("表单格式：", JSON.parse(res.fromJson).fields);
+        this.formJson = JSON.parse(res.fromJson).fields;
+        this.loading = false;
+      });
+    },
+    // 根据typecode获取动态表单id
+    findFormIdByTypeCdoe(typeCode) {
+      let res = this.types.find((item) => {
+        if (item.typeCode === typeCode) {
+          return item;
+        }
+      });
+      if (res) {
+        this.handleChangeType(res.id);
+      }
+    },
+
+    // 查询表单数据
+    queryFormData(id) {
+      this.loading = true;
+      queryAdditional(id).then((res) => {
+        // console.log("表单数据：", res);
+        this.form = res;
+        for (let key in this.form) {
+          if (typeof this.form[key] === "object") {
+            this.form[key] = JSON.stringify(this.form[key]);
+          }
+        }
+        this.findFormIdByTypeCdoe(res.typeCode);
+        this.loading = false;
+      });
+    },
+  },
+  mounted() {
+    // console.log(this.params);
+    this.queryType();
+    this.checkInfo = this.params.checkInfo;
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

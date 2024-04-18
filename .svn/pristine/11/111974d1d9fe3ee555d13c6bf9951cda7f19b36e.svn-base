@@ -1,0 +1,164 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="名称：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="车场：" prop="deviceId">
+        <el-input
+          v-model="form.carParkName"
+          @focus="handleCarParkingModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="车辆类型编号：">
+        <el-input v-model="form.deviceKey" :disabled="checkInfo"></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import {
+  queryCarParkTypeConfig,
+  editCarParkTypeConfig,
+  insertCarParkTypeConfig,
+} from "@/api/parking.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        carParkName: "",
+      },
+      rules: {},
+    };
+  },
+  methods: {
+    handleCarParkingModal() {
+      this.$refs["chooseModal"].show({
+        view: "parking/common/carParkDefinitionModal.vue",
+        params: {},
+        title: "车场列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.getCallData,
+      });
+    },
+
+    getCallData(data) {
+      console.log(data.multipleSelection[0].name);
+      this.form.carParkName = data.multipleSelection[0].name;
+      this.form.referenceCarParkId = data.multipleSelection[0].id;
+      this.$refs["chooseModal"].hide();
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化车位类型
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryCarParkTypeConfig(id).then((res) => {
+        this.form = {
+          id: res.id,
+          name: res.name,
+          referenceCarParkId: res.referenceCarParkId,
+          deviceKey: res.deviceKey,
+          carParkName: res.carParkName,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertCarParkTypeConfig(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editCarParkTypeConfig(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

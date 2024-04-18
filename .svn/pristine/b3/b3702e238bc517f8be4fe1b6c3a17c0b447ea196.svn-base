@@ -1,0 +1,16 @@
+<template>
+  <div>code</div>
+</template>
+
+<script>
+export default {
+  name: "notice",
+  data() {
+    return {};
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped></style>

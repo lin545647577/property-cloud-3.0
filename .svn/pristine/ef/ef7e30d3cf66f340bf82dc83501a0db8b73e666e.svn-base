@@ -1,0 +1,121 @@
+<template>
+  <div class="common-box">
+    <!-- <el-row>
+      <Map/> </el-row> -->
+    <el-row>
+      <el-col :span="19"
+        ><div class="grid-content content-box">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />来访登记
+          </div>
+          <div class="content">
+            <div class="title-box">
+              <p>扫一扫登记</p>
+              <p class="second-title">
+                请使用<span class="blue-text">微信扫一扫</span>进行<span
+                  class="blue-text"
+                  >来访登记</span
+                >
+              </p>
+            </div>
+
+            <el-row
+              style="margin: 5% 0"
+              type="flex"
+              class="row-bg"
+              justify="space-between"
+              align="middle"
+            >
+              <el-col :span="9"
+                ><div class="grid-content">
+                  <div class="qr-box">
+                    <img :src="QRImg" alt="" />
+                  </div></div
+              ></el-col>
+              <el-col :span="12"
+                ><div class="grid-content">
+                  <img
+                    :src="phoneImg"
+                    style="width: 100%; height: 100%"
+                    alt=""
+                  /></div
+              ></el-col>
+            </el-row>
+
+            <p class="tips">
+              温馨提示：您的来访登记信息将在登录后30秒失效，登记失效不会影响您正常使用系统，登记成功后无需重复登记。
+            </p>
+
+            <el-row style="margin-top: 10%">
+              <el-col :span="4"
+                ><div class="grid-content">
+                  <img
+                    style="margin-right: 10px"
+                    :src="pointImg"
+                    alt=""
+                  />操作指引
+                </div></el-col
+              >
+              <el-col :span="18"
+                ><div class="grid-content">
+                  <el-steps align-center>
+                    <el-step description="扫码关注公众号"></el-step>
+                    <el-step
+                      description="根据公众号提示进入来访登记页面"
+                    ></el-step>
+                    <el-step description="填写来访登记信息并提交"></el-step>
+                    <el-step description="登记成功"></el-step>
+                  </el-steps></div
+              ></el-col>
+            </el-row>
+          </div></div
+      ></el-col>
+
+      <!--      建筑介绍-->
+      <el-col :span="5"
+        ><div class="grid-content">
+          <side-card :id="id" :particulars="true"></side-card></div
+      ></el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import sideCard from "@/components/wiseScreen/sideCard";
+// import map from "@/components/wiseScreen/map";
+
+export default {
+  name: "checkIn",
+  components: {
+    "side-card": sideCard,
+    // Map: map,
+  },
+  data() {
+    return {
+      loading: true,
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      QRImg: require("@/assets/img/wiseScreen/2.0/testQR.png"),
+      phoneImg: require("@/assets/img/wiseScreen/2.0/checkIn/phone.png"),
+      id: "",
+    };
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+.content-box .content /deep/ .el-step__description {
+  margin-top: 10px;
+  color: #343f5e;
+}
+.content-box .content /deep/ .el-step__line {
+  background-color: #69cefe;
+}
+
+.content-box .content /deep/ .el-step__head.is-wait {
+  color: #69cefe;
+  border-color: #69cefe;
+}
+</style>

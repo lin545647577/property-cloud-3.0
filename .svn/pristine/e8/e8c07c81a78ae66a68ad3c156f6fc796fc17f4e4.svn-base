@@ -1,0 +1,303 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="物业：">
+        <el-input
+          :value="form.residenceName"
+          @focus="handleResidenceModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="姓名：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="民族：" prop="nation">
+        <el-select
+          v-model="form.nation"
+          placeholder="请选择民族"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in nations"
+            :key="item.dictValue"
+            :label="item.dictLabel"
+            :value="item.dictValue"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="出生：">
+        <el-date-picker
+          type="date"
+          v-model="form.born"
+          style="width: 100%"
+          :disabled="checkInfo"
+        ></el-date-picker>
+      </el-form-item>
+      <el-form-item label="住址：">
+        <el-input
+          v-model="form.address"
+          :disabled="checkInfo"
+          type="textarea"
+          autosize
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="证件类型：" prop="certType">
+        <el-select
+          v-model="form.certType"
+          placeholder="请选择证件类型"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in certType"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="身份证号：" prop="certNo">
+        <el-input v-model="form.certNo" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="签发机关：">
+        <el-input v-model="form.certAddr" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="性别：" prop="gender">
+        <el-select
+          v-model="form.gender"
+          placeholder="请选择性别"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in gender"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="户籍：">
+        <el-input v-model="form.register" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="手机：">
+        <el-input v-model="form.phone" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="照片：" style="text-align: left">
+        <li-portrait v-model="form.fileUrl" :readonly="checkInfo" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        type="primary"
+        class="control-btn"
+        size="small"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import { queryMember, editMember, insertMember } from "@/api/member.js";
+import { nationList } from "@/utils/util.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      nations: nationList,
+      checkInfo: false,
+      form: {
+        residenceName: "",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入名称",
+            trigger: "blur",
+          },
+        ],
+      },
+      nation: [
+        {
+          dictSort: 1,
+          dictLabel: "汉",
+          dictValue: "1",
+        },
+      ],
+
+      gender: [
+        {
+          id: "0",
+          name: "未知",
+        },
+        {
+          id: "1",
+          name: "男",
+        },
+        {
+          id: "2",
+          name: "女",
+        },
+      ],
+      certType: [
+        {
+          id: 1,
+          name: "身份证",
+        },
+        {
+          id: 2,
+          name: "护照",
+        },
+        {
+          id: 3,
+          name: "户口簿",
+        },
+        {
+          id: 4,
+          name: "驾驶证",
+        },
+        {
+          id: 20,
+          name: "其他",
+        },
+      ],
+    };
+  },
+  methods: {
+    handleResidenceModal() {
+      this.$refs["chooseModal"].show({
+        view: "property/common/residenceModal.vue",
+        params: {},
+        title: "查看物业列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.getCallData,
+      });
+    },
+    getCallData(data) {
+      // console.log(data.multipleSelection[0]);
+      this.form.residenceName = data.multipleSelection[0].name;
+      this.form.referenceResidenceId = data.multipleSelection[0].id;
+      this.$refs["chooseModal"].hide();
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化人员
+     * @param {String} id 人员id
+     */
+    queryInfo(id) {
+      // this.avatarUrl = null;
+      this.loading = true;
+      queryMember(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          name: res.name,
+          nation: res.nation ? res.nation.toString() : "",
+          born: res.born,
+          address: res.address,
+          certType: res.certType,
+          certNo: res.certNo,
+          gender: res.gender,
+          register: res.register,
+          referenceFileId: res.fileId,
+          phone: res.phone,
+          certExpireTime: res.certExpireTime,
+          certAddr: res.certAddr,
+          number: res.number,
+          referenceResidenceId: res.residenceId,
+          residenceName: res.residenceName,
+          relateId: res.relateId,
+          fileUrl: res.fileUrl,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      console.log(this.form);
+      insertMember(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editMember(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

@@ -1,0 +1,222 @@
+import request from "./modules/request";
+
+export function listProcessClassify(condition) {
+  return request({
+    url: "taskDistribution/workingProcedureKind/list",
+    method: "POST",
+    data: condition,
+  });
+}
+
+export function detailsProcessClassify(id) {
+  return request({
+    url: "taskDistribution/workingProcedureKind/" + id,
+    method: "GET",
+  });
+}
+
+export function updateProcessClassify(formData) {
+  return request({
+    url: "taskDistribution/workingProcedureKind",
+    method: "PUT",
+    data: formData,
+  });
+}
+
+export function addProcessClassify(formData) {
+  return request({
+    url: "taskDistribution/workingProcedureKind",
+    method: "POST",
+    data: formData,
+  });
+}
+
+export function deleteProcessClassify(ids) {
+  return request({
+    url: "taskDistribution/workingProcedureKind/" + ids,
+    method: "DELETE",
+  });
+}
+
+export function listProcessType(condition) {
+  return request({
+    url: "taskDistribution/workingProcedureType/list",
+    method: "POST",
+    data: condition,
+  });
+}
+
+export function detailsProcessType(id) {
+  return request({
+    url: "taskDistribution/workingProcedureType/" + id,
+    method: "GET",
+  });
+}
+
+export function updateProcessType(formData) {
+  return request({
+    url: "taskDistribution/workingProcedureType",
+    method: "PUT",
+    data: formData,
+  });
+}
+
+export function addProcessType(formData) {
+  return request({
+    url: "taskDistribution/workingProcedureType",
+    method: "POST",
+    data: formData,
+  });
+}
+
+export function deleteProcessType(ids) {
+  return request({
+    url: "taskDistribution/workingProcedureType/" + ids,
+    method: "DELETE",
+  });
+}
+
+export function listProcessTemplate(condition) {
+  return request({
+    url: "taskDistribution/workingProcedure/list",
+    method: "POST",
+    data: condition,
+  });
+}
+
+export function detailsProcessTemplate(id) {
+  return request({
+    url: "taskDistribution/workingProcedure/" + id,
+    method: "GET",
+  });
+}
+
+export function updateProcessTemplate(formData) {
+  return request({
+    url: "taskDistribution/workingProcedure",
+    method: "PUT",
+    data: formData,
+  });
+}
+
+export function addProcessTemplate(formData) {
+  return request({
+    url: "taskDistribution/workingProcedure",
+    method: "POST",
+    data: formData,
+  });
+}
+
+export function deleteProcessTemplate(ids) {
+  return request({
+    url: "taskDistribution/workingProcedure/" + ids,
+    method: "DELETE",
+  });
+}
+
+export function listTaskTemplate(condition) {
+  return request({
+    url: "taskDistribution/taskTemplate/list",
+    method: "POST",
+    data: condition,
+  });
+}
+
+export function detailsTaskTemplate(id) {
+  return request({
+    url: "taskDistribution/taskTemplate/" + id,
+    method: "GET",
+  });
+}
+
+export function updateTaskTemplate(formData) {
+  return request({
+    url: "taskDistribution/taskTemplate",
+    method: "PUT",
+    data: formData,
+  });
+}
+
+export function addTaskTemplate(formData) {
+  return request({
+    url: "taskDistribution/taskTemplate",
+    method: "POST",
+    data: formData,
+  });
+}
+
+export function deleteTaskTemplate(ids) {
+  return request({
+    url: "taskDistribution/taskTemplate/" + ids,
+    method: "DELETE",
+  });
+}
+
+export function listInstance(condition) {
+  return request({
+    url: "taskDistribution/taskInstance/list",
+    method: "POST",
+    data: condition,
+  });
+}
+
+export function detailsInstance(id) {
+  return request({
+    url: "taskDistribution/taskInstance/" + id,
+    method: "GET",
+  });
+}
+
+export function updateInstance(formData) {
+  return request({
+    url: "taskDistribution/taskInstance",
+    method: "PUT",
+    data: formData,
+  });
+}
+
+export function addInstance(formData) {
+  return request({
+    url: "taskDistribution/taskInstance",
+    method: "POST",
+    data: formData,
+  });
+}
+
+export function deleteInstance(ids) {
+  return request({
+    url: "taskDistribution/taskInstance/" + ids,
+    method: "DELETE",
+  });
+}
+
+export function listSystemUser(condition) {
+  return request({
+    url: "system/user/list",
+    method: "GET",
+    params: condition,
+  });
+}
+
+export function confirmProcess(formData) {
+  return request({
+    url: "taskDistribution/workingProcedureInstance/confirm",
+    method: "POST",
+    data: formData,
+  });
+}
+
+export function confirmInstance(id) {
+  return request({
+    url: "taskDistribution/taskInstance/confirm/" + id,
+    method: "GET",
+  });
+}
+
+export function rejectInstance(formData) {
+  return request({
+    url: "taskDistribution/taskInstance/reject",
+    method: "POST",
+    data: formData,
+  });
+}

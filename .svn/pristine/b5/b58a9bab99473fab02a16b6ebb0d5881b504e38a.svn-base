@@ -1,0 +1,115 @@
+<template>
+  <div class="normalForm">
+    <el-form
+        label-position="right"
+        label-width="150px"
+        :model="form"
+        :rules="rules"
+        ref="ruleForm"
+    >
+      <el-form-item label="旧表读书：" prop="lastReading">
+        <el-input v-model="form.lastReading" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="新表初始读数：" prop="initReading">
+        <el-input v-model="form.initReading" :disabled="checkInfo"></el-input>
+      </el-form-item>
+
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+          size="small"
+          type="primary"
+          class="control-btn"
+          :style="{ 'background-color': themeColor }"
+          @click="submitForm('ruleForm')"
+      >确认
+      </el-button>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import { changeMeter } from "@/api/device.js";
+
+export default {
+  name: "changeMeterModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      checkInfo: false,
+      form: {
+        meterId:"",
+        lastReading:"",
+        initReading:""
+      },
+      rules: {
+        lastReading: [
+          {
+            required: true,
+            message: "请输入内容",
+            trigger: "blur",
+          },
+        ],
+        initReading: [
+          {
+            required: true,
+            message: "请输入内容",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          changeMeter(this.form).then(res=>{
+            if(res){
+              this.$message({
+                message: "操作成功",
+                center: true,
+                type: "success",
+              });
+              this.$emit("modal-submit");
+            }
+          })
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    this.form.meterId=this.params.id;
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    }
+  },
+};
+</script>
+
+<style scoped>
+
+</style>

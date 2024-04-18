@@ -1,0 +1,322 @@
+<template>
+  <div class="common-box">
+    <el-row v-if="!mapShow">
+      <el-col :span="19">
+        <div class="grid-content content-box">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />咨询服务
+          </div>
+          <div class="content my-scrollbar" id="contentDiv">
+            <div class="conversation-box">
+              <img class="rabbit-img" :src="rabbitImg" alt="" />
+              <el-card class="box-card question-box">
+                <div class="text item">
+                  <p>您好，我是您的专属智慧向导U-NI,有什么可以帮到您？</p>
+                  <el-button
+                    type="primary"
+                    v-for="item in questionType"
+                    :key="item.id"
+                    style="margin: 10px"
+                    @click="handleType(item.id)"
+                    plain
+                    >{{ item.name }}
+                  </el-button>
+                  <p class="common-question">
+                    常见问题
+                    <span @click="handleCurrentChange(currentPage + 1)"
+                      >换一换<i class="el-icon-refresh"></i
+                    ></span>
+                  </p>
+                  <el-row>
+                    <el-col
+                      :span="24"
+                      v-for="item in questionList"
+                      :key="item.id"
+                    >
+                      <el-button
+                        style="width: 100%; text-align: left; margin-top: 10px"
+                        type="primary"
+                        @click="
+                          handleQuestion(item.tygxQuestionAnswerDefinition)
+                        "
+                        plain
+                        >{{ item.answerTitle }}
+                      </el-button>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-card>
+            </div>
+            <template v-for="(item, index) in conversationList">
+              <div class="ask-box" :key="index" v-if="item.type === 'q'">
+                <p>{{ item.content }}</p>
+              </div>
+              <div class="answer-box" :key="index" v-if="item.type === 'a'">
+                <img class="rabbit-img" :src="rabbitImg" alt="" />
+                <div class="answer-content" v-html="item.content"></div>
+              </div>
+            </template>
+
+            <el-input
+              v-model="searchValue"
+              placeholder="请简短描述您的问题"
+              @keypress.enter.native="handleInput"
+            ></el-input>
+          </div>
+
+          <el-card class="box-card qr-box">
+            <div class="text item">
+              <img :src="qrUrl" alt="" />
+              <p>手机扫码</p>
+            </div>
+          </el-card>
+        </div>
+      </el-col>
+
+      <el-col :span="5">
+        <div class="grid-content">
+          <search-box @handleOpen="handleMap" v-if="!mapShow" />
+        </div>
+      </el-col>
+    </el-row>
+
+    <Map v-if="mapShow"></Map>
+  </div>
+</template>
+
+<script>
+import {
+  queryQuestionTypeByWiseScreen,
+  queryQuestionByWiseScreen,
+  queryAnswerByWiseScreen,
+  queryQRByWiseScreen,
+} from "@/api/order.js";
+import sideSearch from "@/components/wiseScreen/sideSearch.vue";
+import map from "@/components/wiseScreen/map";
+export default {
+  name: "question",
+  components: {
+    Map: map,
+    "search-box": sideSearch,
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      rabbitImg: require("@/assets/img/wiseScreen/2.0/question/rabbit.png"),
+      qrUrl: "",
+      questionType: [],
+      questionList: [],
+      currentPage: 1,
+      pageSize: 3,
+      tId: "",
+      searchValue: "",
+      conversationList: [],
+      mapShow: false,
+    };
+  },
+  methods: {
+    /**
+     * 调用地图组件
+     * @param {Object} data 回调函数
+     */
+    handleMap(data) {
+      debugger;
+      // console.log(data);
+      // this.mapShow = true;
+      this.$router.push({ path: "/wisdom-oriented/appointment" });
+    },
+    /**
+     * 输入框回车事件
+     */
+    handleInput() {
+      // console.log(this.searchValue);
+      if (!this.searchValue) {
+        return;
+      }
+      let dom = document.getElementById("contentDiv");
+      this.conversationList.push({
+        type: "q",
+        content: this.searchValue,
+      });
+
+      queryAnswerByWiseScreen(this.searchValue).then((res) => {
+        // console.log(res);
+        for (let index in res) {
+          if (res[index].content) {
+            this.conversationList.push({
+              type: "a",
+              content: res[index].content,
+            });
+          } else {
+            this.conversationList.push({
+              type: "a",
+              content: res[index].title,
+            });
+          }
+          dom.scrollTop = dom.scrollHeight;
+        }
+      });
+    },
+    /**
+     * 点击问题事件
+     * @param {Object} data 回调数据
+     */
+    handleQuestion(data) {
+      let dom = document.getElementById("contentDiv");
+      // console.log(data)
+      this.conversationList.push({
+        type: "q",
+        content: data.title,
+      });
+      setTimeout(() => {
+        this.conversationList.push({
+          type: "a",
+          content: data.answer,
+        });
+        dom.scrollTop = dom.scrollHeight;
+      }, 200);
+    },
+    // 分页
+    handleCurrentChange(val) {
+      this.initQuestion((this.currentPage = val));
+    },
+    /**
+     * 选择问题类型
+     * @param {Number} val typeId
+     */
+    handleType(val) {
+      // console.log(val);
+      this.tId = val;
+      this.initQuestion((this.currentPage = 1));
+    },
+    // 初始化问题类型
+    initType() {
+      queryQuestionTypeByWiseScreen({}).then((res) => {
+        this.questionType = res.rows;
+      });
+    },
+    /**
+     * 初始化问题
+     * @param {Number} currentPage 页码
+     */
+    initQuestion(currentPage) {
+      queryQuestionByWiseScreen({
+        pageNum: currentPage,
+        pageSize: this.pageSize,
+        referenceTypeId: this.tId,
+        commonStatus: 1,
+      }).then((res) => {
+        this.questionList = res.rows;
+        if (this.questionList.length < 1 && this.currentPage != 1) {
+          this.initQuestion((this.currentPage = 1));
+        }
+      });
+    },
+    initQR() {
+      queryQRByWiseScreen().then((res) => {
+        // console.log(res);
+        this.qrUrl = res.url;
+      });
+    },
+  },
+  mounted() {
+    this.initQR();
+    this.initType();
+    this.initQuestion(this.currentPage);
+  },
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+
+.content-box {
+  position: relative;
+}
+
+.content-box .content {
+  height: calc(70vh);
+  overflow: auto;
+}
+
+.content-box .content .conversation-box {
+  clear: both;
+}
+
+.content-box .content .answer-box {
+  float: left;
+  clear: both;
+}
+
+.content-box .content .answer-box .answer-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0 0 0 0.1);
+}
+
+.content-box .content .ask-box {
+  background-color: #1993fc;
+  color: #e5edff;
+  float: right;
+  margin: 5% 18% 5% 0;
+  padding: 20px;
+  clear: both;
+  text-align: right;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.content-box .content .el-input {
+  position: absolute;
+  width: 65%;
+  bottom: -50px;
+}
+
+.content-box .content /deep/ .el-input__inner {
+  border-radius: 18px;
+}
+
+.content-box .content .question-box {
+  max-width: 55%;
+  min-width: 20%;
+
+  border-radius: 10px;
+}
+
+.content-box .content .question-box .common-question span {
+  color: #409eff;
+  float: right;
+  cursor: default;
+}
+
+.content-box .content .question-box /deep/ .el-button--primary.is-plain {
+  /*margin: 10px 0;*/
+}
+
+.content-box .rabbit-img {
+  width: 65px;
+  height: 65px;
+}
+
+.content-box .qr-box {
+  padding: 0;
+  position: absolute;
+  bottom: 10%;
+  right: 7%;
+  background-color: #1993fc;
+  width: 15%;
+  z-index: 9999;
+  border: none;
+  color: #e5edff;
+  font-size: 26px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.content-box .qr-box img {
+  width: 100%;
+  height: 100%;
+}
+</style>

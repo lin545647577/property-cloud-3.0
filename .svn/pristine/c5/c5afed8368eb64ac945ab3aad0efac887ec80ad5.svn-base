@@ -1,0 +1,37 @@
+<template>
+  <el-submenu :index="item.code">
+    <template slot="title">
+      <span>{{ item.name }}</span>
+    </template>
+    <template v-if="item.children.length > 0">
+      <div
+        v-for="child in item.children"
+        :item="child"
+        :key="child.id"
+        :is="child.isParent ? 'taskMenu' : 'task-item'"
+      ></div>
+    </template>
+  </el-submenu>
+</template>
+
+<script>
+import taskItem from "./taskItem";
+export default {
+  name: "taskMenu",
+  components: {
+    "task-item": taskItem,
+  },
+  props: {
+    item: {
+      type: Object,
+    },
+  },
+  data() {
+    return {};
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped></style>

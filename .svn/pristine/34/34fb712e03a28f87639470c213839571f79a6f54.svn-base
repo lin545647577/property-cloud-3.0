@@ -1,0 +1,809 @@
+<template>
+  <el-row class="page-TaskList">
+    <section>
+      <el-row class="box-menu">
+        <el-button type="primary" size="mini" @click="handleAdd"
+          >发起任务
+        </el-button>
+        <el-button
+          type="danger"
+          size="mini"
+          @click="handleDelete"
+          :disabled="tableSelectedIds.length === 0"
+          >删除
+        </el-button>
+      </el-row>
+      <el-row class="box-table">
+        <el-table
+          ref="table"
+          size="small"
+          :data="tableData"
+          border
+          @selection-change="handleSelected"
+        >
+          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column label="ID" prop="id" />
+          <el-table-column label="编码" prop="code" />
+          <el-table-column label="分类名称" prop="name" />
+          <el-table-column width="150" label="操作" align="center">
+            <template slot-scope="scope">
+              <el-button size="mini" type="text" @click="handleView(scope.row)"
+                >详情
+              </el-button>
+              <el-button size="mini" type="text" @click="handleEdit(scope.row)"
+                >操作
+              </el-button>
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleDelete(scope.row)"
+                >删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-row>
+      <el-row class="box-pagination">
+        <el-pagination
+          style="text-align: center; margin: 20px 0"
+          @current-change="handleCurrentChange"
+          @size-change="handleSizeChange"
+          :current-page="condition.pageNum"
+          :page-size="condition.pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="tableTotal"
+        />
+      </el-row>
+    </section>
+    <section>
+      <el-dialog
+        title="选择任务模板"
+        :visible.sync="taskDialogVisible"
+        width="450px"
+      >
+        <el-select
+          v-model="taskTemplateId"
+          placeholder="请选择任务模板"
+          style="width: 100%"
+        >
+          <el-option
+            :disabled="formDisable"
+            v-for="item in taskTemplateOptions"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-dialog>
+      <el-dialog
+        :title="dialogTitle"
+        :visible.sync="dialogVisible"
+        width="800px"
+      >
+        <el-form
+          ref="form"
+          label-width="80px"
+          :model="formData"
+          :rules="formRules"
+        >
+          <el-form-item label="名称" prop="name">
+            <el-input
+              type="text"
+              placeholder="请输入说明"
+              v-model="formData.name"
+              :readonly="formData.id !== undefined"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="负责人" prop="chargeUserId">
+            <el-select
+              v-model="formData.chargeUserId"
+              placeholder="请选择负责人"
+              filterable
+              remote
+              :remote-method="handleRemoteUser"
+            >
+              <el-option
+                :disabled="formData.id !== undefined"
+                v-for="user in systemUserOptions"
+                :key="user.userId"
+                :label="user.nickName"
+                :value="user.userId"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="说明" prop="explain">
+            <el-input
+              type="text"
+              placeholder="请输入说明"
+              v-model="formData.explain"
+              :readonly="formData.id !== undefined"
+            ></el-input>
+          </el-form-item>
+          <el-form-item label="是否并行" prop="isParallel">
+            <el-radio-group
+              v-model="formData.isParallel"
+              :disabled="formData.id !== undefined"
+            >
+              <el-radio :label="0">否</el-radio>
+              <el-radio :label="1">是</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item
+            v-for="(item, index) in formData.workingProcedureList"
+            :key="index"
+            style="border-top: 1px solid #dfdfdf; padding-top: 25px"
+          >
+            <el-row>
+              <el-col :span="3">
+                <span>工序模板</span>
+              </el-col>
+              <el-col :span="8">
+                <el-select
+                  v-model="item.workingProcedureCode"
+                  placeholder="请选择工序模板"
+                  @change="
+                    handleChangeProcedureTemplate(
+                      item.workingProcedureCode,
+                      index
+                    )
+                  "
+                >
+                  <el-option
+                    :disabled="formData.id !== undefined"
+                    v-for="processTemplate in processTemplateOptions"
+                    :key="processTemplate.code"
+                    :label="processTemplate.name"
+                    :value="processTemplate.code"
+                  >
+                  </el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="2">
+                <el-button
+                  type="danger"
+                  icon="el-icon-minus"
+                  circle
+                  @click="handleDeleteProcedure(index)"
+                  v-if="!formData.id"
+                />
+              </el-col>
+            </el-row>
+            <section v-if="item.workingProcedureCode">
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>期限</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-row :gutter="10" class="li-time">
+                    <el-col :span="2"> 期限</el-col>
+                    <el-col :span="4">
+                      <el-input
+                        type="text"
+                        placeholder="分"
+                        :readonly="formData.id !== undefined"
+                        v-model="item.durationArray[0]"
+                      >
+                        <template slot="append">分</template>
+                      </el-input>
+                    </el-col>
+                    <el-col :span="4">
+                      <el-input
+                        type="text"
+                        placeholder="时"
+                        :readonly="formData.id !== undefined"
+                        v-model="item.durationArray[1]"
+                      >
+                        <template slot="append">时</template>
+                      </el-input>
+                    </el-col>
+                    <el-col :span="4">
+                      <el-input
+                        type="text"
+                        placeholder="日"
+                        :readonly="formData.id !== undefined"
+                        v-model="item.durationArray[2]"
+                      >
+                        <template slot="append">日</template>
+                      </el-input>
+                    </el-col>
+                    <el-col :span="4">
+                      <el-input
+                        type="text"
+                        placeholder="月"
+                        :readonly="formData.id !== undefined"
+                        v-model="item.durationArray[3]"
+                      >
+                        <template slot="append">月</template>
+                      </el-input>
+                    </el-col>
+                    <el-col :span="4">
+                      <el-input
+                        type="text"
+                        placeholder="月"
+                        :readonly="formData.id !== undefined"
+                        v-model="item.durationArray[4]"
+                      >
+                        <template slot="append">年</template>
+                      </el-input>
+                    </el-col>
+                  </el-row>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>名称</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-input
+                    type="text"
+                    placeholder="请输入名称"
+                    v-model="item.name"
+                    :readonly="formData.id !== undefined"
+                  ></el-input>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>分类</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-select
+                    v-model="item.kindCode"
+                    placeholder="请选择分类"
+                    @change="handleChangeClassify(item.kindCode, index)"
+                  >
+                    <el-option
+                      :disabled="formData.id !== undefined"
+                      v-for="classify in processClassifyOptions"
+                      :key="classify.code"
+                      :label="classify.name"
+                      :value="classify.code"
+                    >
+                    </el-option>
+                  </el-select>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>类型</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-select
+                    v-model="item.typeCode"
+                    placeholder="请选择类型"
+                    @change="handleChangeType(item.typeCode, index)"
+                  >
+                    <el-option
+                      :disabled="formData.id !== undefined"
+                      v-for="type in processTypeOptions"
+                      :key="type.code"
+                      :label="type.name"
+                      :value="type.code"
+                    >
+                    </el-option>
+                  </el-select>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>说明</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-input
+                    type="text"
+                    placeholder="请输入说明"
+                    v-model="item.explain"
+                    :readonly="formData.id !== undefined"
+                  ></el-input>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>备注</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-input
+                    type="textarea"
+                    placeholder="请输入备注"
+                    v-model="item.remark"
+                    :readonly="formData.id !== undefined"
+                    rows="5"
+                  ></el-input>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>状态</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-radio-group
+                    v-model="item.status"
+                    :disabled="formData.id !== undefined"
+                  >
+                    <el-radio :label="0">启用</el-radio>
+                    <el-radio :label="1">停用</el-radio>
+                  </el-radio-group>
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>现场凭证</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-radio-group
+                    v-model="item.needSceneVoucher"
+                    :disabled="formData.id !== undefined"
+                  >
+                    <el-radio :label="0">不需要</el-radio>
+                    <el-radio :label="1">需要</el-radio>
+                  </el-radio-group>
+                </el-col>
+              </el-row>
+              <el-row
+                v-if="formData.id !== undefined && item.needSceneVoucher === 1"
+              >
+                <el-col :span="24">
+                  <li-attachment
+                    :readonly="formDisable || item.status !== 1"
+                    v-model="item.sceneVoucher"
+                  />
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>完成凭证</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-radio-group
+                    v-model="item.needCompleteVoucher"
+                    :disabled="formData.id !== undefined"
+                  >
+                    <el-radio :label="0">不需要</el-radio>
+                    <el-radio :label="1">需要</el-radio>
+                  </el-radio-group>
+                </el-col>
+              </el-row>
+              <el-row
+                v-if="
+                  formData.id !== undefined && item.needCompleteVoucher === 1
+                "
+              >
+                <el-col :span="24">
+                  <li-attachment
+                    :readonly="formDisable || item.status !== 1"
+                    v-model="item.completeVoucher"
+                  />
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>文档</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-radio-group
+                    v-model="item.needFile"
+                    :disabled="formData.id !== undefined"
+                  >
+                    <el-radio :label="0">不需要</el-radio>
+                    <el-radio :label="1">需要</el-radio>
+                  </el-radio-group>
+                </el-col>
+              </el-row>
+              <el-row v-if="formData.id !== undefined && item.needFile === 1">
+                <el-col :span="24">
+                  <li-attachment
+                    :readonly="formDisable || item.status !== 1"
+                    v-model="item.file"
+                  />
+                </el-col>
+              </el-row>
+              <el-row :gutter="10">
+                <el-col :span="3">
+                  <span>完成说明</span>
+                </el-col>
+                <el-col :span="21">
+                  <el-radio-group
+                    v-model="item.needCompleteExplain"
+                    :disabled="formData.id !== undefined"
+                  >
+                    <el-radio :label="0">不需要</el-radio>
+                    <el-radio :label="1">需要</el-radio>
+                  </el-radio-group>
+                </el-col>
+              </el-row>
+              <el-row
+                :gutter="10"
+                v-if="
+                  formData.id !== undefined &&
+                  item.needCompleteExplain === 1 &&
+                  !formDisable
+                "
+              >
+                <el-col :span="24">
+                  <el-input
+                    type="text"
+                    v-model="item.completeExplain"
+                    placeholder="请填写完成说明"
+                    :readonly="formDisable || item.status !== 1"
+                  ></el-input>
+                </el-col>
+              </el-row>
+              <el-row
+                :gutter="10"
+                v-if="
+                  formData.id !== undefined &&
+                  !formDisable &&
+                  loginInfo &&
+                  loginInfo.user.userId === formData.chargeUserId &&
+                  item.status === 1
+                "
+                style="text-align: center"
+              >
+                <el-button type="primary" @click="handleConfirmProcess(item)"
+                  >确认工序</el-button
+                >
+              </el-row>
+            </section>
+          </el-form-item>
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            circle
+            @click="handleAddProcedure"
+            v-if="!formData.id"
+          />
+          <el-form-item
+            v-if="
+              formData.id !== undefined &&
+              !formDisable &&
+              loginInfo &&
+              loginInfo.user.userId === formData.launchUserId &&
+              formData.status === 1
+            "
+            style="text-align: center"
+          >
+            <el-button type="primary" @click="handleConfirmInstance"
+              >确认任务</el-button
+            >
+            <el-button type="primary" @click="handleRejectInstance"
+              >驳回任务</el-button
+            >
+          </el-form-item>
+        </el-form>
+
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisible = false">关 闭</el-button>
+          <el-button type="primary" @click="handleSubmit" v-if="!formData.id"
+            >确 定</el-button
+          >
+        </span>
+      </el-dialog>
+    </section>
+  </el-row>
+</template>
+
+<script>
+import {
+  listInstance,
+  detailsInstance,
+  addInstance,
+  updateInstance,
+  deleteInstance,
+  listTaskTemplate,
+  detailsTaskTemplate,
+  listProcessTemplate,
+  detailsProcessTemplate,
+  listProcessClassify,
+  listProcessType,
+  listSystemUser,
+  confirmProcess,
+  confirmInstance,
+  rejectInstance,
+} from "@/api/taskProcess.js";
+import { mapState } from "vuex";
+export default {
+  name: "Instance",
+  data() {
+    return {
+      condition: {
+        pageNum: undefined,
+        pageSize: undefined,
+      },
+      tableData: [],
+      tableTotal: 0,
+      tableSelectedIds: [],
+      dialogTitle: undefined,
+      dialogVisible: false,
+      formData: {
+        name: undefined,
+        explain: undefined,
+        isParallel: undefined, //是否并行
+        chargeUserId: undefined, //负责人id
+        workingProcedureCode: undefined, //工序实例编码（当此任务是因为工序实例生成时，此参数为该工序实例的编码）
+        parentTaskCode: undefined, //父级任务实例编码（与workingProcedureCode不为空时，此字段不能为空）
+        launchUserId: undefined, // 任务发起人
+        workingProcedureList: [],
+      },
+      formRules: {
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        isParallel: [
+          { required: true, message: "请选择是否并行", trigger: "blur" },
+        ],
+        chargeUserId: [
+          { required: true, message: "请选择负责人", trigger: "blur" },
+        ],
+      },
+      formDisable: false,
+      taskTemplateId: undefined,
+      taskTemplateOptions: [],
+      processTemplateOptions: [],
+      processClassifyOptions: [],
+      processTypeOptions: [],
+      systemUserOptions: [],
+      taskDialogVisible: false,
+    };
+  },
+  computed: {
+    ...mapState({
+      loginInfo: (state) => state.auth.loginInfo,
+    }),
+  },
+  watch: {
+    dialogVisible(v) {
+      if (v) {
+        listProcessTemplate({}).then((res) => {
+          this.processTemplateOptions = res.rows;
+        });
+        listProcessClassify({}).then((res) => {
+          this.processClassifyOptions = res.rows;
+        });
+        listProcessType({}).then((res) => {
+          this.processTypeOptions = res.rows;
+        });
+        listSystemUser().then((res) => {
+          this.systemUserOptions = res.rows;
+        });
+      } else {
+        this.processTemplateOptions = [];
+        this.processClassifyOptions = [];
+        this.processTypeOptions = [];
+      }
+    },
+    taskDialogVisible(v) {
+      if (v) {
+        listTaskTemplate({}).then((res) => {
+          this.taskTemplateOptions = res.rows;
+        });
+      } else {
+        this.taskTemplateId = undefined;
+        this.taskTemplateOptions = [];
+      }
+    },
+    taskTemplateId(v) {
+      if (v) {
+        detailsTaskTemplate(v).then((res) => {
+          res.workingProcedureList = this.transformDuration(
+            res.workingProcedureList
+          );
+          delete res.id;
+          delete res.name;
+          delete res.explain;
+          delete res.remark;
+          this.formData = res;
+          this.taskDialogVisible = false;
+          this.dialogVisible = true;
+        });
+      }
+    },
+  },
+  methods: {
+    queryList(pageNum, pageSize) {
+      this.condition.pageNum = pageNum || 1;
+      this.condition.pageSize = pageSize || 10;
+      listInstance(this.condition).then((res) => {
+        this.tableData = res.rows;
+        this.tableTotal = res.total;
+        this.tableSelectedIds = [];
+      });
+    },
+    handleCurrentChange(pageNum) {
+      this.queryList(pageNum, this.condition.pageSize);
+    },
+    handleSizeChange(pageSize) {
+      this.queryList(this.condition.pageNum, pageSize);
+    },
+    handleSelected(row) {
+      this.tableSelectedIds = row.map((item) => item.id) || [];
+    },
+    handleAdd() {
+      this.dialogTitle = "发起任务";
+      this.formDisable = false;
+      this.formData = {
+        name: undefined,
+        explain: undefined,
+        isParallel: undefined, //是否并行
+        chargeUserId: undefined, //负责人id
+        workingProcedureCode: undefined, //工序实例编码（当此任务是因为工序实例生成时，此参数为该工序实例的编码）
+        parentTaskCode: undefined, //父级任务实例编码（与workingProcedureCode不为空时，此字段不能为空）
+        launchUserId: undefined, // 任务发起人
+        workingProcedureList: [],
+      };
+      this.taskDialogVisible = true;
+    },
+    handleView(row) {
+      this.dialogTitle = "任务详情";
+      this.formDisable = true;
+      detailsInstance(row.id).then((res) => {
+        res.workingProcedureList = this.transformDuration(
+          res.workingProcedureList
+        );
+        this.formData = res;
+        this.dialogVisible = true;
+      });
+    },
+    handleEdit(row) {
+      this.dialogTitle = "任务操作";
+      this.formDisable = false;
+      detailsInstance(row.id).then((res) => {
+        res.workingProcedureList = this.transformDuration(
+          res.workingProcedureList
+        );
+        this.formData = res;
+        this.dialogVisible = true;
+      });
+    },
+    handleDelete(row) {
+      this.$confirm("是否删除？", "删除")
+        .then(() => {
+          deleteInstance(row.id || this.tableSelectedIds).then(() => {
+            this.$message.success("操作成功");
+            this.queryList();
+          });
+        })
+        .catch(() => {});
+    },
+    handleSubmit() {
+      this.$refs.form.validate((valid) => {
+        if (valid) {
+          this.formData.workingProcedureList = this.transformDuration(
+            this.formData.workingProcedureList
+          );
+          let handleTarget = this.formData.id ? updateInstance : addInstance;
+          handleTarget(this.formData).then(() => {
+            this.$message.success("操作成功");
+            this.dialogVisible = false;
+            this.queryList();
+          });
+        }
+      });
+    },
+    handleAddProcedure() {
+      this.formData.workingProcedureList.push({
+        workingProcedureCode: undefined,
+        explain: undefined, //说明
+        kindCode: undefined, //分类编码
+        name: undefined, //名称
+        needCompleteVoucher: undefined, //是否需要完成凭证(0不需要 1需要)
+        completeVoucher: undefined, // 完成凭证文件
+        needFile: undefined, //是否需要文档(0不需要 1需要)
+        file: undefined, // 文档
+        needSceneVoucher: undefined, //是否需要现场凭证(0不需要 1需要)
+        sceneVoucher: undefined, // 现场凭证文件
+        needCompleteExplain: undefined, // 是否需要完成说明(0不需要 1需要)
+        completeExplain: undefined, // 完成说明
+        remark: undefined, //备注
+        status: undefined, //状态(0启用 1停用)
+        typeCode: undefined, //类型编码
+        duration: undefined,
+        durationArray: [0, 0, 0, 0, 0],
+      });
+    },
+    handleDeleteProcedure(index) {
+      this.formData.workingProcedureList.splice(index, 1);
+    },
+    transformDuration(list) {
+      for (let index in list) {
+        if (list[index].durationArray) {
+          list[index].duration = list[index].durationArray.join(",");
+        } else {
+          list[index].durationArray = list[index].duration.split(",");
+        }
+
+        if (!list[index].sceneVoucher) {
+          list[index].sceneVoucher = "[]";
+        }
+
+        if (!list[index].completeVoucher) {
+          list[index].completeVoucher = "[]";
+        }
+
+        if (!list[index].file) {
+          list[index].file = "[]";
+        }
+      }
+      return list;
+    },
+
+    handleChangeProcedureTemplate(value, index) {
+      let id = undefined;
+      for (let index in this.processTemplateOptions) {
+        if (this.processTemplateOptions[index].workingProcedureCode === value) {
+          id = this.processTemplateOptions[index].id;
+          break;
+        }
+      }
+      detailsProcessTemplate(id).then((res) => {
+        delete res.id;
+        delete res.name;
+        delete res.explain;
+        delete res.remark;
+        res.durationArray = [0, 0, 0, 0, 0];
+        for (let key in res) {
+          this.formData.workingProcedureList[index][key] = res[key];
+        }
+      });
+    },
+
+    handleChangeClassify(value, index) {
+      console.log(value, index);
+    },
+
+    handleChangeType(value, index) {
+      console.log(value, index);
+    },
+
+    handleRemoteUser(value) {
+      listSystemUser({ nickName: value }).then((res) => {
+        this.systemUserOptions = res.rows;
+      });
+    },
+
+    handleConfirmProcess(item) {
+      confirmProcess(item).then(() => {
+        this.$message.success("操作成功");
+        this.dialogVisible = false;
+      });
+    },
+    handleConfirmInstance() {
+      confirmInstance(this.formData.id).then(() => {
+        this.$message.success("操作成功");
+        this.dialogVisible = false;
+      });
+    },
+    handleRejectInstance() {
+      this.$prompt("请输入驳回理由", "驳回任务", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputPattern: /\S+/,
+        inputErrorMessage: "请输入驳回理由",
+      })
+        .then(({ value }) => {
+          rejectInstance({
+            id: this.formData.id,
+            explain: value,
+          }).then(() => {
+            this.$message.success("操作成功");
+            this.dialogVisible = false;
+          });
+        })
+        .catch(() => {});
+    },
+  },
+  mounted() {
+    this.queryList();
+  },
+};
+</script>
+<style scoped lang="less">
+.li-time {
+  ::v-deep .el-input-group__append {
+    padding: 5px;
+  }
+
+  ::v-deep .el-input__inner {
+    padding: 5px;
+  }
+}
+</style>

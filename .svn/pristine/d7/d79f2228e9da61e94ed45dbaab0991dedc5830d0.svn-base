@@ -1,0 +1,1047 @@
+<template>
+  <div class="count">
+    <div class="header">
+      <img
+        :src="require('@/assets/img/wiseScreen/logo.png')"
+        alt=""
+      />物管云数据可视化分析
+    </div>
+    <div class="item-box">
+      <el-row :gutter="20">
+        <el-col :span="17">
+          <div class="grid-content">
+            <el-row :gutter="20">
+              <!--费用情况-->
+              <el-col :span="16">
+                <div class="grid-content content" style="height: 370px">
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <p class="first-title">费用情况</p>
+                      <div id="billBox" class="grid-content bill-box"></div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="grid-content">
+                        <p class="second-title">
+                          <span><span class="square"></span>回款总费用</span>
+                          <span><span class="circle"></span>时间</span>
+                          <el-select v-model="selectMonth" placeholder="请选择">
+                            <el-option
+                              v-for="item in month"
+                              :key="item.value"
+                              :label="item.name"
+                              :value="item.value"
+                            >
+                            </el-option>
+                          </el-select>
+                        </p>
+                        <el-row
+                          style="
+                            text-align: center;
+                            font-size: 18px;
+                            color: #989eb2;
+                          "
+                        >
+                          <el-col :span="12">
+                            <div class="grid-content">
+                              <p class="big-money">5000020</p>
+                              <p>总费用</p>
+                            </div>
+                          </el-col>
+                          <el-col :span="12">
+                            <div class="grid-content">
+                              <p class="big-money">440850</p>
+                              <p>已回款</p>
+                            </div>
+                          </el-col>
+                        </el-row>
+
+                        <el-row style="color: #989eb2; margin-top: 50px">
+                          <el-col :span="24">
+                            <div class="grid-content">
+                              <div
+                                class="type-box"
+                                style="
+                                  border-bottom: 1px solid #bec4d3;
+                                  padding-bottom: 20px;
+                                "
+                              >
+                                <p
+                                  style="
+                                    line-height: 35px;
+                                    color: #3480f7;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  2565元
+                                </p>
+                                <p>小程序</p>
+                              </div>
+                              <div
+                                class="type-box"
+                                style="
+                                  border-left: 1px solid #bec4d3;
+                                  border-bottom: 1px solid #bec4d3;
+                                  padding-bottom: 20px;
+                                "
+                              >
+                                <p
+                                  style="
+                                    color: #43c492;
+                                    line-height: 35px;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  2565元
+                                </p>
+                                <p>扫码</p>
+                              </div>
+                              <div
+                                class="type-box"
+                                style="
+                                  padding-top: 20px;
+                                  border-right: 1px solid #bec4d3;
+                                "
+                              >
+                                <p
+                                  style="
+                                    color: #e89b3f;
+                                    line-height: 35px;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  2565元
+                                </p>
+                                <p>银行代扣</p>
+                              </div>
+                              <div class="type-box" style="padding-top: 20px">
+                                <p
+                                  style="
+                                    color: #f77a55;
+                                    line-height: 35px;
+                                    font-size: 24px;
+                                  "
+                                >
+                                  2565元
+                                </p>
+                                <p>扫码</p>
+                              </div>
+                            </div>
+                          </el-col>
+                        </el-row>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+              <!--工单处理情况-->
+              <el-col :span="8">
+                <div class="grid-content content" style="height: 370px">
+                  <p class="first-title">工单处理情况</p>
+                  <div id="projectBox" style="height: 360px; width: 100%"></div>
+                </div>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <!--人脸信息系统-->
+              <el-col :span="8">
+                <div
+                  class="grid-content content"
+                  style="
+                    height: 370px;
+                    background-color: initial;
+                    padding: 30px 0;
+                  "
+                >
+                  <el-row>
+                    <el-col :span="24" style="position: relative">
+                      <p class="first-title">
+                        人脸信息系统
+                        <el-select v-model="selectMonth" placeholder="请选择">
+                          <el-option
+                            v-for="item in month"
+                            :key="item.value"
+                            :label="item.name"
+                            :value="item.value"
+                          >
+                          </el-option>
+                        </el-select>
+                      </p>
+                      <div class="triangle-up"></div>
+                      <div class="face-box">
+                        <p>
+                          人脸识别总次数：<span
+                            class="size36"
+                            style="color: #6ad7b0"
+                            >9910</span
+                          >次
+                        </p>
+                        <el-row style="margin: 35px 0">
+                          <el-col :span="20">
+                            <div class="grid-content" style="overflow: hidden">
+                              <div class="swiper mySwiper">
+                                <div class="swiper-wrapper">
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                  <div class="swiper-slide">
+                                    <el-avatar
+                                      :size="66"
+                                      :src="require('@/assets/img/123.png')"
+                                    ></el-avatar>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </el-col>
+                          <el-col :span="4">
+                            <div class="grid-content">
+                              <el-avatar :size="66">
+                                <span style="font-size: 22px">100</span>
+                              </el-avatar>
+                            </div>
+                          </el-col>
+                        </el-row>
+
+                        <el-row :gutter="20">
+                          <el-col :span="12">
+                            <div
+                              class="grid-content"
+                              style="text-align: center"
+                            >
+                              <p class="size36">5060</p>
+                              <p>社区住户识别次数</p>
+                            </div>
+                          </el-col>
+                          <el-col :span="12">
+                            <div
+                              class="grid-content"
+                              style="text-align: center"
+                            >
+                              <p class="size36">5060</p>
+                              <p>社区住户识别次数</p>
+                            </div>
+                          </el-col>
+                        </el-row>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+
+              <!--费用对比及回款情况-->
+              <el-col :span="8">
+                <div class="grid-content content" style="height: 370px">
+                  <el-row>
+                    <el-col :span="24">
+                      <p class="first-title">
+                        费用对比及回款情况
+                        <el-select v-model="selectMonth" placeholder="请选择">
+                          <el-option
+                            v-for="item in month"
+                            :key="item.value"
+                            :label="item.name"
+                            :value="item.value"
+                          >
+                          </el-option>
+                        </el-select>
+                      </p>
+                      <div style="font-size: 14px; margin-top: 20px">
+                        <el-row>
+                          <el-col :span="6">
+                            <div
+                              class="grid-content per-box"
+                              style="
+                                background-color: #009eff;
+                                border-top-left-radius: 10px;
+                                border-bottom-left-radius: 10px;
+                              "
+                            ></div>
+                          </el-col>
+                          <el-col :span="6">
+                            <div
+                              class="grid-content per-box"
+                              style="background-color: #6ad7b0"
+                            ></div>
+                          </el-col>
+                          <el-col :span="6">
+                            <div
+                              class="grid-content per-box"
+                              style="background-color: #f9bd65"
+                            ></div>
+                          </el-col>
+                          <el-col :span="6">
+                            <div
+                              class="grid-content per-box"
+                              style="
+                                background-color: #f77a55;
+                                border-top-right-radius: 10px;
+                                border-bottom-right-radius: 10px;
+                              "
+                            ></div>
+                          </el-col>
+                        </el-row>
+
+                        <el-row :gutter="20">
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #009eff"
+                            ></div>
+                            住宅管理费40%
+                            <div class="grid-content"></div>
+                          </el-col>
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #6ad7b0"
+                            ></div>
+                            住宅公摊费30%
+                            <div class="grid-content"></div>
+                          </el-col>
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #f9bd65"
+                            ></div>
+                            车位管理费16%
+                            <div class="grid-content"></div>
+                          </el-col>
+                          <el-col
+                            :span="12"
+                            style="text-align: center; margin-top: 5px"
+                          >
+                            <div
+                              class="circle"
+                              style="background-color: #f77a55"
+                            ></div>
+                            车位公摊费14%
+                            <div class="grid-content"></div>
+                          </el-col>
+                        </el-row>
+                      </div>
+                      <div class="progress-box">
+                        <p>住宅管理费 <span>80/100</span></p>
+                        <el-progress
+                          percentage="20"
+                          color="#409eff"
+                        ></el-progress>
+                      </div>
+                      <div></div>
+                      <div class="progress-box">
+                        <p>住宅管理费 <span>80/100</span></p>
+                        <el-progress
+                          percentage="20"
+                          color="#6AD7B0"
+                        ></el-progress>
+                      </div>
+                      <div class="progress-box">
+                        <p>住宅管理费 <span>80/100</span></p>
+                        <el-progress
+                          percentage="20"
+                          color="#F9BD65"
+                        ></el-progress>
+                      </div>
+                      <div class="progress-box">
+                        <p>住宅管理费 <span>80/100</span></p>
+                        <el-progress
+                          percentage="20"
+                          color="#F77A55"
+                        ></el-progress>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+              <!--物业品质控制-->
+              <el-col :span="8">
+                <div class="grid-content content" style="height: 370px">
+                  <p class="first-title">物业品质控制</p>
+                  <div style="height: 300px; width: 100%"></div>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+        <el-col :span="7">
+          <div class="grid-content content">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content" style="height: 485px">
+                  <div style="width: 100%; height: 277px">
+                    <iframe
+                      src="http://ha.tank-light.com/ehome/iframe.html"
+                      class="device"
+                      frameborder="0"
+                      scrolling="no"
+                    ></iframe>
+                  </div>
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div class="grid-content"></div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="grid-content"></div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+          <div class="grid-content content" style="margin-top: 20px">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content" style="height: 121px">
+                  <p class="first-title">
+                    物业接待
+                    <el-select v-model="selectMonth" placeholder="请选择">
+                      <el-option
+                        v-for="item in month"
+                        :key="item.value"
+                        :label="item.name"
+                        :value="item.value"
+                      >
+                      </el-option>
+                    </el-select>
+                  </p>
+                  <el-row style="margin-top: 30px">
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        接待单数量
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        40850
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        及时完成数量
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        40850
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+            </el-row>
+            <el-row style="margin-top: 20px">
+              <el-col :span="24">
+                <div
+                  class="grid-content"
+                  style="height: 101px; margin-top: 20px"
+                >
+                  <p class="first-title">
+                    业主/小程序使用情况
+                    <el-select v-model="selectMonth" placeholder="请选择">
+                      <el-option
+                        v-for="item in month"
+                        :key="item.value"
+                        :label="item.name"
+                        :value="item.value"
+                      >
+                      </el-option>
+                    </el-select>
+                  </p>
+                  <el-row style="margin-top: 30px">
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        接待单数量
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        40850
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="
+                          font-size: 18px;
+                          color: #989eb2;
+                          line-height: 45px;
+                        "
+                      >
+                        及时完成数量
+                      </div>
+                    </el-col>
+                    <el-col :span="6">
+                      <div
+                        class="grid-content"
+                        style="color: #000000; font-size: 30px"
+                      >
+                        40850
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import echarts from "echarts";
+import Swiper from "swiper";
+import "swiper/swiper-bundle.min.css";
+
+export default {
+  name: "count",
+  data() {
+    return {
+      selectMonth: new Date().getMonth() + 1,
+      month: [
+        {
+          name: "一月",
+          value: 1,
+        },
+        {
+          name: "一月",
+          value: 1,
+        },
+        {
+          name: "二月",
+          value: 2,
+        },
+        {
+          name: "三月",
+          value: 3,
+        },
+        {
+          name: "四月",
+          value: 4,
+        },
+        {
+          name: "五月",
+          value: 5,
+        },
+        {
+          name: "六月",
+          value: 6,
+        },
+        {
+          name: "七月",
+          value: 7,
+        },
+        {
+          name: "八月",
+          value: 8,
+        },
+        {
+          name: "九月",
+          value: 9,
+        },
+        {
+          name: "十月",
+          value: 10,
+        },
+        {
+          name: "十一月",
+          value: 11,
+        },
+        {
+          name: "十二月",
+          value: 12,
+        },
+      ],
+      visible: true,
+    };
+  },
+  methods: {
+    // 初始化费用情况折线图
+    initBill(id) {
+      let option = {
+        title: {
+          text: "",
+          left: "0",
+          top: "0",
+          textStyle: {
+            fontSize: 30,
+          },
+        },
+        xAxis: {
+          type: "category",
+          data: ["Mon", "Tue", "Wed", "Thu"],
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            data: [820, 932, 901, 934, 1290, 1330, 1320],
+            type: "line",
+            smooth: true,
+            label: {
+              show: false,
+              position: "top",
+              textStyle: {
+                fontSize: 20,
+              },
+            },
+          },
+        ],
+      };
+
+      echarts.init(document.getElementById(id)).setOption(option);
+    },
+    // 初始化工单处理情况,
+    initProject(id) {
+      let option = {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "Access From",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: "40",
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [
+              { value: 1048, name: "Search Engine" },
+              { value: 735, name: "Direct" },
+              { value: 580, name: "Email" },
+              { value: 484, name: "Union Ads" },
+              { value: 300, name: "Video Ads" },
+            ],
+          },
+        ],
+      };
+
+      echarts.init(document.getElementById(id)).setOption(option);
+    },
+
+    initPie(id) {
+      let option = {
+        // title: {
+        //   // 标题
+        //   text: "Weather Statistics",
+        //   subtext: "Fake Data",
+        //   left: "center",
+        // },
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b} : {c} ({d}%)",
+        },
+
+        legend: {
+          // 脚部分类
+          bottom: 10,
+          left: "center",
+          data: ["已接待工单", "已经处理工单"],
+        },
+        series: [
+          {
+            type: "pie",
+            color: ["#E2EEFE", "#3480F7"],
+
+            labelLine: {
+              length: 20,
+            },
+            silent: true, //饼图不响应鼠标事件
+            radius: ["40%", "50%"],
+            center: ["50%", "50%"],
+            selectedMode: "single",
+            data: [
+              // {
+              //   value: 735,
+              //   name: "CityA",
+              //   label: {
+              //     formatter: [
+              //       // 浮标指示
+              //       "{title|{b}}{abg|}",
+              //       "  {weatherHead|Weather}{valueHead|Days}{rateHead|Percent}",
+              //       "{hr|}",
+              //       "  Sunny{value|202}{rate|55.3%}",
+              //       "  Cloudy{value|142}{rate|38.9%}",
+              //       "  Showers{value|21}{rate|5.8%}",
+              //     ].join("\n"),
+              //     backgroundColor: "#eee",
+              //     borderColor: "#777",
+              //     borderWidth: 1,
+              //     borderRadius: 4,
+              //     rich: {
+              //       title: {
+              //         color: "#eee",
+              //         align: "center",
+              //       },
+              //       abg: {
+              //         backgroundColor: "#333",
+              //         width: "100%",
+              //         align: "right",
+              //         height: 25,
+              //         borderRadius: [4, 4, 0, 0],
+              //       },
+              //       Sunny: {
+              //         height: 30,
+              //         align: "left",
+              //         // backgroundColor: {
+              //         //   image: weatherIcons.Sunny,
+              //         // },
+              //       },
+              //       Cloudy: {
+              //         height: 30,
+              //         align: "left",
+              //         // backgroundColor: {
+              //         //   image: weatherIcons.Cloudy,
+              //         // },
+              //       },
+              //       Showers: {
+              //         height: 30,
+              //         align: "left",
+              //         // backgroundColor: {
+              //         //   image: weatherIcons.Showers,
+              //         // },
+              //       },
+              //       weatherHead: {
+              //         color: "#333",
+              //         height: 24,
+              //         align: "left",
+              //       },
+              //       hr: {
+              //         borderColor: "#777",
+              //         width: "100%",
+              //         borderWidth: 0.5,
+              //         height: 0,
+              //       },
+              //       value: {
+              //         width: 20,
+              //         padding: [0, 20, 0, 30],
+              //         align: "left",
+              //       },
+              //       valueHead: {
+              //         color: "#333",
+              //         width: 20,
+              //         padding: [0, 20, 0, 30],
+              //         align: "center",
+              //       },
+              //       rate: {
+              //         width: 40,
+              //         align: "right",
+              //         padding: [0, 10, 0, 0],
+              //       },
+              //       rateHead: {
+              //         color: "#333",
+              //         width: 40,
+              //         align: "center",
+              //         padding: [0, 10, 0, 0],
+              //       },
+              //     },
+              //   },
+              // },
+              { value: 1500, name: "已接待工单", selected: true }, //选中（放大）某一数据
+              { value: 510, name: "已经处理工单" },
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: "rgba(0, 0, 0, 0.5)",
+              },
+            },
+          },
+        ],
+      };
+
+      echarts.init(document.getElementById(id)).setOption(option);
+    },
+
+    initAvator() {
+      new Swiper(".mySwiper", {
+        slidesPerView: 4,
+        spaceBetween: 5,
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true,
+        },
+      });
+    },
+  },
+  mounted() {
+    // this.initBill("billBox");
+    // this.initProject("projectBox");
+    this.initPie("projectBox");
+    this.initAvator();
+  },
+};
+</script>
+
+<style scoped lang="less">
+.triangle-up {
+  position: absolute;
+  left: 50px;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 30px solid #3d53fb;
+}
+
+.square {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #d3ddef;
+}
+
+.circle {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #d3ddef;
+  border-radius: 50%;
+}
+
+.count {
+  .device {
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+  }
+
+  font-family: PingFang;
+  width: 1920px;
+  height: 1080px;
+  background-color: #f5f9fc;
+
+  .header {
+    background-color: #ffffff;
+    width: 100%;
+    height: 120px;
+    text-align: center;
+    font-size: 36px;
+    line-height: 120px;
+    position: relative;
+  }
+
+  img {
+    position: absolute;
+    left: 40px;
+    top: 30px;
+  }
+
+  .item-box {
+    width: 95%;
+    margin: 35px auto;
+
+    .content {
+      .per-box {
+        height: 20px;
+      }
+
+      .progress-box {
+        margin: 25px 0 5px 0;
+        font-size: 14px;
+        color: #989eb2;
+
+        p {
+          margin: 5px 0;
+        }
+
+        span {
+          float: right;
+          font-size: 12px;
+        }
+
+        /deep/ .el-progress-bar {
+          padding-right: 0;
+        }
+
+        /deep/ .el-progress__text {
+          display: none;
+        }
+      }
+
+      .type-box {
+        display: inline-block;
+        width: 49.5%;
+        text-align: center;
+      }
+
+      .face-box {
+        line-height: 40px;
+        color: #ffffff;
+        width: 360px;
+        height: 285px;
+        background-color: #3d53fb;
+        margin-top: 25px;
+        border-radius: 25px;
+        font-size: 14px;
+        padding: 30px;
+
+        .size36 {
+          font-size: 36px;
+        }
+      }
+
+      position: relative;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 5px;
+
+      .first-title {
+        color: #343f5e;
+        font-size: 22px;
+
+        /deep/ .el-select {
+          width: 75px;
+          float: right;
+          font-size: 14px;
+        }
+
+        /deep/ .el-input__inner {
+          border-radius: 20px;
+          background-color: #e5edff;
+          color: #989eb2;
+          height: 30px;
+          line-height: 30px;
+        }
+
+        /deep/ .el-input__icon {
+          line-height: 30px;
+        }
+      }
+
+      .bill-box {
+        width: 100%;
+        height: 390px;
+      }
+
+      .second-title {
+        text-align: right;
+        color: #989eb2;
+        font-size: 14px;
+
+        span {
+          margin-right: 20px;
+        }
+
+        /deep/ .el-select {
+          width: 75px;
+        }
+
+        /deep/ .el-input__inner {
+          border-radius: 20px;
+          background-color: #e5edff;
+          color: #989eb2;
+          height: 30px;
+          line-height: 30px;
+        }
+
+        /deep/ .el-input__icon {
+          line-height: 30px;
+        }
+      }
+
+      .big-money {
+        font-size: 36px;
+        color: #000000;
+        margin-top: 50px;
+      }
+    }
+  }
+}
+</style>

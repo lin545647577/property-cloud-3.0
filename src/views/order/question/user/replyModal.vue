@@ -1,0 +1,147 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="反馈方式：" prop="feedbackType">
+        <el-select
+          v-model="form.feedbackType"
+          placeholder="请选择"
+          style="width: 100%"
+          disabled
+        >
+          <el-option
+            v-for="item in types"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="反馈内容：" prop="feedbackContent">
+        <el-input
+          type="textarea"
+          autosize
+          :disabled="checkInfo"
+          placeholder="请输入"
+          v-model="form.feedbackContent"
+        >
+        </el-input>
+      </el-form-item>
+      <el-form-item label="反馈图片：">
+        <li-attachment v-model="form.feedbackUrls" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import { queryUserQuestion, replyUserQuestion } from "@/api/order.js";
+
+import { dateFormat } from "@/utils/util.js";
+
+export default {
+  name: "replyModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      checkInfo: false,
+      form: {},
+      rules: {
+        feedbackContent: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+      },
+      loading: false,
+      types: [
+        {
+          id: 0,
+          name: "不需要反馈",
+        },
+        {
+          id: 1,
+          name: "公众号",
+        },
+        {
+          id: 2,
+          name: "手机短信",
+        },
+      ],
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryUserQuestion(id).then((res) => {
+        this.form = res;
+        this.form.feedbackUrls = res.feedbackUrls ? res.feedbackUrls : "[]";
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            this.replyInfo();
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    replyInfo() {
+      replyUserQuestion(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+};
+</script>
+
+<style scoped></style>

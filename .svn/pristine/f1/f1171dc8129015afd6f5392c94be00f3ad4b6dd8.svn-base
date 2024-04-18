@@ -1,0 +1,617 @@
+<template>
+  <el-row class="page-location" id="box">
+    <!-- 左上侧搜索框 -->
+    <div class="box-top">
+      <el-col
+        :span="24"
+        style="margin: 2% 0 2% -2%; display: flex; align-items: center"
+      >
+        <transition name="el-fade-in-linear">
+          <el-select
+            v-li-keyboard
+            v-if="search"
+            class="input-content"
+            v-model="information.destination"
+            filterable
+            remote
+            clearable
+            reserve-keyword
+            placeholder="请输入关键词"
+            :remote-method="destinationChange"
+            @change="findPositionByUserCilck"
+          >
+            <el-option
+              v-for="item in options"
+              :key="item.typeCode"
+              :label="item.name"
+              :value="item.typeCode"
+            >
+            </el-option>
+          </el-select>
+        </transition>
+
+        <img
+          v-if="!searchnew"
+          style="position: absolute; right: -20px"
+          @click="search"
+          src="https://w3c.tank-light.com/static/大屏机/tengyuguangxun7.png"
+          alt=""
+        />
+        <div v-if="searchnew">
+          <span style="color: #6c7dfc"> 展<br />开<br />搜<br />索 </span>
+          <img
+            style="position: absolute; right: -20px; top: 40px"
+            @click="unwind"
+            src="https://w3c.tank-light.com/static/大屏机/tengyuguangxun8.png"
+            alt=""
+          />
+        </div>
+      </el-col>
+    </div>
+    <el-col :span="24" class="box-map">
+      <!-- 地图 -->
+      <el-col :span="18" style="height: 100vh">
+        <div id="map" class="box-map-main"></div>
+        <div
+          @click="goBack"
+          v-if="show"
+          style="
+            position: absolute;
+            top: 5%;
+            right: 30%;
+            height: 5%;
+            width: 10%;
+            text-align: center;
+            background-image: linear-gradient(to right, #44c8ef, #30a2f8);
+            line-height: 53px;
+            border-radius: 20px;
+            color: #fff;
+          "
+        >
+          {{ "返回首页" + " " + "(" + times + "秒)" }}
+        </div>
+      </el-col>
+      <!-- 右边详情 -->
+      <el-col :span="6">
+        <!-- <Side-card :loading="dialogVisible" :url="url" :id="id" ref="child" /> -->
+        <SideSearch
+          v-on:handleOpen="handleOpen"
+          v-on:handleClose="handleClose"
+        />
+      </el-col>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+import { get } from "@/api/common.js";
+// import sideCard from "@/components/wiseScreen/sideCard";
+import sideSearch from "@/components/wiseScreen/sideSearch";
+
+import {
+  pathCalculation,
+  deviceMapInfo,
+  tygxMapPointDefinition,
+  findPositionByUser,
+  generateQrcCode,
+  listForWisdomScreen,
+  selectCurrentOrgDefinedTypes,
+  selectShowPointsDataForReservationInWisdomScreen,
+  generateToReservationQrc,
+} from "@/api/location.js";
+
+export default {
+  name: "Location",
+  components: {
+    // "Side-card": sideCard,
+    SideSearch: sideSearch,
+  },
+  data() {
+    return {
+      // 左侧菜单信息
+      information: {
+        destination: "", //目的地
+        startLocation: "起始位置", //查询结果
+        endLocation: undefined,
+        msg: undefined,
+      },
+      map: undefined,
+      dialogVisible: false, //二维码显示
+      res: "", //地图路径
+      equipment: {}, //设备坐标
+      current: [], //搜索的坐标
+      url: "", //二维码图片
+      id: "", //公司详情id
+      distancenew: {}, //地图的距离跟时间
+      route: "",
+      times: 60, //倒计时
+      show: false, //计时显示
+      options: [], //搜索列表
+      searchDistancenew: {}, //搜索的距离跟时间
+      searchnew: false,
+      src: "",
+    };
+  },
+  created() {
+    this.getTime();
+  },
+  methods: {
+    search() {
+      let inputnew = document.getElementsByClassName("input-content")[0];
+      inputnew.setAttribute("class", "input input-content");
+      // setTimeout(function () {
+      this.searchnew = true;
+      //   console.log(this.searchnew);
+      // }, 500);
+    },
+    unwind() {
+      let inputnew = document.getElementsByClassName("input-content")[0];
+      inputnew.setAttribute("class", "inputnew input-content");
+      this.searchnew = false;
+    },
+    /**
+     * 渲染地图
+     * @param {Array} coords 路径坐标点数组
+     */
+    loadMap(coords) {
+      deviceMapInfo().then((res) => {
+        this.res = res.srcSuffix;
+        localStorage.setItem("mapCode", res.code);
+        get(this.res).then((res) => {
+          // eslint-disable-next-line no-undef
+          echarts.registerMap("MyMap", { svg: res });
+
+          if (!this.map) {
+            // eslint-disable-next-line no-undef
+            this.map = echarts.init(document.getElementById("map"));
+          }
+
+          this.map.clear();
+          var destinationData = this.current;
+          let that = this;
+          let option = {
+            geo: {
+              map: "MyMap",
+              roam: true,
+              layoutCenter: ["50%", "50%"],
+              layoutSize: 1320,
+              scaleLimit: {
+                min: 0.7,
+              },
+              emphasis: {
+                itemStyle: {
+                  color: null,
+                },
+                label: {
+                  show: false,
+                },
+              },
+            },
+            tooltip: {
+              className: "tooltip",
+              triggerOn: "click",
+              enterable: true,
+              extraCssText:
+                "border-color:#fff;border-width:0;padding: 0px;background:rgba(0,0,0,0);box-shadow: rgb(0 0 0 / 0%) 1px 2px 10px;",
+              formatter: function (params) {
+                let img =
+                  '<div id="tooltip" style="padding: 20px;background-color: #fff; display: none;border-radius: 12px;">' +
+                  '<h1 style="font-size: 24px;font-weight: 400;color:#343434;margin-bottom:20px;width: 400px;">' +
+                  params.name +
+                  "</h1>" +
+                  '<div style="width: 100%; display: flex;">' +
+                  '<div style="width: 50%;"><span id="distance" style="font-weight: 400;font-size: 20px;color:#63c3b4;margin-right:10px">' +
+                  that.distancenew.distance +
+                  "</span>" +
+                  '<span style="font-weight: 400;color: #666;">M</span><h5 id="walkingTime" style="font-weight: 400;color: #666;font-size: 15px;margin: 0;">步行预估' +
+                  that.distancenew.walkingTime +
+                  "分钟</h5></div>" +
+                  "</div>" +
+                  ' <div><h1 style="font-weight: 400;color: #666;font-size: 15px;margin: 30px 0 20px 0;">地址：广东省佛山市南海区</h1></div>' +
+                  '  <div style="width: 100%; display: flex;justify-content: center;"><div style="width: 80%;">' +
+                  '<button name="预约" accessKey=' +
+                  params.data.route +
+                  '  class="navigation" style="width: 100%;border: none;background-color: #ff317b; color: #fff;padding: 10px 0;border-radius: 10px;"><i class="el-icon-time" name="预约" accessKey=' +
+                  params.data.route +
+                  "></i>预约</button>" +
+                  "</div></div>" +
+                  "</div>";
+
+                return img;
+              },
+            },
+            series: [
+              {
+                name: "Route",
+                type: "lines",
+                coordinateSystem: "geo",
+                geoIndex: 0,
+                zlevel: 9,
+                emphasis: {
+                  label: {
+                    show: false,
+                  },
+                },
+                polyline: true,
+                lineStyle: {
+                  color: "#c46e54",
+                  width: 5,
+                  opacity: 1,
+                  type: "dotted",
+                },
+                effect: {
+                  show: true,
+                  period: 8,
+                  color: "red",
+                  constantSpeed: 100,
+                  trailLength: 0,
+                  symbolSize: [20, 12],
+                  symbol:
+                    "path://M35.5 40.5c0-22.16 17.84-40 40-40s40 17.84 40 40c0 1.6939-.1042 3.3626-.3067 5H35.8067c-.2025-1.6374-.3067-3.3061-.3067-5zm90.9621-2.6663c-.62-1.4856-.9621-3.1182-.9621-4.8337 0-6.925 5.575-12.5 12.5-12.5s12.5 5.575 12.5 12.5a12.685 12.685 0 0 1-.1529 1.9691l.9537.5506-15.6454 27.0986-.1554-.0897V65.5h-28.7285c-7.318 9.1548-18.587 15-31.2715 15s-23.9535-5.8452-31.2715-15H15.5v-2.8059l-.0937.0437-8.8727-19.0274C2.912 41.5258.5 37.5549.5 33c0-6.925 5.575-12.5 12.5-12.5S25.5 26.075 25.5 33c0 .9035-.0949 1.784-.2753 2.6321L29.8262 45.5h92.2098z",
+                },
+                data: [
+                  {
+                    animation: true,
+                    coords: coords || [
+                      [0, 0],
+                      [0, 0],
+                    ],
+                  },
+                ],
+              },
+
+              {
+                type: "scatter",
+                coordinateSystem: "geo",
+                data: destinationData,
+                symbol: function (value, params) {
+                  let img =
+                    "image://https://w3c.tank-light.com/static/大屏机/tengyuguangxun9.png";
+                  return img;
+                },
+
+                label: {
+                  show: true,
+                  position: "insideTopLeft",
+                  distance: -50,
+                  offset: [80, -10],
+                  formatter: function (params) {
+                    let div = params.data.name + " " + ">";
+                    return div;
+                  },
+                  backgroundColor: "#3d53fb",
+                  height: 20,
+                  fontSize: 20,
+                  padding: [15, 20, 10, 20],
+                  borderRadius: [20, 20, 20, 0],
+                },
+                symbolSize: [20, 30],
+                itemStyle: {
+                  normal: {
+                    color: "#291010",
+                  },
+                },
+              },
+            ],
+          };
+          this.map.setOption(option);
+
+          // 点击事件，点击地图后，要做什么操作，在这里处理
+          this.map.off("click").on("click", (params) => {
+            console.log(params);
+            if (params.data.code) {
+              let data = {
+                pointFrom: window.localStorage.getItem("code"),
+                pointTo: params.data.code,
+                referenceMapCode: window.localStorage.getItem("mapCode"),
+              };
+              // 计算距离
+              pathCalculation(JSON.stringify(data)).then((res) => {
+                var tooltip = document.getElementById("tooltip");
+                setTimeout(function () {
+                  document.getElementById("distance").innerHTML = res.distance;
+                  document.getElementById("walkingTime").innerHTML =
+                    "预计步行：" + res.walkingTime + "分钟";
+                  tooltip.style.display = "block";
+                }, 200);
+              });
+              let formDate = {
+                manager: params.data.manager,
+                deptId: params.data.deptId,
+                referenceOrganizationId: params.data.referenceOrganizationId,
+              };
+              generateToReservationQrc(formDate).then((res) => {
+                this.src = res.url;
+              });
+            }
+          });
+        });
+      });
+    },
+    /**
+     * 获取设备当前坐标
+     */
+    tygxMapPointDefinitionNew() {
+      tygxMapPointDefinition().then((res) => {
+        this.equipment = {
+          equipmentCoordinate: [res.x, res.y],
+          name: res.name,
+        };
+        localStorage.setItem("code", res.code);
+        this.loadMap();
+      });
+    },
+
+    /**
+     * 智慧屏查询公司接口
+     */
+    querySearch(queryString, cb) {
+      var restaurants = this.restaurants;
+      var results = queryString
+        ? restaurants.filter(this.createFilter(queryString))
+        : restaurants;
+      // 调用 callback 返回建议列表的数据
+      cb(results);
+    },
+    createFilter(queryString) {
+      return (restaurant) => {
+        return (
+          restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) ===
+          0
+        );
+      };
+    },
+    loadAll() {},
+    destinationChange(query) {
+      if (query !== "") {
+        this.loading = true;
+        selectCurrentOrgDefinedTypes(query).then((res) => {
+          this.options = res;
+        });
+      } else {
+        this.options = [];
+      }
+    },
+    /**
+     * 用户选择公司之后获取的坐标
+     */
+    findPositionByUserCilck(value) {
+      console.log(value);
+      let formDate = {
+        typeCode: value,
+        mapCode: window.localStorage.getItem("mapCode"),
+      };
+      selectShowPointsDataForReservationInWisdomScreen(formDate).then((res) => {
+        console.log(res);
+        for (let index = 0; index < res.length; index++) {
+          const element = res[index];
+          console.log(res[index]);
+          let current = {
+            value: [res[index].x, res[index].y],
+            name: res[index].params.companyData.compName,
+            code: res[index].code,
+            img: "image://" + res[index].params.companyData.compLogo,
+            manager: res[index].params.companyData.userName,
+            deptId: res[index].params.companyData.deptId,
+            referenceOrganizationId: res[index].referenceOrganizationId,
+          };
+          this.current = [];
+          this.current.push(current);
+          this.loadMap();
+        }
+      });
+    },
+    /**
+     * 用户点击预约手机
+     */
+    navigation(coordinates) {
+      var tooltip = document.getElementById("tooltip");
+      tooltip.style.display = "none";
+
+      this.$alert(
+        ' <div style="bottom: 10%;background-color: #1993fc;z-index: 9999; height: 340px;border: none;color: #e5edff;font-size: 26px;text-align: center;">  <img style="margin-bottom: 20px;    margin-top: 20px;s" src=' +
+          this.src +
+          ' alt="" /> <p>请扫描二维码预约</p><div style="  position: absolute;left: 45%;bottom: -24px;    z-index: -1;width: 0;height: 0;border-left: 20px solid transparent;border-right: 20px solid transparent;border-top: 50px solid #1993fc;"></div></div>',
+
+        {
+          customClass: "bottom_box",
+          dangerouslyUseHTMLString: true,
+          showConfirmButton: false,
+          closeOnHashChange: true,
+          closeOnClickModal: true,
+          modal: false,
+          showClose: false,
+        }
+      );
+      setTimeout(function () {
+        var bottom_box = document.getElementsByClassName("bottom_box")[0];
+        console.log(bottom_box);
+        bottom_box.style.border = "0px solid #EBEEF5";
+        bottom_box.style.backgroundColor = "#ffffff00";
+        bottom_box.style.boxShadow = "0 0px 0px 0 rgb(0 0 0 / 10%)";
+        bottom_box.style.display = "inline-block";
+        bottom_box.style.width = "380px";
+      }, 100);
+    },
+
+    /**
+     * 地图获取子组件传过来的参数
+     */
+    handleOpen(index) {
+      console.log("1111", index);
+      this.current = index;
+      this.loadMap();
+      this.times = 60;
+      this.show = false;
+    },
+    /**
+     * 地图获取子组件传过来的参数
+     */
+    handleClose(index) {
+      console.log("2222", index);
+      this.current = [];
+      this.current.push(index);
+      this.loadMap();
+      this.times = 60;
+      this.show = false;
+    },
+
+    /**
+     * 进入地图之后的倒计时
+     */
+    getTime() {
+      this.timer = setInterval(() => {
+        this.times--;
+        if (this.times === 30) {
+          this.show = true;
+        }
+        if (this.times === 0) {
+          this.show = false;
+          var bottom_box = document.getElementsByClassName("bottom_box")[0];
+          bottom_box.style.display = "none";
+          bottom_box.style.border = "0px solid #EBEEF5";
+          bottom_box.style.backgroundColor = "#ffffff00";
+          this.$router.push("/wisdom-oriented/home");
+          clearInterval(this.timer);
+        }
+      }, 1000);
+    },
+    /**
+     * 点击地图返回到首页
+     */
+    goBack() {
+      this.$router.push("/wisdom-oriented/home");
+    },
+  },
+  mounted() {
+    // 进入页面载入地图
+    this.tygxMapPointDefinitionNew();
+    let that = this;
+    document.getElementById("map").onclick = function (e) {
+      if (e.target.name === "预约") {
+        that.navigation(e.target.accessKey);
+      }
+    };
+    // 用户点击屏幕倒计时恢复到60秒
+    document.getElementById("box").onclick = function (e) {
+      that.times = 60;
+      that.show = false;
+    };
+  },
+  destroyed() {
+    clearInterval(this.timer);
+  },
+};
+</script>
+
+<style scoped lang="less">
+.page-location {
+  // border: 1px solid #7dd7ff;
+  border-radius: 5px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #eeeeee;
+  .box-top {
+    background: #ffffff;
+    position: absolute;
+    z-index: 3;
+    margin: 2%;
+    padding: 1% 2%;
+    box-shadow: 0px 0px 5px #96a9bd;
+    border-radius: 12px;
+    .input-content {
+      width: 350px;
+      font-size: 15px;
+      margin-left: 2%;
+      transition: 0.5s ease;
+    }
+  }
+  .box-map {
+    height: 100%;
+    background-color: #ffffff;
+
+    .box-map-main {
+      width: 100%;
+      height: 100%;
+      background-color: #f0f3f7;
+    }
+
+    .box-menu {
+      width: 64px;
+      height: 64px;
+      position: absolute;
+      right: 50px;
+      bottom: 335px;
+
+      .item-menu {
+        width: 100%;
+        height: 100%;
+
+        margin-top: 30px;
+
+        &:first-child {
+          margin-top: 0;
+        }
+
+        .btn-icon {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+
+    .box-dev-tools {
+      width: 400px;
+      position: absolute;
+      top: 80px;
+      right: 25px;
+      padding: 1%;
+      .image {
+        width: 100%;
+        margin-top: 10%;
+      }
+      .clearfix {
+        color: #999;
+        font-size: 14px;
+        line-height: 22px;
+      }
+    }
+  }
+  .input-content {
+    width: 100%;
+  }
+  .el-image {
+    width: 50%;
+    margin-left: 25%;
+  }
+}
+.input {
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+  animation-name: example;
+}
+@keyframes example {
+  from {
+    width: 350px;
+  }
+  to {
+    visibility: hidden;
+    width: 0px;
+  }
+}
+.inputnew {
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+  animation-name: examplenew;
+  z-index: 2;
+}
+@keyframes examplenew {
+  from {
+    width: 0px;
+  }
+  to {
+    width: 350px;
+  }
+}
+</style>

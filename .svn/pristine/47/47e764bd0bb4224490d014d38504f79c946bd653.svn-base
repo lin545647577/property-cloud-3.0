@@ -1,0 +1,42 @@
+<template>
+  <div class="common-box">
+    <el-row>
+      <el-col :span="8"
+        ><div class="grid-content content-box">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />公告信息
+          </div>
+        </div></el-col
+      >
+      <el-col :span="8"
+        ><div class="grid-content content-box">
+          <el-input
+            placeholder="请输入内容"
+            prefix-icon="el-icon-search"
+            style="width: 100%"
+            v-model="searchValue"
+          >
+          </el-input></div
+      ></el-col>
+      <el-col :span="8"><div class="grid-content"></div></el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "notice",
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+    };
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+</style>

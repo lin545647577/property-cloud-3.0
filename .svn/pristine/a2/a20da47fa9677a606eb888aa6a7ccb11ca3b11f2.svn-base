@@ -1,0 +1,94 @@
+<template>
+  <div>
+    <!--    <el-tabs-->
+    <!--      v-model="editableTabsValue"-->
+    <!--      type="card"-->
+    <!--      editable-->
+    <!--      @edit="handleTabsEdit"-->
+    <!--    >-->
+    <el-tabs v-model="editableTabsValue" type="card">
+      <el-tab-pane
+        v-for="item in editableTabs"
+        :key="item.dictValue"
+        :label="item.dictLabel"
+        :name="JSON.stringify(item.dictCode)"
+      >
+        <el-container>
+          <el-aside width="300px">
+            <directory-tree :keyName="item.dictValue"></directory-tree>
+          </el-aside>
+          <el-main>
+            <task-form :typeId="item.dictLabel"></task-form>
+          </el-main>
+        </el-container>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+import directoryTree from "@/components/task/directoryTree/directoryTree";
+import { queryTabs } from "@/api/taskProcess";
+import taskForm from "@/components/task/taskForm";
+
+export default {
+  name: "index",
+  components: {
+    "directory-tree": directoryTree,
+    "task-form": taskForm,
+  },
+  data() {
+    return {
+      editableTabsValue: "1", //默认选中
+      editableTabs: [], //tabslist
+      tabIndex: 0, //tabslist长度
+    };
+  },
+  created() {
+    this.initTabs();
+    this.$store.state.app.sideBar.opened = false;
+  },
+  methods: {
+    // 动态编辑tab标签
+    handleTabsEdit(targetName, action) {
+      if (action === "add") {
+        let newTabName = ++this.tabIndex + "";
+        this.editableTabs.push({
+          title: "New Tab",
+          name: newTabName,
+          content: "New Tab content",
+        });
+        this.editableTabsValue = newTabName;
+      }
+      if (action === "remove") {
+        let tabs = this.editableTabs;
+        let activeName = this.editableTabsValue;
+        if (activeName === targetName) {
+          tabs.forEach((tab, index) => {
+            if (tab.name === targetName) {
+              let nextTab = tabs[index + 1] || tabs[index - 1];
+              if (nextTab) {
+                activeName = nextTab.name;
+              }
+            }
+          });
+        }
+
+        this.editableTabsValue = activeName;
+        this.editableTabs = tabs.filter((tab) => tab.name !== targetName);
+      }
+    },
+    initTabs() {
+      queryTabs().then((res) => {
+        // console.log(res);
+        this.editableTabs = res.rows;
+        this.tabIndex = res.total;
+        this.editableTabsValue = this.editableTabs[0].dictCode.toString();
+      });
+    },
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped></style>

@@ -1,0 +1,169 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="公司名称：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="法人代表：" prop="legalPerson">
+        <el-input v-model="form.legalPerson" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="联系人：">
+        <el-input v-model="form.contact" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="联系电话：" prop="contactPhone">
+        <el-input v-model="form.contactPhone" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="联系地址：">
+        <el-input v-model="form.contacAddress" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="备注：">
+        <el-input v-model="form.remarks" :disabled="checkInfo"></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="floorModal" />
+  </div>
+</template>
+
+<script>
+import {
+  queryDeveloper,
+  editDeveloper,
+  insertDeveloper,
+} from "@/api/property.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {},
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        legalPerson: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        contactPhone: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 开发商id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryDeveloper(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          name: res.name,
+          legalPerson: res.legalPerson,
+          contact: res.contact,
+          contactPhone: res.contactPhone,
+          contacAddress: res.contacAddress,
+          remarks: res.remarks,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertDeveloper(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editDeveloper(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

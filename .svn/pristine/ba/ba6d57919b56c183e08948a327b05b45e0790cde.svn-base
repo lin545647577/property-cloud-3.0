@@ -1,0 +1,451 @@
+<template>
+  <div>
+    <el-card class="box-card">
+      <div class="text item" v-if="info">
+        <el-row :gutter="10">
+          <el-col :span="3">
+            <div class="grid-content right-title">房屋名称</div>
+          </el-col>
+          <el-col :span="5">
+            <div class="grid-content ellipsis">
+              {{ info.name ? info.name : "暂无信息" }}
+            </div>
+          </el-col>
+          <el-col :span="3">
+            <div class="grid-content right-title">所属物业</div>
+          </el-col>
+          <el-col :span="5">
+            <div class="grid-content ellipsis">
+              {{ info.residenceName ? info.residenceName : "暂无信息" }}
+            </div>
+          </el-col>
+          <el-col :span="3">
+            <div class="grid-content right-title">使用面积</div>
+          </el-col>
+          <el-col :span="5">
+            <div class="grid-content ellipsis">
+              {{ info.useArea ? info.useArea + "平方米" : "暂无信息" }}
+            </div>
+          </el-col>
+        </el-row>
+        <el-row :gutter="10">
+          <el-col :span="3">
+            <div class="grid-content right-title">物业类型</div>
+          </el-col>
+          <el-col :span="5">
+            <div class="grid-content ellipsis">
+              {{ info.type ? info.type : "暂无信息" }}
+            </div>
+          </el-col>
+          <el-col :span="3">
+            <div class="grid-content right-title">房屋状态</div>
+          </el-col>
+          <el-col :span="5">
+            <div class="grid-content ellipsis">
+              {{ info.status ? info.status : "暂无信息" }}
+            </div>
+          </el-col>
+        </el-row>
+      </div>
+    </el-card>
+    <div class="search-box">
+      <el-row :gutter="10" class="vertical-middle">
+        <el-col :span="2" class="text-right vertical-middle">
+          <div class="grid-content el-line-height">状态：</div>
+        </el-col>
+        <el-col :span="5" class="vertical-middle">
+          <div class="grid-content">
+            <el-select
+              v-model="searchStatus"
+              @change="queryList"
+              placeholder="请选择"
+            >
+              <el-option label="现住" value="now"> </el-option>
+              <el-option label="旧业主" value="old"> </el-option>
+            </el-select>
+          </div>
+        </el-col>
+        <!--        <el-col :span="3" class="vertical-middle">-->
+        <!--          <div class="grid-content text-right">-->
+        <!--            <el-button-->
+        <!--                size="small"-->
+        <!--                class="search-btn"-->
+        <!--                type="primary"-->
+        <!--                @click="queryList"-->
+        <!--            >搜索-->
+        <!--            </el-button>-->
+        <!--          </div>-->
+        <!--        </el-col>-->
+      </el-row>
+    </div>
+    <div class="items-box">
+      <el-row
+        :gutter="20"
+        type="flex"
+        class="row-bg"
+        justify="center"
+        style="flex-wrap: wrap"
+      >
+        <el-col :span="12" v-for="item in tableData" :key="item.id">
+          <div class="grid-content">
+            <el-card
+              class="box-card item-box"
+              @click.native="handleEdit(false, item.tygxMemberInfo)"
+            >
+              <div class="text item">
+                <el-row>
+                  <el-col :span="8">
+                    <div class="grid-content">
+                      <!--                      <li-image class="img-box" :src="item.tygxMemberInfo.fileUrl" alt="暂无图片"/>-->
+                      <img class="img-box" :src="item.tygxMemberInfo.fileUrl" />
+                    </div>
+                  </el-col>
+                  <el-col :span="16">
+                    <div class="grid-content">
+                      <el-row :gutter="10">
+                        <el-col :span="5">
+                          <div class="grid-content text-right">姓名:</div>
+                        </el-col>
+                        <el-col :span="7">
+                          <div class="grid-content ellipsis">
+                            {{ item.tygxMemberInfo.name }}
+                          </div>
+                        </el-col>
+                        <el-col :span="5">
+                          <div class="grid-content text-right">性别:</div>
+                        </el-col>
+                        <el-col :span="7">
+                          <div class="grid-content">
+                            {{
+                              item.tygxMemberInfo.gender == "1" ? "男" : "女"
+                            }}
+                          </div>
+                        </el-col>
+                      </el-row>
+                      <el-row :gutter="10">
+                        <el-col :span="5">
+                          <div class="grid-content text-right">生日:</div>
+                        </el-col>
+                        <el-col :span="7">
+                          <div class="grid-content ellipsis">
+                            {{
+                              item.tygxMemberInfo.born
+                                ? item.tygxMemberInfo.born
+                                : "暂无信息"
+                            }}
+                          </div>
+                        </el-col>
+                        <el-col :span="5">
+                          <div class="grid-content text-right">关系:</div>
+                        </el-col>
+                        <el-col :span="7">
+                          <div class="grid-content">
+                            {{
+                              item.relation
+                                ? findRelation(item.relation)
+                                : "业主"
+                            }}
+                          </div>
+                        </el-col>
+                      </el-row>
+                      <el-row :gutter="10">
+                        <el-col :span="8">
+                          <div class="grid-content text-right">证件类型:</div>
+                        </el-col>
+                        <el-col :span="16">
+                          <div class="grid-content ellipsis">
+                            {{ findCertType(item.tygxMemberInfo.certType) }}
+                          </div>
+                        </el-col>
+                      </el-row>
+                      <el-row :gutter="10">
+                        <el-col :span="8">
+                          <div class="grid-content text-right">证件号码:</div>
+                        </el-col>
+                        <el-col :span="16">
+                          <div class="grid-content ellipsis">
+                            {{ item.tygxMemberInfo.certNo }}
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="grid-content">
+            <el-card
+              class="box-card item-box"
+              style="text-align: center"
+              @click.native="handleInsert"
+            >
+              <div class="text item">
+                <el-avatar class="add-box">+</el-avatar>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+        <el-col
+          :span="12"
+          v-if="tableData.length % 2 === 0"
+          style="visibility: hidden"
+        >
+          <div class="grid-content">
+            <el-card
+              class="box-card item-box"
+              style="text-align: center"
+              @click.native="handleInsert"
+            >
+              <div class="text item">
+                <el-avatar class="add-box">+</el-avatar>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="editModal" />
+  </div>
+</template>
+
+<script>
+import { queryOwnerList, queryMemberHouseList } from "@/api/member.js";
+import { queryPropertyTreeInfo } from "@/api/property.js";
+import { resolveBlob } from "@/utils/util.js";
+
+export default {
+  name: "memberView",
+  data() {
+    return {
+      searchStatus: "now",
+      tableData: [],
+      multipleSelection: [],
+      currentPage: 1,
+      pageSizes: [10, 20, 50, 100],
+      pageSize: 10,
+      total: 0,
+      fullscreenLoading: false,
+      ids: "",
+
+      info: null,
+      relation: [
+        {
+          id: 1,
+          name: "租户",
+        },
+        {
+          id: 3,
+          name: "夫妻",
+        },
+        {
+          id: 4,
+          name: "子女",
+        },
+        {
+          id: 5,
+          name: "父母",
+        },
+        {
+          id: 6,
+          name: "朋友",
+        },
+        {
+          id: 7,
+          name: "其他",
+        },
+      ],
+      certType: [
+        {
+          id: 1,
+          name: "身份证",
+        },
+        {
+          id: 2,
+          name: "护照",
+        },
+        {
+          id: 3,
+          name: "户口簿",
+        },
+        {
+          id: 4,
+          name: "驾驶证",
+        },
+        {
+          id: 20,
+          name: "其他",
+        },
+      ],
+    };
+  },
+  methods: {
+    findCertType(cid) {
+      let res = this.certType.find((item) => {
+        return item.id == cid;
+      });
+      return res ? res.name : "";
+    },
+    findRelation(rid) {
+      let res = this.relation.find((item) => {
+        return item.id == rid;
+      });
+      return res ? res.name : "";
+    },
+    /**
+     * 查看操作
+     * @param {boolean} checkInfo
+     * @param {Object} row
+     */
+    handleCheck(checkInfo, row) {
+      this.$refs["editModal"].show({
+        view: "property/residence/editResidenceModal.vue",
+        params: { checkInfo: checkInfo, id: row.id },
+        title: "查看人员",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+      });
+    },
+
+    /**
+     *modal回调
+     */
+    modalCallFunction() {
+      this.queryList();
+      this.$refs["editModal"].hide();
+    },
+
+    /**
+     * 编辑操作
+     * @param {boolean} checkInfo
+     * @param {Object} row
+     */
+    handleEdit(checkInfo, row) {
+      // console.log(index, row);
+      this.$refs["editModal"].show({
+        view: "member/member/editModal.vue",
+        params: { checkInfo: checkInfo, id: row.id },
+        title: "编辑人员",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.modalCallFunction,
+      });
+    },
+
+    /**
+     * 新增操作
+     */
+    handleInsert() {
+      let view = "member/owner/editModal.vue";
+      let data = { houseId: this.info.id, houseName: this.info.name };
+      if (this.tableData.length > 0) {
+        view = "member/memberHouse/editModal.vue";
+        // console.log(this.tableData[0]);
+        data.referenceMemberId = this.tableData[0].referenceMemberId;
+        data.memberName = this.tableData[0].memberName;
+      }
+      this.$refs["editModal"].show({
+        view: view,
+        params: data,
+        title: "新增人员",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.modalCallFunction,
+      });
+    },
+
+    queryList() {
+      let that = this;
+      queryOwnerList({
+        referenceHouseId: this.node.nodeId,
+        status: this.searchStatus,
+      }).then((res) => {
+        // console.log("业主", res.rows);
+        this.tableData = res.rows;
+        queryMemberHouseList({
+          referenceHouseId: this.node.nodeId,
+          status: this.searchStatus,
+        }).then((res) => {
+          // console.log("成员", res.rows);
+          for (let index in res.rows) {
+            that.tableData.push(res.rows[index]);
+          }
+          // console.log("整合后", that.tableData);
+        });
+      });
+    },
+    queryInfo(node) {
+      queryPropertyTreeInfo(node).then((res) => {
+        // console.log(res)
+        this.info = res;
+        this.queryList();
+      });
+    },
+  },
+  mounted() {
+    // console.log(this.node);
+    if (this.node.nodeId) {
+      this.queryInfo(this.node);
+    }
+  },
+  computed: {
+    node() {
+      return this.$store.state.node;
+    },
+  },
+  watch: {
+    node(nval, oval) {
+      if (nval.nodeId != oval.nodeId) {
+        this.queryInfo(nval);
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.el-row {
+  margin-bottom: 20px;
+}
+
+.el-row:last-child {
+  margin-bottom: 0;
+}
+
+.items-box {
+  margin-top: 20px;
+  background-color: #fff;
+}
+
+.item-box {
+  margin: 0 auto 30px auto;
+  background-color: #f3fffe;
+  border-radius: 8px;
+  max-width: 450px;
+  min-width: 350px;
+  height: 195px;
+  cursor: pointer;
+}
+
+.add-box {
+  height: 80px;
+  width: 80px;
+  line-height: 80px;
+  font-size: 40px;
+  margin: 8%;
+}
+
+.img-box {
+  width: 100%;
+  height: 155px;
+}
+</style>

@@ -1,0 +1,84 @@
+<template>
+  <div class="common-box">
+    <el-row>
+      <el-col :span="18"
+        ><div class="grid-content content-box">
+          <el-row>
+            <el-col :span="12"
+              ><div class="grid-content header">
+                <img
+                  style="margin: 0 15px 7px 0"
+                  :src="pointImg"
+                  alt=""
+                />物业租赁
+              </div></el-col
+            >
+            <el-col :span="12"
+              ><div class="grid-content">
+                <el-input
+                  placeholder="请输入您要搜索的问题"
+                  prefix-icon="el-icon-search"
+                  v-model="searchValue"
+                >
+                </el-input></div
+            ></el-col>
+          </el-row>
+          <div class="content">
+            <el-tabs
+              v-model="activeName"
+              @tab-click="handleClick"
+              style="margin-top: 2.5%; font-size: 24px"
+            >
+              <el-tab-pane label="商铺出租" name="first"></el-tab-pane>
+              <el-tab-pane label="写字楼出租" name="second"></el-tab-pane>
+            </el-tabs>
+          </div></div
+      ></el-col>
+
+      <!--      建筑介绍-->
+      <el-col :span="6"><div class="grid-content"></div></el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "index",
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      activeName: "second",
+      searchValue: "",
+    };
+  },
+  methods: {
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+  width: 90%;
+}
+
+.content {
+  padding: 0;
+}
+
+.common-box .content-box .content /deep/ .el-tabs__item {
+  font-size: 24px;
+  height: 50px;
+  color: #989eb2;
+}
+
+.common-box .content-box .content /deep/ .el-tabs__item.is-active {
+  color: inherit;
+}
+</style>

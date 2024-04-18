@@ -1,0 +1,481 @@
+<template>
+  <div class="common-box">
+    <el-row>
+      <el-col :span="19">
+        <div class="grid-content content-box">
+          <el-row>
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-button type="primary" @click="back" class="backBtn"
+                  >返回上一级
+                </el-button>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row
+            style="margin: 5% 0"
+            class="rent-box row-bg"
+            type="flex"
+            justify="space-between"
+            align="middle"
+          >
+            <el-col :span="11">
+              <div class="grid-content">
+                <img
+                  v-if="data.image"
+                  :src="data.image"
+                  style="width: 100%"
+                  alt=""
+                />
+                <img
+                  v-else
+                  :src="require('@/assets/img/wiseScreen/2.0/rent/rentL.png')"
+                  style="width: 100%"
+                  alt=""
+                />
+              </div>
+            </el-col>
+            <el-col :span="11">
+              <div class="grid-content">
+                <p class="title">
+                  {{ data.issued }}
+                </p>
+                <p class="tip-box">
+                  <el-tag>标签一</el-tag>
+                  <el-tag type="success">标签二</el-tag>
+                  <el-tag type="info">标签三</el-tag>
+                  <el-tag type="warning">标签四</el-tag>
+                  <el-tag type="danger">标签五</el-tag>
+                </p>
+                <div style="margin: 5% 0 10% 0">
+                  <el-row :gutter="20">
+                    <el-col :span="8">
+                      <div class="grid-content month">
+                        {{ data.monthRent ? data.monthRent : "-" }}3000元/月
+                      </div>
+                    </el-col>
+                    <el-col :span="8">
+                      <div class="grid-content day">
+                        {{ data.dayRent ? data.dayRent : "-" }}29元/㎡/天
+                      </div>
+                    </el-col>
+                    <el-col :span="8">
+                      <div class="grid-content">
+                        {{ data.publishStartTime }}
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+
+                <el-row :gutter="20">
+                  <el-col :span="8">
+                    <div class="grid-content title">15㎡</div>
+                  </el-col>
+                  <el-col :span="8">
+                    <div class="grid-content title">精装修</div>
+                  </el-col>
+                  <el-col :span="8">
+                    <div class="grid-content title">写字楼新楼</div>
+                  </el-col>
+                </el-row>
+
+                <el-row :gutter="20" style="margin-bottom: 10%">
+                  <el-col :span="8">
+                    <div class="grid-content">建筑面积</div>
+                  </el-col>
+                  <el-col :span="8">
+                    <div class="grid-content">装修</div>
+                  </el-col>
+                  <el-col :span="8">
+                    <div class="grid-content">性质</div>
+                  </el-col>
+                </el-row>
+                <p>
+                  {{ data.address ? data.address : "暂无地址信息" }}
+                </p>
+                <p>
+                  {{
+                    data.propertiesForSale ? data.propertiesForSale : "暂无信息"
+                  }}
+                  | 中区 |
+                  {{ data.floor ? data.floor : "暂无信息" }}
+                </p>
+                <p class="contact">
+                  联系人：<span class="person">{{ data.contactPerson }}</span>
+                </p>
+                <el-button class="btn"
+                  ><i class="el-icon-phone"></i>{{ data.contactPhone }}
+                </el-button>
+              </div>
+            </el-col>
+          </el-row>
+
+          <div class="basic-box">
+            <p class="basic-title">基础信息</p>
+            <el-row :gutter="30">
+              <el-col :span="4"
+                ><div class="grid-content title">日 租：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">
+                  {{ data.dayRent ? data.dayRent : "-" }}元/㎡/天
+                </div></el-col
+              >
+              <el-col :span="4"
+                ><div class="grid-content title">性 质：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">
+                  {{ data.dayRent ? data.dayRent : "-" }}元/㎡/天
+                </div></el-col
+              >
+
+              <el-col :span="4"
+                ><div class="grid-content title">月 租：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">
+                  {{ data.monthRent ? data.monthRent : "-" }}/月
+                </div></el-col
+              >
+              <el-col :span="4"
+                ><div class="grid-content title">面 积：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">
+                  {{ data.dayRent ? data.dayRent : "-" }}/月
+                </div></el-col
+              >
+
+              <el-col :span="4"
+                ><div class="grid-content title">付 款：</div></el-col
+              >
+              <el-col :span="8"><div class="grid-content">押2付1</div></el-col>
+              <el-col :span="4"
+                ><div class="grid-content title">类 型：</div></el-col
+              >
+              <el-col :span="8"><div class="grid-content">押2付1</div></el-col>
+
+              <el-col :span="4"
+                ><div class="grid-content title">装 修：</div></el-col
+              >
+              <el-col :span="8"><div class="grid-content">精装修</div></el-col>
+              <el-col :span="4"
+                ><div class="grid-content title">注 册：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">
+                  {{ data.publishStartTime }}
+                </div></el-col
+              >
+
+              <el-col :span="4"
+                ><div class="grid-content title">楼 盘：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">民间金融街</div></el-col
+              >
+              <el-col :span="4"
+                ><div class="grid-content title">地 址：</div></el-col
+              >
+              <el-col :span="8"
+                ><div class="grid-content">
+                  {{ data.address }}
+                </div></el-col
+              >
+            </el-row>
+          </div>
+
+          <div class="basic-box">
+            <p class="basic-title">配套设施</p>
+            <div>
+              <el-row type="flex" class="row-bg">
+                <el-col :span="4"
+                  ><div class="grid-content">
+                    <i class="el-icon-sort"></i>宽带
+                  </div></el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-s-platform"></i>有线电视</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-ice-drink"></i>水</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-eleme"></i>电</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-phone"></i>电话</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-edit"></i>中央空调</el-col
+                >
+              </el-row>
+              <el-row type="flex" class="row-bg">
+                <el-col :span="4"
+                  ><div class="grid-content">
+                    <i class="el-icon-edit"></i>电梯
+                  </div></el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-connection"></i>集中供暖</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-refrigerator"></i>办公家具</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-edit"></i>免费车位</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-edit"></i>员工餐厅</el-col
+                >
+                <el-col :span="4"
+                  ><div class="grid-content"></div>
+                  <i class="el-icon-aim"></i>安全监控</el-col
+                >
+              </el-row>
+            </div>
+          </div>
+          <div class="basic-box">
+            <p class="basic-title">详细信息</p>
+            <div v-html="data.leaseDescription"></div>
+          </div>
+          <div class="basic-box">
+            <p class="basic-title">图片</p>
+            <el-row type="flex" class="row-bg">
+              <el-col
+                :span="10"
+                v-for="item in getImgs(data.urls)"
+                :key="item.name"
+                ><div class="grid-content">
+                  <li-image :src="item.url" :alt="alt" /></div
+              ></el-col>
+            </el-row>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="5">
+        <div class="grid-content">
+          <el-card class="box-card card-box">
+            <div class="text item">
+              <div class="header-title">
+                <img :src="pointImg" fit="fill" />
+                优质房源
+              </div>
+              <div class="item-box">
+                <div
+                  v-for="item in goodList"
+                  :key="item.id"
+                  class="items"
+                  @click="loadDetail(item.id)"
+                >
+                  <img
+                    :src="item.image"
+                    style="width: 100%"
+                    v-if="item.image"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    style="width: 100%"
+                    :src="require('@/assets/img/wiseScreen/2.0/rent/rentL.png')"
+                    alt=""
+                  />
+                  <p class="title">{{ item.issued }}</p>
+                  <p>{{ item.address ? item.address : "暂无地址信息" }}</p>
+                  <p class="price">
+                    {{ item.monthRent ? item.monthRent : "-" }}元/月
+                  </p>
+                  <p></p>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import {
+  queryLeasingByWiseScreen,
+  queryLeasingListByWiseScreen,
+} from "@/api/rent";
+
+export default {
+  name: "detail",
+  data() {
+    return {
+      data: null,
+      goodList: [],
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+    };
+  },
+  methods: {
+    /**
+     * 读取详情
+     * @param {number} id
+     */
+    loadDetail(id) {
+      this.queryInfo(id);
+    },
+    back() {
+      this.$router.go(-1);
+    },
+    queryInfo(id) {
+      queryLeasingByWiseScreen(id).then((res) => {
+        this.data = res;
+      });
+    },
+    queryGoodList() {
+      queryLeasingListByWiseScreen({
+        state: 1,
+        pageNum: 1,
+        pageSize: 10,
+      }).then((res) => {
+        // console.log(res);
+        this.goodList = res.rows;
+      });
+    },
+    getImgs(val) {
+      return JSON.parse(val);
+    },
+  },
+  mounted() {
+    this.queryInfo(this.$route.query.id);
+    this.queryGoodList();
+  },
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+
+.common-box .content-box {
+  height: 90vh;
+  overflow: auto;
+}
+
+.common-box .content-box::-webkit-scrollbar {
+  display: none;
+}
+
+.common-box .content-box .backBtn {
+  background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);
+  border: none;
+}
+
+.common-box .content-box .basic-box {
+  color: #343f5e;
+  font-size: 16px;
+  margin: 3% 0;
+}
+
+.common-box .content-box .basic-box .li-image /deep/ img {
+  width: 100%;
+}
+
+.common-box .content-box .basic-box /deep/ .el-col {
+  margin: 1% 0;
+}
+
+.basic-title {
+  font-size: 24px;
+  margin-bottom: 2%;
+}
+
+.common-box .content-box .basic-box .title {
+  color: #989eb2;
+}
+
+.common-box .content-box .rent-box {
+  color: #989eb2;
+  font-size: 16px;
+  line-height: 30px;
+}
+
+.common-box .content-box .rent-box .title {
+  color: #343f5e;
+  font-size: 24px;
+  margin-bottom: 2%;
+}
+
+.common-box .content-box .rent-box .month {
+  color: #eb5f00;
+  font-size: 26px;
+}
+
+.common-box .content-box .rent-box .contact {
+  margin: 12% 0 3% 0;
+  font-size: 24px;
+}
+
+.common-box .content-box .rent-box .contact .person {
+  font-size: 36px;
+  color: #343f5e;
+}
+
+.common-box .content-box .rent-box .btn {
+  color: #ffffff;
+  font-size: 32px;
+  border: none;
+  background-image: linear-gradient(270deg, #90ccfe 0%, #1b96fe 100%);
+  width: 100%;
+}
+
+.common-box .content-box .rent-box .tip-box .el-tag {
+  /*visibility: hidden;*/
+  margin-right: 20px;
+}
+
+.common-box .card-box {
+  height: calc(100vh - 2px);
+  color: #989eb2;
+}
+
+.common-box .card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+
+.common-box .card-box .header-title * {
+  vertical-align: middle;
+}
+
+.common-box .card-box .item-box {
+  overflow: auto;
+  height: 88vh;
+}
+
+.common-box .card-box .item-box::-webkit-scrollbar {
+  display: none;
+}
+
+.common-box .card-box .item-box .items {
+  position: relative;
+  z-index: 100;
+  margin: 5% 0;
+  line-height: 25px;
+}
+
+.common-box .card-box .title {
+  font-size: 22px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  bottom: 14.5%;
+  padding: 5px;
+  width: 96.8%;
+}
+</style>

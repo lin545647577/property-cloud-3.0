@@ -1,0 +1,103 @@
+<template>
+  <div class="common-box">
+    <!--    头部-->
+    <el-row type="flex" class="row-bg" align="middle">
+      <el-col :span="8">
+        <div class="grid-content">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />楼层索引
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <el-input
+            placeholder="请输入您要搜索的问题"
+            prefix-icon="el-icon-search"
+            style="width: 100%; border-radius: 10px"
+            v-model="searchValue"
+          >
+          </el-input>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <weather></weather>
+        </div>
+      </el-col>
+    </el-row>
+    <!--    内容-->
+    <div class="content-box">
+      <!--      <el-tabs v-model="activeName" @tab-click="handleClick">-->
+      <!--        <el-tab-pane label="用户管理" name="first">用户管理</el-tab-pane>-->
+      <!--        <el-tab-pane label="配置管理" name="second">配置管理</el-tab-pane>-->
+      <!--        <el-tab-pane label="角色管理" name="third">角色管理</el-tab-pane>-->
+
+      <!--        <el-tab-pane label="用户管理" name="first">用户管理</el-tab-pane>-->
+      <!--        <el-tab-pane label="配置管理" name="second">配置管理</el-tab-pane>-->
+      <!--        <el-tab-pane label="角色管理" name="third">角色管理</el-tab-pane>-->
+      <!--      </el-tabs>-->
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryBuildingListBywiseScreen } from "@/api/property.js";
+import weather from "@/components/wiseScreen/weather";
+
+export default {
+  name: "building",
+  components: {
+    weather,
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+      buildingList: [],
+      floorList: [],
+      activeName: "second",
+    };
+  },
+  methods: {
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
+    // 初始化楼宇
+    queryBuildingList() {
+      queryBuildingListBywiseScreen("building").then((res) => {
+        // console.log(res);
+        this.buildingList = res.rows;
+      });
+    },
+    // 初始化楼层
+    queryFloorList(id) {
+      queryBuildingListBywiseScreen("floor").then((res) => {
+        this.floorList = res.rows;
+      });
+    },
+  },
+  mounted() {
+    this.queryBuildingList();
+  },
+};
+</script>
+
+<style scoped>
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+}
+.common-box {
+  padding: 3% 4% 0 4%;
+  max-height: 1080px;
+  width: auto;
+}
+
+.common-box .header {
+  font-size: 36px;
+}
+
+.common-box .content-box {
+  padding: 0;
+}
+</style>

@@ -1,0 +1,198 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+      label-width="150px"
+      class="demo-ruleForm"
+      :disabled="checkInfo"
+    >
+      <template v-for="(item, index) in formJson">
+        <el-form-item
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+        >
+          <!--输入框-->
+          <el-input
+            v-if="item.__config__.tag === 'el-input'"
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+          ></el-input>
+          <!--时间选择器-->
+          <el-time-picker
+            v-if="item.__config__.tag === 'el-time-picker'"
+            v-model="form[item.__vModel__]"
+            :picker-options="item.picker - options"
+          >
+          </el-time-picker>
+          <!--单选框组-->
+          <el-radio-group
+            v-model="form[item.__vModel__]"
+            v-if="item.__config__.tag === 'el-radio-group'"
+          >
+            <el-radio
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictValue"
+              >{{ opItem.dictLabel }}
+            </el-radio>
+          </el-radio-group>
+
+          <!--下来框-->
+          <el-select
+            v-if="item.__config__.tag === 'el-select'"
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictLabel"
+              :value="opItem.dictValue"
+            >
+            </el-option>
+          </el-select>
+          <!--多选框-->
+          <el-checkbox-group
+            v-model="form[item.__vModel__]"
+            v-if="item.__config__.tag === 'el-checkbox-group'"
+          >
+            <el-checkbox
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictValue"
+              >{{ opItem.dictLabel }}</el-checkbox
+            >
+          </el-checkbox-group>
+        </el-form-item>
+      </template>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryForm, queryFormData, editFormData } from "@/api/property.js";
+export default {
+  name: "commonForm",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      rules: {
+        field101: [
+          { required: true, message: "请输入活动名称", trigger: "blur" },
+        ],
+      },
+      form: {},
+      formJson: [],
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    insertInfo() {
+      require(this.params.axiosUrl)
+        [this.params.insertFormData](this.form)
+        .then((res) => {
+          this.$message({
+            message: "操作成功",
+            center: true,
+            type: "success",
+          });
+          this.$emit("modal-submit");
+        });
+    },
+    editInfo() {
+      // console.log(this.form);
+      require(this.params.axiosUrl)
+        [this.params.editFormData](this.form)
+        .then((res) => {
+          this.$message({
+            message: "操作成功",
+            center: true,
+            type: "success",
+          });
+          this.$emit("modal-submit");
+        });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+    queryFormElement(id) {
+      require(this.params.axiosUrl)
+        [this.params.queryFormElement](id)
+        .then((res) => {
+          console.log(JSON.parse(res).fields);
+          this.formJson = JSON.parse(res).fields;
+          this.loading = false;
+        });
+    },
+    queryFormData(id) {
+      this.loading = true;
+      require(this.params.axiosUrl)
+        [this.params.queryFormData](id)
+        .then((res) => {
+          // console.log("data", res);
+          this.form = res;
+          this.form.id = id;
+          this.queryFormElement(id);
+        });
+    },
+  },
+  mounted() {
+    if (this.params.id) {
+      this.queryFormData(this.params.id);
+    }
+    this.checkInfo = this.params.checkInfo;
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style></style>

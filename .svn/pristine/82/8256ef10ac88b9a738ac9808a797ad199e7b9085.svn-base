@@ -1,0 +1,114 @@
+<template>
+  <el-card
+    class="box-card card-box"
+    v-if="loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+    element-loading-spinner="2"
+  >
+    <el-row class="item" id="text">
+      <el-col :span="24" class="header-title">
+        <img :src="pointImg" fit="fill" />
+        导航路线
+      </el-col>
+      <el-col :span="24">
+        <div style="height: 150px">
+          <el-steps direction="vertical" :active="1">
+            <el-step title="起点" :description="origin"></el-step>
+            <el-step title="终点" :description="destination"></el-step>
+          </el-steps>
+        </div>
+      </el-col>
+      <el-col :span="24" style="margin-top: 14%">
+        <h1 style="font-size: 18px; font-weight: 600">具体线路</h1>
+      </el-col>
+      <el-col :span="24">
+        <div style="height: 300px">
+          <el-steps direction="vertical" :active="1">
+            <el-step title="起点" :description="origin"></el-step>
+            <el-step
+              title="步行360米，然后"
+              description="左转进入南平西路"
+            ></el-step>
+            <el-step
+              title="步行360米，然后"
+              description="左转进入南平西路"
+            ></el-step>
+            <el-step title="终点" :description="destination"></el-step>
+          </el-steps>
+        </div>
+      </el-col>
+      <el-col :span="24">
+        <el-card class="box-card qr-box">
+          <div class="text item">
+            <i
+              class="el-icon-circle-close"
+              style="font-size: 40px; margin-left: 90%; margin-bottom: 5%"
+              @click="loading = false"
+            ></i>
+            <img :src="url" alt="" />
+            <p>手机扫码</p>
+          </div>
+        </el-card>
+      </el-col>
+      <!-- <el-col :span="24">
+        <div></div>
+      </el-col> -->
+    </el-row>
+  </el-card>
+</template>
+
+<script>
+export default {
+  name: "sideCard",
+  props: {
+    loading: {
+      type: Boolean,
+    },
+    origin: {
+      type: String,
+    },
+    destination: {
+      type: String,
+    },
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      url: "http://192.168.66.203:9300/statics/2021/10/13/4c5154b9-1665-4edf-bc81-63c848a510e4.png",
+    };
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped>
+.card-box {
+  height: calc(100vh - 2px);
+  position: relative;
+  z-index: 100;
+}
+
+.card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+.card-box .header-title * {
+  vertical-align: middle;
+}
+.qr-box {
+  background-color: #1993fc;
+  width: 90%;
+  z-index: 9999;
+  border: none;
+  color: #e5edff;
+  font-size: 26px;
+  text-align: center;
+  margin-top: 5%;
+}
+.qr-box img {
+  width: 70%;
+  height: 100%;
+}
+</style>

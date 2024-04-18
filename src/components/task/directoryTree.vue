@@ -1,0 +1,143 @@
+<template>
+  <div>
+    <el-button
+      v-if="tabDictValue === '1' || tabDictValue === '0'"
+      type="primary"
+      style="width: 100%"
+      @click="handleAdd"
+      >新增任务</el-button
+    >
+    <el-tree
+      v-if="treeDisplay"
+      class="tree-box"
+      :props="props"
+      :load="loadNode"
+      :expand-on-click-node="false"
+      @node-click="handleNodeClick"
+      @node-expand="handleOpenExpande"
+      @node-collapse="handleCloseExpande"
+      lazy
+      node-key="code"
+      :default-expanded-keys="defaultExpanded"
+    >
+    </el-tree>
+  </div>
+</template>
+
+<script>
+import eventBus from "@/utils/eventBus";
+import { queryTaskTree } from "@/api/taskProcess";
+
+export default {
+  name: "directoryTree",
+  props: ["tabDictValue"],
+  data() {
+    return {
+      props: {
+        label: "name",
+        children: "children",
+        isLeaf: !"isParent",
+      },
+      treeDisplay: true,
+    };
+  },
+  methods: {
+    /**
+     * 节点关闭操作
+     * @param {Object} data 节点数据
+     * @param {Object} node 节点结构数据
+     * @param {function} e 事件本身
+     */
+    handleCloseExpande(data, node, e) {
+      e.expanded = false; //节点关闭属性
+      this.$store.dispatch("cutTaskCodeSelected", {
+        node: node,
+        tabType: this.tabDictValue,
+      });
+    },
+    /**
+     * 节点展开操作
+     * @param {Object} data 节点数据
+     * @param {Object} node 节点结构数据
+     * @param {function} e 事件本身
+     */
+    handleOpenExpande(data, node, e) {
+      if (node.level > 0) {
+        // console.log("展开:", node);
+        this.$store.dispatch("updateTaskCodeSelected", {
+          node: node,
+          tabType: this.tabDictValue,
+        });
+      }
+    },
+    //点击节点事件
+    handleNodeClick(data) {
+      // console.log(data);
+      eventBus.$emit("transmitKey" + this.tabDictValue, data.code);
+    },
+    loadNode(node, resolve) {
+      // console.log(node.level, node);
+      if (node.level === 0) {
+        this.treeLoading = true;
+        queryTaskTree({
+          type: this.tabDictValue,
+          parentCode: "",
+        }).then((res) => {
+          this.treeLoading = false;
+          return resolve(res);
+        });
+      }
+      if (node.level > 0) {
+        // 有children数据则返回
+        if (node.data.children.length > 0) {
+          return resolve(node.data.children);
+        } else {
+          // 没有children数据则调接口获取数据
+          queryTaskTree({
+            type: this.tabDictValue,
+            parentCode: node.data.code,
+          }).then((res) => {
+            return resolve(res);
+          });
+        }
+      }
+    },
+    handleAdd() {
+      eventBus.$emit("transmitKey" + this.tabDictValue, false);
+    },
+  },
+  mounted() {
+    eventBus.$on("transmitTree" + this.tabDictValue, (key) => {
+      if (key) {
+        this.treeDisplay = false;
+        setTimeout(() => {
+          this.treeDisplay = true;
+        }, 300);
+      }
+    });
+  },
+  beforeDestroy() {
+    eventBus.$off("transmitTree" + this.tabDictValue, null);
+  },
+  computed: {
+    defaultExpanded() {
+      return this.$store.state["taskCodeSelected" + this.tabDictValue];
+    },
+  },
+};
+</script>
+
+<style scoped lang="less">
+.tree-box {
+  /deep/ .el-tree-node__content {
+    height: 40px;
+    .el-tree-node__label {
+      font-size: 16px;
+      color: #333333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+</style>

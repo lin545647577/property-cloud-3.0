@@ -1,0 +1,38 @@
+<template>
+  <div>
+    <el-row :gutter="10" v-loading="loading">
+      <el-col :span="8"
+        ><div class="grid-content"><proTree></proTree></div
+      ></el-col>
+      <el-col :span="16">
+        <div class="grid-content"><li-view :view="view" /></div
+      ></el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import proTree from "@/components/propertyTree.vue";
+
+export default {
+  name: "propertyTree",
+  components: { proTree },
+  data() {
+    return {
+      loading: false,
+    };
+  },
+  methods: {},
+  mounted() {},
+  computed: {
+    view() {
+      return this.$store.state.treeViewUrl;
+    },
+    node() {
+      return this.$store.state.node;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

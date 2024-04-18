@@ -1,0 +1,207 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="公告主题：">
+        <el-input v-model="form.theme" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="公告分类：">
+        <el-select v-model="form.type" style="width: 100%" placeholder="请选择">
+          <el-option
+            v-for="item in type"
+            :key="item.dictValue"
+            :label="item.dictLabel"
+            :value="item.dictValue"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="公告说明：">
+        <el-input
+          type="textarea"
+          v-model="form.explain"
+          autosize
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="开始时间：">
+        <el-date-picker
+          v-model="form.startDate"
+          style="width: 100%"
+          align="right"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="选择开始时间"
+          :disabled="checkInfo"
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="结束时间：">
+        <el-date-picker
+          v-model="form.endDate"
+          style="width: 100%"
+          align="right"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="选择结束时间"
+          :disabled="checkInfo"
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="设备关联：" prop="deviceIds">
+        <el-select
+          v-model="form.deviceIds"
+          style="width: 100%"
+          multiple
+          placeholder="请选择"
+        >
+          <el-option
+            v-for="item in deviceList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="公告内容：">
+        <li-rich-text v-model="form.content" />
+      </el-form-item>
+
+      <el-form-item label="封面图片：">
+        <li-portrait v-model="form.fileUrls" :readonly="checkInfo" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import { queryNotice, editNotice, insertNotice } from "@/api/notice.js";
+import { queryWiseDevideList } from "@/api/device.js";
+import { queryDictionary } from "@/api/common.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {},
+      rules: {
+        type: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+      deviceList: [],
+      type: [],
+    };
+  },
+  methods: {
+    // 获取设备列表
+    queryDevice() {
+      queryWiseDevideList({}).then((res) => {
+        // console.log(res);
+        this.deviceList = res.rows;
+        this.initType();
+        if (this.params.id) {
+          this.queryInfo(this.params.id);
+        }
+      });
+    },
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryNotice(id).then((res) => {
+        this.form = res;
+        // this.form.fileUrls = res.fileUrls ? res.fileUrls : "[]";
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertNotice(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editNotice(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    initType() {
+      queryDictionary("estate_notice_type").then((res) => {
+        // console.log(res);
+        this.type = res;
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    // if (this.params.id) {
+    //   this.queryInfo(this.params.id);
+    // }
+    this.queryDevice();
+  },
+};
+</script>
+
+<style scoped></style>

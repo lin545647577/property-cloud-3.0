@@ -1,0 +1,281 @@
+<template>
+  <div class="common-box">
+    <!--    头部-->
+    <el-row>
+      <el-col :span="8">
+        <div class="grid-content">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />办事指南
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <el-input
+            placeholder="请输入您要搜索的问题"
+            prefix-icon="el-icon-search"
+            style="width: 100%; border-radius: 10px"
+            v-model="searchValue"
+          >
+          </el-input>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content"></div>
+      </el-col>
+    </el-row>
+    <!--    内容-->
+    <div class="content-box">
+      <el-row :gutter="40">
+        <el-col :span="16">
+          <div class="grid-content">
+            <el-card class="box-card card-box">
+              <p class="box-title">园区业务办理</p>
+              <div class="text item">
+                <el-row :gutter="20">
+                  <el-col :span="12"
+                    ><div class="grid-content">
+                      <el-card class="box-card hot-box">
+                        <div class="text item">
+                          <div>
+                            <el-tag
+                              effect="dark"
+                              style="border: none"
+                              color="#FEC119"
+                              >HOT</el-tag
+                            >
+                            <span class="circle-box"
+                              ><i class="el-icon-arrow-left"></i
+                            ></span>
+                            <span><i class="el-icon-arrow-right"></i></span>
+                          </div>
+                        </div>
+                      </el-card></div
+                  ></el-col>
+                  <el-col :span="12"
+                    ><div class="grid-content">
+                      <el-row
+                        :gutter="20"
+                        v-for="i in 4"
+                        :key="i"
+                        class="notice-item"
+                      >
+                        <el-col :span="16">
+                          <div class="grid-content">
+                            <p class="title ellipsis">园区业务办理</p>
+                            <p class="time">2021年9月20日</p>
+                            <p class="ellipsis2">
+                              园区停电通知，本园区电力改造，于2021年9月20日晚上8点后停电0日晚上8点后停电
+                            </p>
+                          </div>
+                        </el-col>
+                        <el-col :span="8">
+                          <div class="grid-content" style="text-align: right">
+                            <div
+                              class="demo-image__error"
+                              style="width: 134px; height: 134px"
+                            >
+                              <div class="block">
+                                <el-image
+                                  :src="
+                                    require('@/assets/img/wiseScreen/2.0/notice/1.png')
+                                  "
+                                >
+                                  <div slot="error" class="image-slot">
+                                    <i class="el-icon-picture-outline"></i>
+                                  </div>
+                                </el-image>
+                              </div>
+                            </div>
+                          </div>
+                        </el-col>
+                      </el-row></div
+                  ></el-col>
+                </el-row>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="grid-content">
+            <el-card class="box-card card-box">
+              <p class="box-title">扶持政策申报</p>
+              <div class="text item">
+                <el-row>
+                  <el-col :span="24"
+                    ><div class="grid-content">
+                      <el-row
+                        :gutter="20"
+                        v-for="i in 4"
+                        :key="i"
+                        class="notice-item"
+                      >
+                        <el-col :span="16">
+                          <div class="grid-content">
+                            <p class="title ellipsis">园区业务办理</p>
+                            <p class="time">2021年9月20日</p>
+                            <p class="ellipsis2">
+                              园区停电通知，本园区电力改造，于2021年9月20日晚上8点后停电0日晚上8点后停电
+                            </p>
+                          </div>
+                        </el-col>
+                        <el-col :span="8">
+                          <div class="grid-content" style="text-align: right">
+                            <div
+                              class="demo-image__error"
+                              style="width: 134px; height: 134px"
+                            >
+                              <div class="block">
+                                <el-image
+                                  :src="
+                                    require('@/assets/img/wiseScreen/2.0/notice/1.png')
+                                  "
+                                >
+                                  <div slot="error" class="image-slot">
+                                    <i class="el-icon-picture-outline"></i>
+                                  </div>
+                                </el-image>
+                              </div>
+                            </div>
+                          </div>
+                        </el-col>
+                      </el-row></div
+                  ></el-col>
+                </el-row>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryNoticeListByWiseScreen } from "@/api/notice.js";
+
+export default {
+  name: "notice",
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+      noticeList: [],
+      policyList: [],
+      securityList: [],
+    };
+  },
+  methods: {
+    /**
+     * 跳转详细页面
+     * @param item
+     */
+    toDetail(item) {
+      this.$router.push({
+        path: "/wisdom-oriented/notice/detail",
+        query: { id: item.id },
+      });
+    },
+    // 初始化园区公告
+    queryNoticeList() {
+      queryNoticeListByWiseScreen({ type: "1", pageNum: 1, pageSize: 7 }).then(
+        (res) => {
+          // console.log(res);
+          this.noticeList = res.rows;
+        }
+      );
+    },
+    // 初始化政策公告
+    queryPolicyList() {
+      queryNoticeListByWiseScreen({ type: "2", pageNum: 1, pageSize: 3 }).then(
+        (res) => {
+          // console.log(res);
+          this.policyList = res.rows;
+        }
+      );
+    },
+    // 初始化安全公告
+    querySecurityList() {
+      queryNoticeListByWiseScreen({ type: "3", pageNum: 1, pageSize: 10 }).then(
+        (res) => {
+          // console.log(res);
+          this.securityList = res.rows;
+        }
+      );
+    },
+  },
+  mounted() {
+    this.queryNoticeList();
+    this.queryPolicyList();
+    this.querySecurityList();
+  },
+};
+</script>
+
+<style scoped>
+.circle-box {
+  background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);
+  width: 30px;
+  height: 30px;
+  color: #ffffff;
+  text-align: center;
+  line-height: 30px;
+}
+.common-box {
+  padding: 3% 4% 0 4%;
+  max-height: 1080px;
+  width: auto;
+}
+
+.card-box /deep/ img {
+  width: 100%;
+  height: 100%;
+}
+
+.common-box .header {
+  font-size: 36px;
+}
+
+.common-box .content-box {
+  padding: 0;
+}
+
+.common-box .content-box .el-card {
+  border: none;
+}
+
+.common-box .content-box .card-box {
+  border-radius: 20px;
+  margin-top: 20px;
+  height: 82vh;
+}
+
+.common-box .content-box .card-box .box-title {
+  color: #42a6f4;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+}
+.common-box .content-box .card-box .notice-item {
+  color: #989eb2;
+  font-size: 16px;
+  margin: 11% 0;
+}
+
+.common-box .content-box .card-box .notice-item .title {
+  color: #343f5e;
+  font-size: 18px;
+}
+
+.common-box .content-box .card-box .notice-item .time {
+  margin-bottom: 25px;
+}
+
+.common-box .content-box .card-box .hot-box {
+  background-color: #f5f9fc;
+  height: 70vh;
+  padding: 10px 20px;
+}
+</style>

@@ -1,0 +1,336 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="名称：" prop="advName">
+        <el-input
+          v-model="form.advName"
+          :disabled="checkInfo"
+          clearable
+        ></el-input>
+      </el-form-item>
+
+      <el-form-item label="类型：" prop="advGenre">
+        <el-select
+          v-model="form.advGenre"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in types"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="分类：" prop="advType">
+        <el-select
+          v-model="form.advType"
+          placeholder="请选择"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in advType"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <!--      <el-form-item label="状态：" prop="advState">-->
+      <!--        <el-select-->
+      <!--          v-model="form.advState"-->
+      <!--          placeholder="请选择"-->
+      <!--          style="width: 100%"-->
+      <!--          disabled-->
+      <!--        >-->
+      <!--          <el-option-->
+      <!--            v-for="item in status"-->
+      <!--            :key="item.id"-->
+      <!--            :label="item.name"-->
+      <!--            :value="item.id"-->
+      <!--          ></el-option>-->
+      <!--        </el-select>-->
+      <!--      </el-form-item>-->
+      <el-form-item label="发布单位：" prop="advPublishOrg">
+        <el-input
+          v-model="form.advPublishOrg"
+          clearable
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="发布人：" prop="advPublisher">
+        <el-input
+          v-model="form.advPublisher"
+          clearable
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+
+      <el-form-item label="联系人：">
+        <el-input
+          v-model="form.contactPerson"
+          clearable
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="联系电话：">
+        <el-input
+          v-model="form.contactPhone"
+          clearable
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="发布开始时间：" prop="publishStartTime">
+        <el-date-picker
+          v-model="form.publishStartTime"
+          style="width: 100%"
+          align="right"
+          type="datetime"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          placeholder="选择时间"
+          :disabled="checkInfo"
+          clearable
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="发布结束时间：" prop="publishFinishTime">
+        <el-date-picker
+          v-model="form.publishFinishTime"
+          style="width: 100%"
+          align="right"
+          type="datetime"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          placeholder="选择时间"
+          :disabled="checkInfo"
+          clearable
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="内容：">
+        <li-rich-text v-model="form.advContent" :readonly="checkInfo" />
+      </el-form-item>
+      <el-form-item label="备注：">
+        <el-input
+          type="textarea"
+          autosize
+          v-model="form.remark"
+          :disabled="checkInfo"
+          clearable
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="附件：">
+        <li-attachment v-model="form.urls" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import { queryAdvInfo, editAdvInfo, insertAdvInfo } from "@/api/advert.js";
+import { dateFormat } from "@/utils/util.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        advState: 0,
+      },
+      houseName: "",
+      rules: {
+        publishStartTime: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        publishFinishTime: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        advGenre: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        // advState: [
+        //   {
+        //     required: true,
+        //     message: "请选择",
+        //     trigger: "change",
+        //   },
+        // ],
+        advType: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        advName: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        advPublishOrg: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        advPublisher: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+      },
+      types: [
+        {
+          id: 0,
+          name: "图片",
+        },
+        {
+          id: 1,
+          name: "视频",
+        },
+        {
+          id: 2,
+          name: "文本",
+        },
+      ],
+      status: [
+        {
+          id: 0,
+          name: "未发报",
+        },
+        {
+          id: 1,
+          name: "已发布",
+        },
+        {
+          id: 2,
+          name: "过期",
+        },
+      ],
+      advType: [
+        {
+          id: 0,
+          name: "广告投放",
+        },
+        {
+          id: 1,
+          name: "政府宣传",
+        },
+        {
+          id: 2,
+          name: "活动宣传",
+        },
+      ],
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryAdvInfo(id).then((res) => {
+        this.form = res;
+        this.form.urls = this.form.urls ? this.form.urls : "[]";
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertAdvInfo(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editAdvInfo(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+};
+</script>
+
+<style scoped></style>

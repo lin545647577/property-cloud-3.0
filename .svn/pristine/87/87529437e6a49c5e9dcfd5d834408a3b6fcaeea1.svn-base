@@ -1,0 +1,408 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <!--      <el-form-item label="物业信息：" prop="houseId">-->
+      <!--        <el-input-->
+      <!--          style="display: none"-->
+      <!--          v-model="form.houseId"-->
+      <!--          :disabled="checkInfo"-->
+      <!--        ></el-input>-->
+      <!--        <el-input-->
+      <!--          v-model="houseName"-->
+      <!--          @focus="handleChooseHouse"-->
+      <!--          :disabled="checkInfo"-->
+      <!--        ></el-input>-->
+      <!--      </el-form-item>-->
+      <el-form-item label="联系人：" prop="contactPerson">
+        <el-input v-model="form.contactPerson" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="联系电话：" prop="contactPhone">
+        <el-input v-model="form.contactPhone" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="单位：" prop="issued">
+        <el-input v-model="form.issuedOrg" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="发布人：" prop="publisher">
+        <el-input v-model="form.publisher" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="月租：" prop="monthRent">
+        <el-input v-model="form.monthRent" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="日租：" prop="dayRent">
+        <el-input v-model="form.dayRent" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="面积：" prop="area">
+        <el-input v-model="form.area" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="性质：" prop="nature">
+        <el-input v-model="form.nature" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="付款方式：" prop="payState">
+        <el-input v-model="form.payState" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="物业费用：" prop="propertyFee">
+        <el-input v-model="form.propertyFee" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="物业：" prop="propertiesForSale">
+        <el-input
+          v-model="form.propertiesForSale"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="注册：" prop="registing">
+        <el-input v-model="form.registing" :disabled="checkInfo"></el-input>
+      </el-form-item>
+
+      <el-form-item label="装修：" prop="fixing">
+        <el-input v-model="form.fixing" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="楼层：" prop="floor">
+        <el-input v-model="form.floor" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="分割：" prop="division">
+        <el-input v-model="form.division" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="地址：" prop="address">
+        <el-input
+          type="area"
+          v-model="form.address"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+
+      <el-form-item label="置顶：">
+        <el-switch
+          :disabled="checkInfo"
+          v-model="form.orNotTop"
+          active-text="是"
+          inactive-text="否"
+        >
+        </el-switch>
+      </el-form-item>
+      <el-form-item label="开始时间：">
+        <el-date-picker
+          v-model="form.publishStartTime"
+          style="width: 100%"
+          align="right"
+          type="datetime"
+          format="yyyy-MM-dd HH:mm:dd"
+          value-format="yyyy-MM-dd HH:mm:dd"
+          placeholder="选择开始时间"
+          :disabled="checkInfo"
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="结束时间：">
+        <el-date-picker
+          v-model="form.publishFinishTime"
+          style="width: 100%"
+          align="right"
+          type="datetime"
+          format="yyyy-MM-dd HH:mm:dd"
+          value-format="yyyy-MM-dd HH:mm:dd"
+          placeholder="选择结束时间"
+          :disabled="checkInfo"
+        >
+        </el-date-picker>
+      </el-form-item>
+
+      <el-form-item label="状态：">
+        <el-select
+          v-model="form.state"
+          placeholder="请选择状态"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="未发布" :value="0"></el-option>
+          <el-option label="已发布" :value="1"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="设备关联：" prop="deviceIds">
+        <el-select
+          v-model="form.deviceIds"
+          style="width: 100%"
+          multiple
+          placeholder="请选择"
+        >
+          <el-option
+            v-for="item in deviceList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="租赁说明：" prop="leaseDescription">
+        <li-rich-text v-model="form.leaseDescription" />
+      </el-form-item>
+      <el-form-item label="附件：">
+        <li-attachment v-model="form.urls" :readonly="checkInfo" />
+      </el-form-item>
+
+      <el-form-item label="封面图片：">
+        <li-portrait v-model="form.image" :readonly="checkInfo" />
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import { queryLeasing, editLeasing, insertLeasing } from "@/api/rent.js";
+import { dateFormat } from "@/utils/util.js";
+import { queryWiseDevideList } from "@/api/device.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: { state: 0 },
+      houseName: "",
+      rules: {
+        deviceIds: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        image: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        address: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        houseId: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        publisher: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        area: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        leaseDescription: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        issuedOrg: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        contactPhone: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        contactPerson: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        monthRent: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        propertyFee: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        propertiesForSale: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        payState: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        dayRent: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        division: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        fixing: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        floor: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+      },
+      deviceList: [],
+    };
+  },
+  methods: {
+    // 获取设备列表
+    queryDevice() {
+      queryWiseDevideList({}).then((res) => {
+        // console.log(res);
+        this.deviceList = res.rows;
+        if (this.params.id) {
+          this.queryInfo(this.params.id);
+        }
+      });
+    },
+    //房屋选择
+    handleChooseHouse() {
+      this.$refs["chooseModal"].show({
+        view: "property/common/houseModal.vue",
+        params: {},
+        title: "查看房屋列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          // console.log(data.multipleSelection[0].name);
+          this.houseName = data.multipleSelection[0].name;
+          this.form.houseId = data.multipleSelection[0].id;
+          this.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryLeasing(id).then((res) => {
+        this.form = res;
+        // this.houseName = JSON.parse(res.tygxHouseDefinition).name;
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertLeasing(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editLeasing(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    this.queryDevice();
+  },
+};
+</script>
+
+<style scoped></style>

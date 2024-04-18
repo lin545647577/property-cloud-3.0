@@ -1,0 +1,33 @@
+<template>
+  <div class="common-box">
+    <div class="content-box"></div>
+  </div>
+</template>
+
+<script>
+import { queryNoticeByWiseScreen } from "@/api/notice.js";
+export default {
+  name: "detail",
+  data() {
+    return {
+      data: null,
+    };
+  },
+  methods: {
+    queryInfo(id) {
+      queryNoticeByWiseScreen(id).then((res) => {
+        // console.log(res);
+        this.data = res;
+      });
+    },
+  },
+  mounted() {
+    this.queryInfo(this.$route.query.id);
+    console.log(this.$route.query.id);
+  },
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+</style>

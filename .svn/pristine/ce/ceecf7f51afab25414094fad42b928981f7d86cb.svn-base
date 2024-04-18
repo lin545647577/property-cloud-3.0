@@ -1,0 +1,411 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="formLoading"
+      :model="form"
+      ref="ruleForm"
+      :label-width="formSetting.labelWidth + 'px'"
+      class="demo-ruleForm"
+      :disabled="checkInfo"
+      :label-position="formSetting.labelPosition"
+      :size="formSetting.size"
+    >
+      <template v-for="(item, index) in formItems">
+        <!--输入框-->
+        <el-form-item
+          v-if="
+            item.__config__.tag === 'el-input' &&
+            item.__config__.tagIcon === 'input' &&
+            !item.__config__.popupType
+          "
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请输入',
+              trigger: 'blur',
+            },
+          ]"
+        >
+          <el-input
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+            :disabled="checkInfo"
+            clearable
+          ></el-input>
+        </el-form-item>
+
+        <!--文本输入框-->
+        <el-form-item
+          v-if="
+            item.__config__.tag === 'el-input' &&
+            item.__config__.tagIcon === 'textarea'
+          "
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请输入',
+              trigger: 'blur',
+            },
+          ]"
+        >
+          <el-input
+            autosize
+            type="textarea"
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+            :disabled="checkInfo"
+            clearable
+          ></el-input>
+        </el-form-item>
+
+        <!--日期选择器-->
+        <el-form-item
+          v-if="
+            item.__config__.tag === 'el-date-picker' &&
+            item.__config__.tagIcon === 'date'
+          "
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请选择',
+              trigger: 'change',
+            },
+          ]"
+        >
+          <el-date-picker
+            :style="item.style"
+            v-model="form[item.__vModel__]"
+            :type="item.type"
+            :placeholder="item.placeholder"
+            :disabled="checkInfo"
+            :format="item.format"
+            :value-format="item['value-format']"
+          >
+          </el-date-picker>
+        </el-form-item>
+
+        <!--日期范围-->
+        <el-form-item
+          v-if="
+            item.__config__.tag === 'el-date-picker' &&
+            item.__config__.tagIcon === 'date-range'
+          "
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请选择',
+              trigger: 'change',
+            },
+          ]"
+        >
+          <el-date-picker
+            :style="item.style"
+            v-model="form[item.__vModel__]"
+            :type="item.type"
+            :range-separator="item['range-separator']"
+            :start-placeholder="item['start-placeholder']"
+            :end-placeholder="item['end-placeholder']"
+            :format="item.format"
+            :value-format="item['value-format']"
+            :disabled="checkInfo"
+          >
+          </el-date-picker>
+        </el-form-item>
+
+        <!--时间选择器-->
+        <el-form-item
+          v-if="
+            item.__config__.tag === 'el-time-picker' &&
+            item.__config__.tagIcon === 'time'
+          "
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请选择',
+              trigger: 'change',
+            },
+          ]"
+        >
+          <el-time-picker
+            v-model="form[item.__vModel__]"
+            :style="item.style"
+            :picker-options="item['picker-options']"
+            :placeholder="item.placeholder"
+            :disabled="checkInfo"
+          >
+          </el-time-picker>
+        </el-form-item>
+
+        <!--时间范围选择-->
+        <el-form-item
+          v-if="
+            item.__config__.tag === 'el-time-picker' &&
+            item.__config__.tagIcon === 'time-range'
+          "
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请选择',
+              trigger: 'change',
+            },
+          ]"
+        >
+          <el-time-picker
+            :defaultValue="item.__config__.defaultValue"
+            is-range
+            :style="item.style"
+            v-model="form[item.__vModel__]"
+            :type="item.type"
+            :range-separator="item['range-separator']"
+            :start-placeholder="item['start-placeholder']"
+            :end-placeholder="item['end-placeholder']"
+            :format="item.format"
+            :value-format="item['value-format']"
+            :disabled="checkInfo"
+          >
+          </el-time-picker>
+        </el-form-item>
+
+        <!--单选框组-->
+        <el-form-item
+          v-if="item.__config__.tag === 'el-radio-group'"
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+          :rules="[
+            {
+              required: item.__config__.required,
+              message: '请选择',
+              trigger: 'change',
+            },
+          ]"
+        >
+          <el-radio-group v-model="form[item.__vModel__]" :disabled="checkInfo">
+            <el-radio
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictValue"
+              >{{ opItem.dictLabel }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <!--下拉框-->
+        <el-form-item
+          v-if="item.__config__.tag === 'el-select'"
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+        >
+          <el-select
+            v-model="form[item.__vModel__]"
+            :placeholder="item.placeholder"
+            :disabled="checkInfo"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictLabel"
+              :value="opItem.dictValue"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <!--多选框-->
+        <el-form-item
+          v-if="item.__config__.tag === 'el-checkbox-group'"
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+        >
+          <el-checkbox-group
+            v-model="form[item.__vModel__]"
+            :disabled="checkInfo"
+          >
+            <el-checkbox
+              v-for="(opItem, opIndex) in item.__slot__.options"
+              :key="opIndex"
+              :label="opItem.dictValue"
+              >{{ opItem.dictLabel }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+
+        <!--          上传-->
+        <el-form-item
+          v-if="item.__config__.tag === 'el-upload'"
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+        >
+          <li-attachment v-model="form[item.__vModel__]" />
+        </el-form-item>
+
+        <!--表格弹框-->
+        <el-form-item
+          v-if="item.__config__.popupType === 'table'"
+          :label="item.__config__.label"
+          :prop="item.__vModel__"
+          :key="index"
+        >
+          <el-input
+            v-model="form[item.__vModel__ + keyPlaceholder]"
+            :placeholder="item.placeholder"
+            :disabled="checkInfo"
+            clearable
+            @focus="handleChooseTable(item.__vModel__, item.__config__.dataUrl)"
+          ></el-input>
+        </el-form-item>
+      </template>
+    </el-form>
+    <div class="modal-btn" style="margin-top: 20px">
+      <el-button size="small" v-if="checkInfo" @click="handleChangeStatus"
+        >编辑</el-button
+      >
+      <el-button
+        v-if="!checkInfo"
+        type="primary"
+        class="control-btn"
+        size="small"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+      <el-button size="small" v-if="!checkInfo" @click="handleChangeStatus"
+        >取消</el-button
+      >
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="chooseTable" />
+  </div>
+</template>
+
+<script>
+export default {
+  name: "editForm",
+  props: {
+    form: {
+      type: Object,
+    },
+    formSetting: {
+      type: Object,
+      required: true,
+    },
+    loading: {
+      type: Boolean,
+    },
+    residenceId: {
+      type: Number,
+    },
+  },
+  data() {
+    return {
+      checkInfo: true,
+      formItems: [],
+      formLoading: false,
+    };
+  },
+  methods: {
+    /**
+     * 弹窗选择表格
+     * @param {String} keyName 键值名称
+     * @param {String} url 调用地址
+     */
+    handleChooseTable(keyName, url) {
+      // console.log("keyName:", keyName);
+      this.$refs["chooseTable"].show({
+        view: url,
+        params: this.form.residenceId
+          ? { referenceResidenceId: this.form.residenceId }
+          : {},
+        title: "选择表格",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (res) => {
+          // console.log("选中", res);
+          this.formLoading = true;
+          this.form[keyName] = res.multipleSelection[0].id;
+          this.form[keyName + this.keyPlaceholder] =
+            res.multipleSelection[0].name;
+          // console.log("选择后", this.form);
+          this.$refs["chooseTable"].hide();
+          this.formLoading = false;
+        },
+      });
+    },
+    // 变更表单编辑状态
+    handleChangeStatus() {
+      this.checkInfo = !this.checkInfo;
+      this.$refs["ruleForm"].clearValidate();
+    },
+    // 提交表单
+    submitForm(formName) {
+      // console.log(this.form);
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.$emit("bindForm", this.form);
+          this.handleChangeStatus();
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+  },
+  mounted() {
+    this.formItems = this.formSetting.fields;
+  },
+  computed: {
+    keyPlaceholder() {
+      return this.$store.state.keyPlaceholder;
+    },
+  },
+  watch: {
+    "form.id": {
+      handler(nval, oval) {
+        if (nval != oval) {
+          this.$refs["ruleForm"].clearValidate();
+          this.checkInfo = true;
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
+    loading: {
+      handler(nval, oval) {
+        if (nval != oval) {
+          this.formLoading = nval;
+        }
+      },
+      immediate: true,
+    },
+  },
+};
+</script>
+
+<style></style>

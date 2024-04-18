@@ -1,0 +1,248 @@
+<template>
+  <div class="common-box">
+    <!--    头部-->
+    <el-row type="flex" class="row-bg" align="middle">
+      <el-col :span="8">
+        <div class="grid-content">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />楼层索引
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <!--          <el-input-->
+          <!--            placeholder="请输入您要搜索的问题"-->
+          <!--            prefix-icon="el-icon-search"-->
+          <!--            style="width: 100%; border-radius: 10px"-->
+          <!--            v-model="searchValue"-->
+          <!--          >-->
+          <!--          </el-input>-->
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <weather></weather>
+        </div>
+      </el-col>
+    </el-row>
+    <!--    内容-->
+    <div class="content-box">
+      <el-tabs
+        v-model="activeName"
+        @tab-click="handleClick"
+        style="margin-top: 2.5%; font-size: 24px"
+        v-if="buildingList.length > 0"
+      >
+        <el-tab-pane
+          :label="item.name"
+          :name="item.id"
+          v-for="item in buildingList"
+          :key="item.id"
+        ></el-tab-pane>
+      </el-tabs>
+      <div class="building-content">
+        <div class="building-box" v-for="item in floorList" :key="item.id">
+          <p class="floor">
+            <span class="sp-box" v-for="c in item.name" :key="c">{{ c }}</span>
+          </p>
+          <p class="floor-en">
+            <span class="sp-box" v-for="c in 'GROUND FLOOR'" :key="c">{{
+              c
+            }}</span>
+          </p>
+          <el-row
+            type="flex"
+            class="row-bg"
+            :gutter="50"
+            v-if="
+              getCompanyList(item.id) && getCompanyList(item.id).rows.length > 0
+            "
+          >
+            <el-col
+              :span="8"
+              v-for="com in getCompanyList(item.id).rows"
+              :key="com.fid"
+              ><div class="grid-content">
+                <span v-for="c in com.name" :key="c" class="char-box">
+                  <span class="sp-box" v-for="w in c" :key="w">{{ w }}</span>
+                </span>
+              </div></el-col
+            >
+          </el-row>
+          <el-row type="flex" class="row-bg" :gutter="50" v-else>
+            <el-col :span="8" key="com.id"
+              ><div class="grid-content ellipsis">暂无信息</div></el-col
+            >
+          </el-row>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import {
+  queryBuildingListBywiseScreen,
+  queryCompanyListByWiseScreen,
+} from "@/api/property.js";
+import weather from "@/components/wiseScreen/weather";
+
+export default {
+  name: "building",
+  components: {
+    weather,
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+      buildingList: [],
+      floorList: [],
+      companyList: [],
+      activeName: 0,
+    };
+  },
+  methods: {
+    // tabs Bar选中
+    handleClick(tab, event) {
+      // console.log(tab, event);
+      this.companyList = [];
+      this.queryFloorList(tab.name);
+    },
+    // 初始化楼宇
+    queryBuildingList() {
+      queryBuildingListBywiseScreen({ typeCode: "building" }).then((res) => {
+        // console.log(res);
+        this.buildingList = res.rows;
+        for (let index in this.buildingList) {
+          this.buildingList[index].id = this.buildingList[index].id.toString();
+        }
+        this.activeName = this.buildingList[0].id;
+        this.queryFloorList(this.activeName);
+        // console.log(this.buildingList);
+      });
+    },
+    /**
+     * 初始化楼层
+     * @param {Long} bid 楼宇id
+     */
+    queryFloorList(bid) {
+      queryBuildingListBywiseScreen({ typeCode: "floor", parentId: bid }).then(
+        (res) => {
+          this.floorList = res.rows;
+          this.floorList.forEach((item) => {
+            this.queryCompanyList(item.id);
+          });
+        }
+      );
+    },
+    /**
+     * 初始化公司列表
+     * @param {Long} fid 楼层id
+     */
+    queryCompanyList(fid) {
+      queryCompanyListByWiseScreen(fid).then((res) => {
+        this.companyList.push({
+          fid: fid,
+          rows: res,
+        });
+        console.log(this.companyList);
+      });
+    },
+
+    getCompanyList(fid) {
+      return this.companyList.find((item) => item.fid === fid);
+    },
+  },
+  mounted() {
+    this.queryBuildingList();
+  },
+};
+</script>
+
+<style scoped>
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+}
+.common-box {
+  padding: 3% 4% 0 4%;
+  max-height: 1080px;
+  width: auto;
+}
+
+.common-box .header {
+  font-size: 36px;
+}
+
+.common-box .content-box {
+  font-size: 24px;
+  padding: 0;
+  color: #343f5e;
+}
+
+.common-box .content-box .building-content {
+  height: 79vh;
+  overflow: auto;
+}
+
+/* 设置滚动条的样式 */
+.common-box .content-box .building-content::-webkit-scrollbar {
+  /*width: 0px;*/
+  display: none;
+  width: 15px;
+  background-color: #ecf5ff;
+  border-radius: 10px;
+}
+
+/* 滚动条滑块 */
+.common-box .content-box .building-content::-webkit-scrollbar-thumb {
+  background-color: #409eff;
+  border-radius: 10px;
+}
+
+.common-box .content-box .building-box {
+  margin: 2.5% 0;
+}
+
+.common-box .content-box .sp-box {
+  line-height: 45px;
+  background-image: url("../../../assets/img/wiseScreen/2.0/buiildcharBox.png");
+  padding: 3px 5px;
+  /*margin-right: 5px;*/
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  text-align: center;
+}
+
+.common-box .content-box .building-box .char-box {
+  /*background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);*/
+  /*width: 31px;*/
+  /*height: 31px;*/
+  /*text-align: center;*/
+}
+
+.common-box .content-box /deep/ .el-tabs__item {
+  font-size: 24px;
+  height: 50px;
+  color: #989eb2;
+}
+
+.common-box .content-box /deep/ .el-tabs__item.is-active {
+  color: inherit;
+}
+
+.common-box .content-box .building-box .floor {
+  margin-top: 2.5%;
+}
+
+.common-box .content-box .building-box .floor-en {
+  font-size: 10px;
+  margin-bottom: 2.5%;
+}
+
+.common-box .content-box .building-box .floor-en .sp-box {
+  line-height: 30px;
+  padding: 0 3px;
+}
+</style>

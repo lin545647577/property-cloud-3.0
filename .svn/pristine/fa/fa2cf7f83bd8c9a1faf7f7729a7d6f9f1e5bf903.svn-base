@@ -1,0 +1,284 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="位置：" prop="positionName">
+        <el-input
+          v-model="form.positionName"
+          @focus="handlePositionModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="仪表名称：" prop="name">
+        <el-input v-model="form.name" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="仪表编号：" prop="meterNumber">
+        <el-input v-model="form.meterNumber" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="初始读数：" prop="initialReading">
+        <el-input
+          v-model="form.initialReading"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="仪表类型：" prop="meterType">
+        <el-select
+          v-model="form.meterType"
+          filterable
+          placeholder="请选择类型"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option label="水表" value="w"></el-option>
+          <el-option label="电表" value="e"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="选择收费项目：">
+        <el-input
+          v-model="form.itemName"
+          @focus="handleItemModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+  </div>
+</template>
+
+<script>
+import {
+  queryMeter,
+  editMeter,
+  insertMeter,
+  configPositionId,
+} from "@/api/device.js";
+import { queryFormulaList } from "@/api/payment.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        positionName: "",
+        itemName: "",
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入名称",
+            trigger: "blur",
+          },
+        ],
+        positionName: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        meterNumber: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        initialReading: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+        meterType: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+      },
+      projectList: [],
+    };
+  },
+  methods: {
+    // 费用项目选择
+    handleItemModal() {
+      this.$refs["chooseModal"].show({
+        view: "payment/common/itemModalRadio.vue",
+        params: { id: this.params.id },
+        title: "费用项目",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.getItemData,
+      });
+    },
+    /**
+     * 表单费用项目赋值
+     * @param {Object} data 回调数据
+     */
+    getItemData(data) {
+      // console.log(data.multipleSelection[0]);
+      let temp = data.multipleSelection[0];
+      this.form.referenceItemId = temp.id;
+      this.form.itemName = temp.name;
+      this.$refs["chooseModal"].hide();
+    },
+    // 位置选择
+    handlePositionModal() {
+      this.$refs["chooseModal"].show({
+        view: "meter/meter/positionTreeModal.vue",
+        params: { id: this.params.id },
+        title: "位置",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.getCallData,
+      });
+    },
+    /**
+     * 表单位置赋值
+     * @param {Object} data 回调数据
+     */
+    getCallData(data) {
+      // console.log(data.chooseTree);
+      let tempArr = data.chooseTree;
+      let tempData = [];
+      for (let index in tempArr) {
+        tempData.push(tempArr[index].id + ":" + tempArr[index].nodeType);
+      }
+      configPositionId({
+        position: tempData.toString(),
+        residenceId: parseInt(this.residenceTreeSelected),
+      }).then((res) => {
+        // console.log("解析结果",res)
+        this.form.positionName = res.name;
+        this.form.positionInfo = res;
+        this.$refs["chooseModal"].hide();
+      });
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化数据
+     * @param {String} id id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryMeter(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          positionName: res.positionName,
+          positionInfo: res.positionInfo,
+          name: res.name,
+          meterType: res.meterType,
+          meterNumber: res.meterNumber,
+          shareMode: res.shareMode,
+          referenceItemId: res.referenceItemId,
+          itemName: res.itemName,
+          referenceResidenceId: res.referenceResidenceId
+            ? res.referenceResidenceId
+            : this.residenceTreeSelected,
+          initialReading: res.initialReading,
+        };
+        this.loading = false;
+      });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertMeter(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editMeter(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    queryFormula() {
+      queryFormulaList().then((res) => {
+        this.projectList = res.rows;
+      });
+    },
+  },
+  mounted() {
+    this.queryFormula();
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    } else {
+      this.form.referenceResidenceId = this.residenceTreeSelected;
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+    residenceTreeSelected() {
+      return this.$store.state.residenceTreeSelected;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

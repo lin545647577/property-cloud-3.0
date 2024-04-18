@@ -1,0 +1,107 @@
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.circle-box {
+    display: inline-block;
+    /*background-color: #24B5A2;*/
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.oval-box {
+    display: inline-block;
+    /*background-color: #24B5A2;*/
+    width: 7px;
+    height: 27px;
+    border-radius: 10px;
+    margin-right: 5px;
+}
+
+.vertical-middle * {
+    vertical-align: middle;
+}
+
+.pagination-center {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.el-line-height {
+    line-height: 30px;
+}
+
+.search-box {
+    margin: 20px auto;
+    font-size: 15px;
+}
+
+.search-box .el-input__inner {
+    height: 31px;
+    line-height: 31px;
+}
+
+.search-box .el-input__icon {
+    line-height: 25px;
+}
+
+.search-box .el-col {
+    margin-bottom: 20px;
+}
+
+.btn-box {
+    margin: 20px auto;
+}
+
+.btn-box .control-btn, .form-control {
+    color: #ffffff;
+    border: none;
+}
+
+.modal-btn {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.normalModal {
+    min-width: 1200px;
+}
+
+.normalForm {
+    width: 80%;
+    margin: 0 auto;
+    color: #666666;
+}
+
+.normalForm .el-input.is-disabled .el-input__inner, .normalForm .el-textarea.is-disabled .el-textarea__inner {
+    background-color: #ffffff;
+    color: #666666;
+    /*border: none;*/
+    cursor: default;
+}
+
+.search-box .search-btn {
+    border: none;
+}
+
+.right-title {
+    text-align: right;
+    color: #999;
+}
+
+.el-row {
+    margin-bottom: 10px;
+}
+
+.el-row:last-child {
+    margin-bottom: 0;
+}
+

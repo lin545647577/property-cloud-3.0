@@ -1,0 +1,339 @@
+<template>
+  <div class="common-box">
+    <el-row>
+      <el-col :span="19"
+        ><div class="grid-content content-box">
+          <el-row>
+            <el-col :span="12"
+              ><div class="grid-content header">
+                <img
+                  style="margin: 0 15px 7px 0"
+                  :src="pointImg"
+                  alt=""
+                />物业租赁
+              </div></el-col
+            >
+            <el-col :span="12"
+              ><div class="grid-content">
+                <el-autocomplete
+                  popper-class="my-autocomplete"
+                  prefix-icon="el-icon-search"
+                  v-model="state"
+                  :fetch-suggestions="querySearch"
+                  placeholder="请输入内容"
+                  @select="handleSelect"
+                  style="width: 100%"
+                  v-li-keyboard
+                >
+                  <template slot-scope="{ item }">
+                    <div class="name">{{ item.issuedOrg }}</div>
+                    <!--              <span class="addr">{{ item.address }}</span>-->
+                  </template>
+                </el-autocomplete>
+              </div></el-col
+            >
+          </el-row>
+          <div class="content">
+            <el-tabs
+              v-model="activeName"
+              @tab-click="handleClick"
+              style="margin-top: 2.5%; font-size: 24px"
+            >
+              <el-tab-pane label="写字楼出租" name="first"></el-tab-pane>
+              <!--              <el-tab-pane label="写字楼出租" name="second"></el-tab-pane>-->
+            </el-tabs>
+            <div class="rent-box">
+              <el-row
+                type="flex"
+                class="row-bg"
+                align="middle"
+                v-for="item in dataList"
+                :key="item.id"
+                style="margin: 5% 0"
+                @click.native="toDetail(item)"
+              >
+                <el-col :span="5"
+                  ><div class="grid-content">
+                    <img
+                      style="width: 188px; height: 188px"
+                      :src="item.image"
+                      alt=""
+                      v-if="item.image"
+                    />
+                    <img
+                      v-else
+                      style="width: 188px; height: 188px"
+                      :src="
+                        require('@/assets/img/wiseScreen/2.0/rent/rentS.png')
+                      "
+                      alt=""
+                    /></div
+                ></el-col>
+                <el-col :span="13"
+                  ><div class="grid-content">
+                    <p class="title ellipsis2">
+                      {{ item.issuedOrg }}
+                    </p>
+                    <div class="location">
+                      <p>
+                        {{ item.address ? item.address : "暂无地址信息" }}
+                        <span class="blue-text" v-if="item.address"
+                          ><i class="el-icon-location">到这里去</i></span
+                        >
+                      </p>
+                      <p>
+                        {{
+                          item.propertiesForSale
+                            ? item.propertiesForSale
+                            : "暂无信息"
+                        }}
+                        <!--                        | 中区-->
+                        |
+                        {{ item.floor ? item.floor : "暂无信息" }}
+                      </p>
+                    </div>
+
+                    <p class="tip-box">
+                      <el-tag>随时入住</el-tag>
+                      <el-tag type="success">随时可看</el-tag>
+                      <el-tag type="info">精装修</el-tag>
+                      <el-tag type="warning">免车位费</el-tag>
+                      <!--                      <el-tag type="danger">标签五</el-tag>-->
+                    </p>
+                  </div></el-col
+                >
+                <el-col :span="3"
+                  ><div class="grid-content text-center">
+                    <p class="title">{{ item.area }}㎡</p>
+                    <p>建筑面积</p>
+                  </div></el-col
+                >
+                <el-col :span="3"
+                  ><div class="grid-content text-center">
+                    <p class="price">
+                      {{ item.monthRent ? item.monthRent : "-" }}元/月
+                    </p>
+                    <p>{{ item.dayRent ? item.dayRent : "-" }}元/㎡/天</p>
+                  </div></el-col
+                >
+              </el-row>
+            </div>
+          </div>
+        </div></el-col
+      >
+
+      <!--      优质房源-->
+      <el-col :span="5"
+        ><div class="grid-content">
+          <el-card class="box-card card-box">
+            <div class="text item">
+              <div class="header-title">
+                <img :src="pointImg" fit="fill" />
+                优质房源
+              </div>
+              <div class="item-box">
+                <div
+                  v-for="item in goodList"
+                  :key="item.id"
+                  class="items"
+                  @click="toDetail(item)"
+                >
+                  <img
+                    :src="item.image"
+                    style="width: 100%"
+                    v-if="item.image"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    style="width: 100%"
+                    :src="require('@/assets/img/wiseScreen/2.0/rent/rentL.png')"
+                    alt=""
+                  />
+                  <p class="title">{{ item.issuedOrg }}</p>
+                  <p>{{ item.address ? item.address : "暂无地址信息" }}</p>
+                  <p class="price">
+                    {{ item.monthRent ? item.monthRent : "-" }}元/月
+                  </p>
+                  <p></p>
+                </div>
+              </div>
+            </div>
+          </el-card></div
+      ></el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import { queryLeasingListByWiseScreen } from "@/api/rent";
+export default {
+  name: "rent",
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      activeName: "first",
+      dataList: [],
+      goodList: [],
+      state: "",
+    };
+  },
+  methods: {
+    /**
+     * 跳转详细页面
+     * @param item
+     */
+    toDetail(item) {
+      this.$router.push({
+        path: "/wisdom-oriented/rent/detail",
+        query: { id: item.id, type: item.rentType },
+      });
+    },
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
+    queryList() {
+      queryLeasingListByWiseScreen({
+        state: 1,
+        pageNum: 1,
+        pageSize: 10,
+      }).then((res) => {
+        // console.log(res);
+        this.dataList = res.rows;
+      });
+    },
+    queryGoodList() {
+      queryLeasingListByWiseScreen({
+        state: 1,
+        pageNum: 1,
+        pageSize: 10,
+      }).then((res) => {
+        // console.log(res);
+        this.goodList = res.rows;
+      });
+    },
+    // 查询返回
+    querySearch(queryString, cb) {
+      if (!queryString) {
+        cb([]);
+      } else {
+        queryLeasingListByWiseScreen({ state: 1, issuedOrg: queryString }).then(
+          (res) => {
+            // console.log(res);
+            cb(res.rows);
+          }
+        );
+      }
+    },
+    createFilter(queryString) {
+      return (restaurant) => {
+        return (
+          restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) ===
+          0
+        );
+      };
+    },
+    handleSelect(item) {
+      // console.log(item);
+      this.toDetail(item);
+    },
+  },
+  mounted() {
+    this.queryList();
+    this.queryGoodList();
+  },
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+  width: 90%;
+}
+
+.content {
+  padding: 0;
+}
+
+.common-box .content-box .content /deep/ .el-tabs__item {
+  font-size: 24px;
+  height: 50px;
+  color: #989eb2;
+}
+
+.common-box .content-box .content /deep/ .el-tabs__item.is-active {
+  color: inherit;
+}
+
+.common-box .content-box .content .rent-box {
+  height: 75vh;
+  overflow: auto;
+  color: #989eb2;
+  font-size: 16px;
+}
+
+.common-box .content-box .content .rent-box::-webkit-scrollbar {
+  display: none;
+}
+
+.common-box .content-box .content .rent-box .title {
+  font-size: 18px;
+  color: #343f5e;
+}
+
+.common-box .content-box .content .rent-box .price {
+  color: #eb5f00;
+}
+
+.common-box .content-box .content .rent-box .location {
+  line-height: 30px;
+  margin: 4% 0;
+}
+.common-box .content-box .content .rent-box .tip-box .el-tag {
+  /*visibility: hidden;*/
+  margin-right: 20px;
+}
+
+.common-box .card-box {
+  height: calc(100vh - 2px);
+  color: #989eb2;
+}
+
+.common-box .card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+
+.common-box .card-box .header-title * {
+  vertical-align: middle;
+}
+
+.common-box .card-box .item-box {
+  overflow: auto;
+  height: 88vh;
+}
+
+.common-box .card-box .item-box::-webkit-scrollbar {
+  display: none;
+}
+
+.common-box .card-box .item-box .items {
+  position: relative;
+  z-index: 100;
+  margin: 5% 0;
+  line-height: 25px;
+}
+
+.common-box .card-box .title {
+  font-size: 22px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  bottom: 18.5%;
+  padding: 5px;
+  width: 96.8%;
+}
+</style>

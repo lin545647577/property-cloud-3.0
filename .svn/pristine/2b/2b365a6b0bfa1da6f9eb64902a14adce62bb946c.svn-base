@@ -1,0 +1,136 @@
+<template>
+  <div>
+    <li-modal style="min-width: 1200px" ref="chooseModal" />
+
+    <el-card class="box-card">
+      <div slot="header" class="clearfix">
+        <span>楼宇详情</span>
+      </div>
+      <div class="text item">
+        <my-form
+          v-if="formSetting"
+          ref="formCom"
+          @bindForm="bindData"
+          :formSetting="formSetting"
+          :form="formData"
+          :loading="loading"
+          :residenceId="residenceId"
+        ></my-form>
+      </div>
+    </el-card>
+  </div>
+</template>
+
+<script>
+import { queryForm, queryFormData, editFormData } from "@/api/property.js";
+import { queryCoefficient } from "@/api/payment.js";
+import myForm from "@/components/form/editForm";
+
+export default {
+  name: "buildingView",
+  components: {
+    "my-form": myForm,
+  },
+  data() {
+    return {
+      loading: false,
+      formSetting: null,
+      formData: {
+        id: "",
+      },
+      rules: {
+        name: [{ required: true, message: "请输入", trigger: "blur" }],
+      },
+      coefficientList: [],
+    };
+  },
+  methods: {
+    /**
+     * 绑定回调数据
+     * @param {Object} data 回调数据
+     */
+    bindData(data) {
+      // console.log("父组件回调：", data);
+      this.loading = true;
+      editFormData(data).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.loading = false;
+        this.queryFormData(this.node.nodeId);
+      });
+    },
+    queryInfo(id) {
+      this.loading = true;
+      queryForm(id).then((res) => {
+        this.formSetting = JSON.parse(res);
+        // console.log("格式", JSON.parse(res).fields);
+        this.loading = false;
+      });
+    },
+    queryFormData(id) {
+      this.loading = true;
+      queryFormData(id).then((res) => {
+        // console.log("值", res);
+        this.formData = res;
+        this.formData.id = id;
+        // if (this.formData.referenceCoefficientId) {
+        //   this.getCoefficient(this.formData.referenceCoefficientId);
+        // }
+        this.queryInfo(id);
+      });
+    },
+    /**
+     *获取分摊系数名称
+     * @param {String} id 分摊系数id
+     */
+    // getCoefficient(id) {
+    //   queryCoefficient(id).then((res) => {
+    //     this.formData.referenceCoefficientIdName = res.name;
+    //   });
+    // },
+  },
+  beforeMount() {
+    this.$store.dispatch("updatePropertyTreeSelectedByLocalStorage");
+  },
+  mounted() {
+    // this.queryList(this.currentPage);
+    if (this.node.nodeId) {
+      this.queryFormData(this.node.nodeId);
+    }
+  },
+  computed: {
+    node() {
+      return this.$store.state.node;
+    },
+    residenceId() {
+      let temp = 0;
+      let tempArr = this.$store.state.propertyTreeSelected;
+      for (let index in tempArr) {
+        if (tempArr[index].nodeType === "residence") {
+          temp = tempArr[index].nodeId;
+        }
+      }
+      return temp;
+    },
+  },
+  watch: {
+    "node.nodeId"(nval, oval) {
+      if (nval != oval) {
+        this.queryFormData(nval);
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.el-row {
+  margin-bottom: 20px;
+}
+.el-row:last-child {
+  margin-bottom: 0;
+}
+</style>

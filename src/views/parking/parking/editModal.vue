@@ -1,0 +1,396 @@
+<template>
+  <div class="normalForm">
+    <el-form
+      v-loading="loading"
+      label-position="right"
+      label-width="150px"
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+    >
+      <el-form-item label="车位编号：" prop="parkingId">
+        <el-input v-model="form.parkingId" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="所属物业：" prop="residenceName">
+        <el-input
+          v-model="form.residenceName"
+          @focus="handleResidenceModal"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="所属业主：">
+        <el-input
+          v-model="form.memberName"
+          @focus="handleOwnerModal"
+          clearable
+          @clear="handleClear"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="车位类型：">
+        <el-input
+          v-model="form.parkingTypeName"
+          @focus="handleParkingTypeModal(checkInfo)"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="管理类型：" prop="type">
+        <el-select
+          v-model="form.type"
+          placeholder="请选择管理类型"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in manageType"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="预售价格：">
+        <el-input v-model="form.preMoney" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="租金：">
+        <el-input v-model="form.rent" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="车位位置：">
+        <el-input v-model="form.parkingPoint" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="车位面积：">
+        <el-input v-model="form.parkingArea" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="分摊面积：">
+        <el-input v-model="form.shareArea" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="状态：" prop="status">
+        <el-select
+          v-model="form.status"
+          placeholder="请选择状态"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in states"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="实时状态：">
+        <el-input v-model="form.realStatus" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="所在层：">
+        <el-input v-model="form.location" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="房屋唯一码：">
+        <el-input
+          v-model="form.houseUniquecode"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="房屋户型：">
+        <el-input v-model="form.houseType" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="规划用途：">
+        <el-input v-model="form.panPurpose" :disabled="checkInfo"></el-input>
+      </el-form-item>
+      <el-form-item label="类型：" prop="estateType">
+        <el-select
+          v-model="form.estateType"
+          placeholder="请选择类型"
+          style="width: 100%"
+          :disabled="checkInfo"
+        >
+          <el-option
+            v-for="item in type"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+    <li-modal ref="chooseModal" style="min-width: 1200px" />
+  </div>
+</template>
+<script>
+import {
+  queryParking,
+  editParking,
+  insertParking,
+  removeParkingMemberr,
+} from "@/api/parking.js";
+
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      checkInfo: false,
+      form: {
+        referenceMemberId: "",
+        memberName: "",
+        referenceParkingTypeId: "",
+        parkingTypeName: "",
+        residenceName: "",
+        referenceResidenceId: "",
+      },
+      rules: {
+        residenceName: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        type: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        status: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        estateType: [
+          {
+            required: true,
+            message: "请选择",
+            trigger: "change",
+          },
+        ],
+        parkingId: [
+          {
+            required: true,
+            message: "请输入",
+            trigger: "blur",
+          },
+        ],
+      },
+      states: [
+        {
+          id: 0,
+          name: "未售",
+        },
+        {
+          id: 1,
+          name: "未收",
+        },
+        {
+          id: 2,
+          name: "已租",
+        },
+        {
+          id: 3,
+          name: "已收",
+        },
+      ],
+      manageType: [
+        {
+          id: 1,
+          name: "出租",
+        },
+        {
+          id: 2,
+          name: "出售",
+        },
+      ],
+      type: [
+        {
+          id: 1,
+          name: "产权",
+        },
+        {
+          id: 2,
+          name: "人防",
+        },
+      ],
+    };
+  },
+  methods: {
+    handleParkingTypeModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "parking/common/parkingTypeModal.vue",
+        params: {},
+        title: "车位类型列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          console.log(data);
+          console.log(data.multipleSelection[0].name);
+          that.form.parkingTypeName = data.multipleSelection[0].name;
+          that.form.referenceParkingTypeId = data.multipleSelection[0].id;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+
+    handleOwnerModal() {
+      let that = this;
+      this.$refs["chooseModal"].show({
+        view: "member/common/ownerModal.vue",
+        params: {},
+        title: "业主列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: (data) => {
+          console.log(data.multipleSelection[0]);
+          that.form.memberName = data.multipleSelection[0].memberName;
+          that.form.referenceMemberId =
+            data.multipleSelection[0].referenceMemberId;
+          that.$refs["chooseModal"].hide();
+        },
+      });
+    },
+    // 解除人员车位关联
+    handleClear() {
+      removeParkingMemberr(this.form.id).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+      });
+    },
+
+    handleResidenceModal() {
+      this.$refs["chooseModal"].show({
+        view: "property/common/residenceModal.vue",
+        params: {},
+        title: "物业列表",
+        center: true,
+        top: "5vh",
+        hideSubmitButton: true,
+        hideCancelButton: true,
+        submit: this.getCallData,
+      });
+    },
+
+    getCallData(data) {
+      // console.log(data.multipleSelection[0].name);
+      this.form.residenceName = data.multipleSelection[0].name;
+      this.form.referenceResidenceId = data.multipleSelection[0].id;
+      this.$refs["chooseModal"].hide();
+    },
+
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    /**
+     * 初始化车位类型
+     * @param {String} id 楼层id
+     */
+    queryInfo(id) {
+      (this.loading = true),
+        queryParking(id).then((res) => {
+          this.form = {
+            id: res.id,
+            parkingId: res.parkingId,
+            type: parseInt(res.type),
+            preMoney: res.preMoney,
+            rent: res.rent,
+            parkingPoint: res.parkingPoint,
+            parkingArea: res.parkingArea,
+            shareArea: res.shareArea,
+            status: parseInt(res.status),
+            realStatus: res.realStatus,
+            location: res.location,
+            houseUniquecode: res.houseUniquecode,
+            houseType: res.houseType,
+            panPurpose: res.panPurpose,
+            estateType: parseInt(res.estateType),
+            referenceMemberId: res.referenceMemberId,
+            memberName: res.memberName,
+            referenceParkingTypeId: res.referenceParkingTypeId,
+            parkingTypeName: res.parkingTypeName,
+            residenceName: res.residenceName,
+            referenceResidenceId: res.referenceResidenceId,
+          };
+          this.loading = false;
+        });
+    },
+
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      insertParking(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editParking(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+  },
+  mounted() {
+    this.checkInfo = this.params.checkInfo;
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+  computed: {
+    themeColor() {
+      return this.$store.state.app.themeColor;
+    },
+  },
+};
+</script>
+
+<style scoped></style>

@@ -1,0 +1,106 @@
+<template>
+  <div>
+    <el-row
+      :gutter="10"
+      class="vertical-middle"
+      v-if="searchList.length > 0 && searchDataList"
+    >
+      <template v-for="(item, index) in searchList">
+        <el-col :span="2" class="text-right vertical-middle" :key="item.title">
+          <div class="grid-content el-line-height">{{ item.title }}：</div>
+        </el-col>
+        <el-col :span="5" class="vertical-middle" :key="item.key">
+          <div class="grid-content">
+            <el-input
+              v-model="searchDataList[index][item.key]"
+              :placeholder="item.holder"
+            ></el-input>
+          </div>
+        </el-col>
+      </template>
+      <el-col :span="3" class="vertical-middle">
+        <div class="grid-content text-right">
+          <el-button
+            size="small"
+            id="searchBtn"
+            class="search-btn"
+            type="primary"
+            @click="searchBtnListener(searchDataList)"
+          >
+            搜索
+          </el-button>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import { debounce } from "@/utils/util";
+import eventBus from "@/utils/eventBus";
+export default {
+  name: "searchBox",
+  props: {
+    searchList: {
+      required: true,
+      type: Array,
+    },
+  },
+  data() {
+    return {
+      searchDataList: undefined, //回传数据
+      searchBtnListener: undefined,
+      btn: undefined,
+    };
+  },
+  methods: {
+    /**
+     * 初始化数据
+     * @param {Array} arr 处理list
+     */
+    handleDate(arr) {
+      this.searchDataList = [];
+      for (let i in arr) {
+        let keyName = arr[i].key;
+        let temp = {};
+        temp[keyName] = "";
+        this.searchDataList.push(temp);
+      }
+    },
+    /**
+     * 发布搜索事件
+     */
+    handleSearch() {
+      let args = Array.prototype.shift.call(arguments); //arguments为类数组，获取debounce函数回调参数第一个数据
+      // let args = arguments[0]; //debounce函数回调参数
+      let callData = {};
+      for (let i in args) {
+        Object.assign(callData, args[i]); //对象拼接
+      }
+      this.$emit("mySearch", callData);
+      // eventBus.$emit("mySearch", callData);
+    },
+  },
+  mounted() {
+    this.handleDate(this.searchList);
+    this.$nextTick(function () {
+      let that = this;
+      this.btn = document.getElementById("searchBtn");
+      this.searchBtnListener = debounce(this.handleSearch); //赋值防抖方法
+      // this.btn.addEventListener(
+      //   "click",
+      //   function () {
+      //     that.searchBtnListener(that.searchKeyValueList);
+      //   }
+      //   //调用延迟函数
+      // ); //绑定防抖监听器
+    });
+  },
+  destroyed() {
+    // this.searchBtnListener = undefined;
+    // this.btn.removeEventListener("click");
+  },
+};
+</script>
+
+<style scoped></style>

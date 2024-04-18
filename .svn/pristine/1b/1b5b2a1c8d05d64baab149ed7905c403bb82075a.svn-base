@@ -1,0 +1,97 @@
+<template>
+  <el-card
+    class="box-card card-box"
+    v-loading="loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+    element-loading-spinner="2"
+  >
+    <el-row class="text item">
+      <el-col :span="24" class="header-title">
+        <img :src="pointImg" fit="fill" />
+        搜索附近
+      </el-col>
+      <el-col
+        :span="24"
+        class="accessory"
+        v-for="(item, index) in 9"
+        :key="index"
+        @click="accessoryClick"
+      >
+        <el-card shadow="hover">
+          <el-col :span="5" class="accessory-img">
+            <img
+              src="https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg95.699pic.com%2Fphoto%2F40186%2F9914.gif_wh300.gif%21%2Fgifto%2Ftrue&refer=http%3A%2F%2Fimg95.699pic.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1636619572&t=1b0b97e98ed832175bb7ed262bb7528d"
+              alt=""
+            />
+          </el-col>
+          <el-col :span="19" class="accessory-title">
+            <h1>美食</h1>
+            <span>delicious food</span>
+          </el-col>
+        </el-card>
+      </el-col>
+    </el-row>
+  </el-card>
+</template>
+
+<script>
+export default {
+  name: "sideCard",
+  props: {
+    loading: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+    };
+  },
+  methods: {
+    accessoryClick() {
+      console.log(111);
+    },
+  },
+  mounted() {},
+};
+</script>
+
+<style scoped>
+.card-box {
+  height: calc(100vh - 2px);
+  position: relative;
+  z-index: 100;
+}
+
+.card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+.card-box .header-title * {
+  vertical-align: middle;
+}
+.accessory {
+  padding-left: 5%;
+  margin-bottom: 10%;
+  /* opacity: 0.5; */
+}
+.accessory-img img {
+  width: 100%;
+  margin-right: 5%;
+}
+.accessory-title {
+  padding-left: 2%;
+}
+.accessory-title h1 {
+  font-size: 25px;
+  font-weight: 400;
+}
+.accessory-title span {
+  font-size: 18px;
+  color: #666;
+}
+.el-card__body {
+  padding: 0px;
+}
+</style>

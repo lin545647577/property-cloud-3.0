@@ -1,0 +1,370 @@
+<template>
+  <div class="common-box" v-cloak>
+    <!--    头部-->
+    <el-row>
+      <el-col :span="8">
+        <div class="grid-content">
+          <div class="header">
+            <img style="margin: 0 15px 7px 0" :src="pointImg" alt="" />公告信息
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content">
+          <el-input
+            placeholder="请输入您要搜索的问题"
+            prefix-icon="el-icon-search"
+            style="width: 100%; border-radius: 10px"
+            v-model="searchValue"
+          >
+          </el-input>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="grid-content"></div>
+      </el-col>
+    </el-row>
+    <!--    内容-->
+    <div class="content-box">
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <div class="grid-content">
+            <el-card class="box-card card-box">
+              <p class="box-title">政策支持</p>
+              <div class="cover-box">
+                <p style="font-size: 48px">最新政策</p>
+                <p>LATEST NEWS</p>
+              </div>
+              <div
+                v-for="item in policyList"
+                :key="item.id"
+                class="text item notice-item"
+              >
+                <el-row
+                  :gutter="20"
+                  style="margin: 30px 0"
+                  @click.native="toDetail(item)"
+                >
+                  <el-col :span="16">
+                    <div class="grid-content">
+                      <p class="title ellipsis">
+                        {{ item.theme ? item.theme : "暂无信息" }}
+                      </p>
+                      <p class="time">{{ item.startDate }}</p>
+                      <p class="ellipsis2">
+                        {{ item.explain ? item.explain : "暂无信息" }}
+                      </p>
+                    </div>
+                  </el-col>
+                  <el-col :span="8">
+                    <div class="grid-content" style="text-align: right">
+                      <div
+                        class="demo-image__error"
+                        style="width: 143px; height: 143px"
+                      >
+                        <div class="block">
+                          <el-image :src="item.fileUrls">
+                            <div slot="error" class="image-slot">
+                              <i class="el-icon-picture-outline"></i>
+                            </div>
+                          </el-image>
+                        </div>
+                      </div>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-card>
+          </div>
+        </el-col>
+        <el-col :span="16">
+          <div class="grid-content">
+            <el-card class="box-card card-box">
+              <p class="box-title">园区通知</p>
+              <div class="text item">
+                <el-row :gutter="20">
+                  <el-col :span="9">
+                    <div
+                      class="grid-content"
+                      style="position: relative; width: 100%"
+                      @click="toDetail(noticeList[0])"
+                    >
+                      <div
+                        class="demo-image__error"
+                        style="width: 370px; height: 370px"
+                      >
+                        <div class="block">
+                          <el-image :src="noticeList[0].fileUrls">
+                            <div slot="error" class="image-slot">
+                              <i class="el-icon-picture-outline"></i>
+                            </div>
+                          </el-image>
+                        </div>
+                      </div>
+
+                      <p class="cover-title ellipsis">
+                        {{ noticeList[0].theme }}
+                      </p>
+                    </div>
+                  </el-col>
+                  <el-col :span="15">
+                    <div class="grid-content">
+                      <el-row
+                        :gutter="20"
+                        v-for="item in noticeList"
+                        :key="item.id"
+                        @click.native="toDetail(item)"
+                      >
+                        <el-col :span="20">
+                          <div
+                            class="grid-content"
+                            style="font-size: 18px; color: #343f5e"
+                          >
+                            <p class="notice-p ellipsis">
+                              <span class="circle"></span>
+                              {{ item.theme ? item.theme : "暂无信息" }}
+                            </p>
+                          </div>
+                        </el-col>
+                        <el-col :span="4">
+                          <div
+                            class="grid-content"
+                            style="font-size: 16px; color: #989eb2"
+                          >
+                            <p class="notice-p">{{ item.startDate }}</p>
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-card>
+
+            <el-row :gutter="20">
+              <el-col :span="18">
+                <div class="grid-content">
+                  <el-card class="box-card card-box" style="height: 35vh">
+                    <p class="box-title">安全须知</p>
+                    <div class="text item">
+                      <el-row :gutter="20">
+                        <el-col
+                          :span="12"
+                          v-for="item in securityList"
+                          :key="item.id"
+                        >
+                          <div class="grid-content">
+                            <p
+                              class="ellipsis notice-p"
+                              @click="toDetail(item)"
+                            >
+                              <span class="circle"></span>
+                              {{ item.theme ? item.theme : "暂无信息" }}
+                            </p>
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-card>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div class="grid-content">
+                  <el-card class="box-card card-box us-box">
+                    <p class="box-title" style="color: #ffffff">
+                      <img
+                        style="margin: 0 15px 7px 0; width: auto; height: auto"
+                        :src="pointImg"
+                        alt=""
+                      />联系我们
+                    </p>
+                    <div class="text item us-p">
+                      <p>电话：0757-25654565</p>
+                      <p>传真：0757-25658656</p>
+                      <p>邮箱：77545452@163.com</p>
+                      <el-button class="us-btn"
+                        ><i
+                          class="el-icon-location"
+                          style="margin-right: 20px"
+                        ></i
+                        >到这里去</el-button
+                      >
+                    </div>
+                  </el-card>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryNoticeListByWiseScreen } from "@/api/notice.js";
+
+export default {
+  name: "notice",
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      searchValue: "",
+      noticeList: [],
+      policyList: [],
+      securityList: [],
+    };
+  },
+  methods: {
+    /**
+     * 跳转详细页面
+     * @param item
+     */
+    toDetail(item) {
+      this.$router.push({
+        path: "/wisdom-oriented/notice/detail",
+        query: { id: item.id },
+      });
+    },
+    // 初始化园区公告
+    queryNoticeList() {
+      queryNoticeListByWiseScreen({ type: "1", pageNum: 1, pageSize: 7 }).then(
+        (res) => {
+          // console.log(res);
+          this.noticeList = res.rows;
+        }
+      );
+    },
+    // 初始化政策公告
+    queryPolicyList() {
+      queryNoticeListByWiseScreen({ type: "2", pageNum: 1, pageSize: 3 }).then(
+        (res) => {
+          // console.log(res);
+          this.policyList = res.rows;
+        }
+      );
+    },
+    // 初始化安全公告
+    querySecurityList() {
+      queryNoticeListByWiseScreen({ type: "3", pageNum: 1, pageSize: 10 }).then(
+        (res) => {
+          // console.log(res);
+          this.securityList = res.rows;
+        }
+      );
+    },
+  },
+  mounted() {
+    this.queryNoticeList();
+    this.queryPolicyList();
+    this.querySecurityList();
+  },
+};
+</script>
+
+<style scoped>
+.circle {
+  display: inline-block;
+  border-radius: 50%;
+  background-color: #e5edff;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+}
+
+.common-box {
+  padding: 3% 4% 0 4%;
+  max-height: 1080px;
+  width: auto;
+}
+
+.card-box /deep/ img {
+  width: 100%;
+  height: 100%;
+}
+
+.common-box .header {
+  font-size: 36px;
+}
+
+.common-box .content-box {
+  padding: 0;
+}
+
+.common-box .content-box .el-card {
+  border: none;
+}
+
+.common-box .content-box .card-box {
+  border-radius: 20px;
+  margin-top: 20px;
+}
+
+.common-box .content-box .card-box .notice-item {
+  color: #989eb2;
+  font-size: 16px;
+}
+
+.common-box .content-box .card-box .notice-item .title {
+  color: #343f5e;
+  font-size: 18px;
+}
+
+.common-box .content-box .card-box .notice-item .time {
+  margin-bottom: 25px;
+}
+
+.common-box .content-box .card-box .notice-p {
+  margin: 10px 0;
+}
+
+.cover-title {
+  font-size: 22px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  bottom: 1%;
+  padding: 5px;
+  width: 96%;
+}
+
+.common-box .content-box .card-box .cover-box {
+  width: 100%;
+  text-align: center;
+  color: #ffffff;
+  background-image: url("../../../assets/img/wiseScreen/2.0/notice/notice.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 10% 0;
+  margin: 40px 0;
+}
+
+.common-box .content-box .card-box .box-title {
+  color: #42a6f4;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.common-box .content-box .us-box {
+  height: 35vh;
+  color: #ffffff;
+  background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);
+}
+
+.common-box .content-box .us-box .us-p {
+  margin-top: 30%;
+}
+.common-box .content-box .us-box .us-p p {
+  margin: 10% 0;
+}
+
+.common-box .content-box .us-box .us-btn {
+  width: 100%;
+  margin-top: 20%;
+  color: #1b96fe;
+}
+
+.common-box /deep/ .el-input--prefix .el-input__inner {
+  border-radius: 20px;
+}
+</style>

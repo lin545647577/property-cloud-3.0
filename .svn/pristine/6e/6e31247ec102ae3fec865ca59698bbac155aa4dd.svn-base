@@ -1,0 +1,166 @@
+<template>
+  <el-card
+    class="box-card card-box"
+    v-loading="loading"
+    element-loading-background="rgba(0, 0, 0, 0.8)"
+    element-loading-spinner="2"
+  >
+    <el-row class="item" id="text">
+      <el-col :span="24" class="header-title">
+        <img :src="pointImg" fit="fill" />
+        搜索附近
+      </el-col>
+      <el-col
+        :span="24"
+        id="accessory"
+        name="accessory"
+        v-for="(item, index) in accessory"
+        :key="index"
+      >
+        <el-menu
+          default-active="2"
+          class="el-menu-vertical-demo"
+          @open="handleOpen"
+        >
+          <el-submenu :index="JSON.stringify(index)">
+            <template slot="title">
+              <img style="width: 12%" :src="item.imgSrc" alt="" />
+              <span style="font-size: 20px; margin-left: 30px">{{
+                item.dictLabel
+              }}</span>
+              <p style="font-size: 16px; margin-left: 60px">
+                {{ item.dictValue }}
+              </p>
+            </template>
+            <el-menu-item
+              v-for="(item, index) in accessorynew"
+              :key="index"
+              index="index"
+              @click="handleClose(item)"
+              >{{ item.name }}</el-menu-item
+            >
+          </el-submenu>
+        </el-menu>
+      </el-col>
+    </el-row>
+  </el-card>
+</template>
+
+<script>
+import {
+  searchOrgFunctionBusinessTypesForWiseScreen,
+  selectShowPointsDataForReservationInWisdomScreen,
+  tygxMapLogoShowPositionDefinitionNearby,
+  findPositionByUser,
+  pathCalculation,
+} from "@/api/location.js";
+export default {
+  name: "sideSearch",
+  props: {
+    loading: {
+      type: Boolean,
+    },
+  },
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      coordinate: [],
+      accessory: [],
+      accessorynew: [],
+    };
+  },
+  methods: {
+    selectCurrentOrganizationCompanyTypesDictDatanew() {
+      searchOrgFunctionBusinessTypesForWiseScreen().then((res) => {
+        this.accessory = res;
+      });
+    },
+
+    handleOpen(key, keyPath) {
+      let formDate = {
+        businessType: this.accessory[key].dictValue,
+        mapCode: window.localStorage.getItem("mapCode"),
+      };
+      console.log(key);
+      let accessory = document.getElementsByName("accessory");
+      for (let index = 0; index < accessory.length; index++) {
+        const element = accessory[index];
+        console.log(element);
+        element.style.opacity = 0.5;
+      }
+      accessory[key].style.opacity = 1;
+      selectShowPointsDataForReservationInWisdomScreen(formDate).then((res) => {
+        this.accessorynew = [];
+        for (const index in res) {
+          let accessorynew = {
+            value: [res[index].x, res[index].y],
+            name: res[index].params.companyData.compName,
+            code: res[index].code,
+            img: "image://" + res[index].params.companyData.compLogo,
+            manager: res[index].params.companyData.userName,
+            deptId: res[index].params.companyData.deptId,
+            referenceOrganizationId: res[index].referenceOrganizationId,
+          };
+          this.accessorynew.push(accessorynew);
+        }
+        this.$emit("handleOpen", this.accessorynew);
+      });
+    },
+    handleClose(item) {
+      this.$emit("handleClose", item);
+    },
+  },
+  mounted() {
+    this.selectCurrentOrganizationCompanyTypesDictDatanew();
+  },
+};
+</script>
+
+<style scoped>
+.card-box {
+  height: calc(100vh - 2px);
+  position: relative;
+  z-index: 100;
+}
+
+.card-box .header-title {
+  font-size: 24px;
+  color: #343f5e;
+  margin: 10px 0 40px 0;
+}
+.card-box .header-title * {
+  vertical-align: middle;
+}
+#accessory {
+  padding-left: 5%;
+  margin-bottom: 5%;
+  line-height: 25px;
+  opacity: 0.5;
+}
+.accessory-img img {
+  width: 100%;
+  margin-right: 5%;
+}
+.accessory-title {
+  padding-left: 2%;
+}
+.accessory-title h1 {
+  font-size: 25px;
+  font-weight: 400;
+}
+.accessory-title span {
+  font-size: 18px;
+  color: #666;
+}
+.el-card__body {
+  padding: 0px;
+}
+
+.card-box .item /deep/ .el-submenu__title {
+  height: auto;
+  line-height: 20px;
+}
+.card-box .item /deep/ .el-submenu .el-menu-item {
+  font-size: 18px;
+}
+</style>

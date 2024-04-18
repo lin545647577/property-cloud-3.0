@@ -1,0 +1,18 @@
+<template>
+  <div>code</div>
+</template>
+
+<script>
+export default {
+  name: "index",
+  data() {
+    return {
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+    };
+  },
+  methods: {},
+  mounted() {},
+};
+</script>
+
+<style scoped></style>

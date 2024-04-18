@@ -1,0 +1,96 @@
+<template>
+    <div class="common-box">
+        <el-row>
+            <el-col :span="18"
+            >
+                <div class="grid-content content-box">
+                    <div class="header">
+                        <img style="margin: 0 15px 7px 0" :src="pointImg" alt=""/>咨询服务
+                    </div>
+                    <div class="content">
+                        <img class="rabbit-img" :src="rabbitImg" alt="">
+
+                        <el-card class="box-card conversation-box">
+                            <div class="text item">
+                                <p>您好，我是您的专属智慧向导U-NI,有什么可以帮到您？</p>
+                                <el-button type="primary" v-for="o in 4" :key="o" plain>{{ '列表内容 ' + o }}</el-button>
+                            </div>
+                        </el-card>
+
+                        <el-card class="box-card qr-box">
+                            <div class="text item">
+                                <img :src="require('@/assets/img/wiseScreen/2.0/testQR.png')" alt=""/>
+                                <p>手机扫码</p>
+                            </div>
+                        </el-card>
+                    </div>
+                </div>
+            </el-col
+            >
+
+            <el-col :span="6">
+                <div class="grid-content"></div>
+            </el-col>
+        </el-row>
+    </div>
+</template>
+
+<script>
+export default {
+    name: "question",
+    data() {
+        return {
+            pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+            rabbitImg: require("@/assets/img/wiseScreen/2.0/question/rabbit.png"),
+            questionType:[],
+            questionList:[]
+        };
+    },
+    methods: {
+    },
+    mounted() {
+    },
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+
+.content-box {
+    width: 100%;
+}
+
+.content-box .content {
+    width: 100%;
+    position: relative;
+}
+.content-box .content .rabbit-img {
+    width: 65px;
+    height: 65px;
+}
+
+.content-box .content .conversation-box {
+    max-width: 60%;
+    min-width: 40%;
+}
+
+.content-box .content .qr-box {
+    padding: 0;
+    position: absolute;
+    bottom: 20%;
+    right: 2%;
+    background-color: #1993fc;
+    width: 15%;
+    z-index: 9999;
+    border: none;
+    color: #e5edff;
+    font-size: 26px;
+    text-align: center;
+}
+
+.content-box .content .qr-box img {
+    width: 100%;
+    height: 100%;
+}
+
+</style>

@@ -1,0 +1,293 @@
+<template>
+  <div>
+    <el-form
+      :model="form"
+      :rules="rules"
+      ref="ruleForm"
+      label-width="110px"
+      v-loading="loading"
+    >
+      <el-form-item label="公式名称：" prop="name">
+        <el-input
+          v-model="form.name"
+          style="width: 50%"
+          :disabled="checkInfo"
+        ></el-input>
+      </el-form-item>
+      <el-form-item label="计算公式：" prop="formula">
+        <el-input style="width: 43%" v-model="form.formula" disabled></el-input>
+        <el-button @click="formulaInfoBtn()" size="medium" type="warning"
+          >退格</el-button
+        >
+      </el-form-item>
+    </el-form>
+    <div class="buttons-Box">
+      <p>单项公摊总额(A) ：</p>
+      <div class="buttons">
+        <!-- <el-button @click="formulaInfoBtn('A')" size="medium">同楼公用电(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">车库公用电(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">商铺用电(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">小区公用电(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">居民用电代收(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">车库公用水(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">小区公用水(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">电梯用电公摊(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">同楼公用水(A)</el-button>
+        <el-button @click="formulaInfoBtn('A')" size="medium">居民用水代收(A)</el-button> -->
+        <el-button @click="formulaInfoBtn('A')" size="medium"
+          >单项公摊总额(A)</el-button
+        >
+      </div>
+
+      <p>常用计算元素 ：</p>
+      <div class="buttons">
+        <el-button @click="formulaInfoBtn('N')" size="medium"
+          >同层入住户数(N)</el-button
+        >
+        <el-button @click="formulaInfoBtn('M')" size="medium"
+          >同楼入住户数(M)</el-button
+        >
+        <el-button @click="formulaInfoBtn('T')" size="medium"
+          >小区入住户数(T)</el-button
+        >
+        <el-button @click="formulaInfoBtn('n')" size="medium"
+          >自购车位入住户数(n)</el-button
+        >
+        <el-button @click="formulaInfoBtn('m')" size="medium"
+          >楼层数(m)</el-button
+        >
+        <el-button @click="formulaInfoBtn('h')" size="medium"
+          >当次分摊总户数(h)</el-button
+        >
+        <el-button @click="formulaInfoBtn('K')" size="medium"
+          >楼层分摊系数(K)</el-button
+        >
+        <el-button @click="formulaInfoBtn('k')" size="medium"
+          >车位计算系数(k)</el-button
+        >
+        <el-button @click="formulaInfoBtn('O')" size="medium"
+          >楼宇总公摊系数(O)</el-button
+        >
+        <el-button @click="formulaInfoBtn('B')" size="medium"
+          >同楼入住层数(B)</el-button
+        >
+        <el-button @click="formulaInfoBtn('S')" size="medium"
+          >住房面积(S)</el-button
+        >
+        <el-button @click="formulaInfoBtn('s')" size="medium"
+          >车位面积(s)</el-button
+        >
+        <el-button @click="formulaInfoBtn('Q')" size="medium"
+          >物业费单价(Q)</el-button
+        >
+        <el-button @click="formulaInfoBtn('P')" size="medium"
+          >车位费单价(P)</el-button
+        >
+        <el-button @click="formulaInfoBtn('W')" size="medium"
+          >总用水量(W)</el-button
+        >
+        <el-button @click="formulaInfoBtn('E')" size="medium"
+          >总用电量(E)</el-button
+        >
+        <el-button @click="formulaInfoBtn('w')" size="medium"
+          >房屋用水量(w)</el-button
+        >
+        <el-button @click="formulaInfoBtn('e')" size="medium"
+          >房屋用电量(e)</el-button
+        >
+        <el-button @click="formulaInfoBtn('MR')" size="medium"
+          >仪表用量(MR)</el-button
+        >
+      </div>
+
+      <p>算术运算符 ：</p>
+      <div class="buttons">
+        <el-button @click="formulaInfoBtn('+')" size="medium">+</el-button>
+        <el-button @click="formulaInfoBtn('-')" size="medium">-</el-button>
+        <el-button @click="formulaInfoBtn('*')" size="medium">*</el-button>
+        <el-button @click="formulaInfoBtn('/')" size="medium">/</el-button>
+        <el-button @click="formulaInfoBtn('(')" size="medium">(</el-button>
+        <el-button @click="formulaInfoBtn(')')" size="medium">)</el-button>
+        <el-button @click="formulaInfoBtn('[')" size="medium">[</el-button>
+        <el-button @click="formulaInfoBtn(']')" size="medium">]</el-button>
+      </div>
+
+      <p>通用 ：</p>
+      <div class="buttons">
+        <el-button @click="formulaInfoBtn('计量')" size="medium"
+          >计量</el-button
+        >
+        <el-button @click="formulaInfoBtn('定额')" size="medium"
+          >定额</el-button
+        >
+        <el-button @click="formulaInfoBtn('合同定额')" size="medium"
+          >合同定额</el-button
+        >
+      </div>
+    </div>
+    <div class="modal-btn">
+      <el-button size="small" @click="hiddenModal">取消</el-button>
+      <el-button
+        size="small"
+        type="primary"
+        class="control-btn"
+        :style="{ 'background-color': themeColor }"
+        @click="submitForm('ruleForm')"
+        >确认
+      </el-button>
+    </div>
+  </div>
+</template>
+
+<script>
+import { queryFormula, editFormula, insertFormula } from "@/api/payment.js";
+export default {
+  name: "editModal",
+  props: {
+    params: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      rules: {
+        name: [
+          {
+            required: true,
+            message: "请输入公式名称",
+            trigger: "blur",
+          },
+        ],
+        formula: [
+          {
+            required: true,
+            message: "请输入计算公式",
+            trigger: "blur",
+          },
+        ],
+      },
+      form: {
+        name: "",
+        formula: "",
+      },
+      editFormulation: false,
+      checkInfo: false,
+    };
+  },
+  methods: {
+    hiddenModal() {
+      // console.log(this.form)
+      this.$emit("modal-cancel");
+    },
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.checkInfo) {
+            if (this.form.id) {
+              this.editInfo();
+            } else {
+              this.insertInfo();
+            }
+          } else {
+            this.$emit("modal-submit");
+          }
+        } else {
+          this.$message({
+            message: "提交表单失败",
+            center: true,
+            type: "error",
+          });
+          return false;
+        }
+      });
+    },
+    insertInfo() {
+      this.form.referenceResidenceId = this.params.referenceResidenceId;
+      insertFormula(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    editInfo() {
+      editFormula(this.form).then((res) => {
+        this.$message({
+          message: "操作成功",
+          center: true,
+          type: "success",
+        });
+        this.$emit("modal-submit");
+      });
+    },
+    formulaInfoBtn(val) {
+      // console.log(val);
+      if (!this.editFormulation) {
+        this.editFormulation = true;
+        this.form.formula = "";
+      }
+      if (!val) {
+        let len = this.form.formula.length;
+        if (len > 0) {
+          this.form.formula = this.form.formula.substring(0, len - 1);
+        }
+      } else if (val == "计量" || val == "定额" || val == "合同定额") {
+        this.form.formula = val;
+      } else {
+        this.form.formula += val;
+      }
+      // console.log('formformula:',this.form.formula);
+    },
+    /**
+     * 初始化
+     * @param {String} id 开发商id
+     */
+    queryInfo(id) {
+      this.loading = true;
+      queryFormula(id).then((res) => {
+        // console.log(res);
+        this.form = {
+          id: res.id,
+          name: res.name,
+          formula: res.formula,
+        };
+        this.loading = false;
+      });
+    },
+  },
+  mounted() {
+    if (this.params.id) {
+      this.queryInfo(this.params.id);
+    }
+  },
+};
+</script>
+
+<style scoped>
+.buttons-Box {
+  text-align: left;
+  padding: 0 20px;
+}
+
+.buttons-Box p {
+  margin: 5px 0;
+}
+
+.buttons-Box .buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.buttons-Box .buttons .el-button {
+  background-color: #f2fffd;
+  padding: 10px;
+  margin: 5px;
+  width: 155px;
+}
+</style>

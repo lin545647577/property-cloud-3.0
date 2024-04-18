@@ -1,0 +1,89 @@
+<template>
+  <el-row class="page-taskTemplate">
+    <section>
+      <el-row class="box-menu">
+        <el-button type="primary" size="mini" @click="handleAdd"
+          >新增
+        </el-button>
+        <el-button
+          type="danger"
+          size="mini"
+          @click="handleDelete"
+          :disabled="tableSelectedIds.length === 0"
+          >删除
+        </el-button>
+      </el-row>
+      <el-row class="box-table"></el-row>
+      <el-row class="box-pagination"></el-row>
+    </section>
+  </el-row>
+</template>
+
+<script>
+export default {
+  name: "TaskTemplate",
+  data() {
+    return {
+      condition: {
+        pageNum: undefined,
+        pageSize: undefined,
+      },
+      tableData: [],
+      tableTotal: 0,
+      tableSelectedIds: [],
+      dialogTitle: undefined,
+      dialogVisible: false,
+      formData: {
+        name: undefined,
+        remark: undefined,
+      },
+      formRules: {},
+      processClassifyOptions: [],
+      formDisable: false,
+    };
+  },
+  methods: {
+    queryList(pageNum, pageSize) {
+      this.condition.pageNum = pageNum || 1;
+      this.condition.pageSize = pageSize || 10;
+    },
+    handleCurrentChange(pageNum) {
+      this.queryList(pageNum, this.condition.pageSize);
+    },
+    handleSizeChange(pageSize) {
+      this.queryList(this.condition.pageNum, pageSize);
+    },
+    handleSelected(row) {
+      this.tableSelectedIds = row.map((item) => item.id) || [];
+    },
+    handleAdd() {
+      this.dialogTitle = "新增";
+      this.formData = {
+        name: undefined,
+        kindCode: undefined,
+        remark: undefined,
+      };
+      this.dialogVisible = true;
+    },
+    handleView(row) {
+      this.dialogTitle = "查看";
+      this.formDisable = true;
+    },
+    handleEdit(row) {
+      this.dialogTitle = "编辑";
+      this.formDisable = false;
+    },
+    handleDelete(row) {
+      this.$confirm("是否删除？", "删除")
+        .then(() => {})
+        .catch(() => {});
+    },
+    handleSubmit() {
+      this.$refs.form.validate((valid) => {});
+    },
+  },
+  mounted() {
+    this.queryList();
+  },
+};
+</script>

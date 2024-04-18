@@ -1,0 +1,18 @@
+<template>
+  <div class="footer-box">广东腾宇光讯网络科技有限公司©技术支持</div>
+</template>
+
+<script>
+export default {
+  name: "Footer",
+};
+</script>
+<style scoped>
+.footer-box {
+  margin-top: 40px;
+  color: #a3bcd4;
+  font-size: 20px;
+  text-align: center;
+  width: 100%;
+}
+</style>

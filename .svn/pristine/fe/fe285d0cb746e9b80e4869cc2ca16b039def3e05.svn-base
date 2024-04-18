@@ -1,0 +1,207 @@
+<template>
+  <div>
+    <div class="search-box">
+      <el-row :gutter="10" class="vertical-middle">
+        <el-col :span="2" class="text-right vertical-middle">
+          <div class="grid-content el-line-height">公司名称：</div>
+        </el-col>
+        <el-col :span="4" class="vertical-middle">
+          <div class="grid-content">
+            <el-input v-model="input" placeholder="请输入内容"></el-input>
+          </div>
+        </el-col>
+        <el-col :span="2" class="text-right vertical-middle">
+          <div class="grid-content el-line-height">公司名称：</div>
+        </el-col>
+        <el-col :span="4" class="vertical-middle">
+          <div class="grid-content">
+            <el-input v-model="input" placeholder="请输入内容"></el-input>
+          </div>
+        </el-col>
+        <el-col :span="2" class="text-right vertical-middle">
+          <div class="grid-content el-line-height">公司名称：</div>
+        </el-col>
+        <el-col :span="4" class="vertical-middle">
+          <div class="grid-content">
+            <el-input v-model="input" placeholder="请输入内容"></el-input>
+          </div>
+        </el-col>
+        <el-col :span="2" class="text-right vertical-middle">
+          <div class="grid-content el-line-height">公司名称：</div>
+        </el-col>
+        <el-col :span="4" class="vertical-middle">
+          <div class="grid-content">
+            <el-input v-model="input" placeholder="请输入内容"></el-input>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+    <div class="btn-box">
+      <el-button class="control-btn" :style="{ 'background-color': themeColor }"
+        >默认按钮</el-button
+      >
+      <el-button class="control-btn" :style="{ 'background-color': themeColor }"
+        >默认按钮</el-button
+      >
+      <el-button class="control-btn" :style="{ 'background-color': themeColor }"
+        >默认按钮</el-button
+      >
+    </div>
+    <el-table
+      border
+      ref="multipleTable"
+      :data="tableData"
+      tooltip-effect="dark"
+      style="width: 100%"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection"> </el-table-column>
+      <el-table-column label="编号" type="index">{{ index }} </el-table-column>
+      <el-table-column label="日期">
+        <template slot-scope="scope">{{ scope.row.date }}</template>
+      </el-table-column>
+      <el-table-column prop="name" label="姓名"> </el-table-column>
+      <el-table-column prop="address" label="地址" show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope="scope">
+          <el-button size="mini" @click="handleEdit(scope.$index, scope.row)"
+            >编辑
+          </el-button>
+          <el-button
+            size="mini"
+            type="danger"
+            @click="handleDelete(scope.$index, scope.row)"
+            >删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <div class="block pagination-center">
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="pageSizes"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="400"
+      >
+      </el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "childrenForm",
+  data() {
+    return {
+      themeColor: "",
+      input: "",
+      tableData: [
+        {
+          date: "2016-05-03",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-02",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-04",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-01",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-08",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-06",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+        {
+          date: "2016-05-07",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄",
+        },
+      ],
+      multipleSelection: [],
+      currentPage: 4,
+      pageSizes: [10, 20, 50, 100],
+      pageSize: 10,
+    };
+  },
+  methods: {
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+      console.log(val);
+    },
+
+    handleDelete(index, row) {
+      console.log(index, row);
+    },
+
+    // 分页
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      this.pageSize = val;
+    },
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+    },
+    //获取主题背景颜色
+    getThemeInfo() {
+      let theme = this.newTheme;
+      let themeInfo = this.$store.state.app.themeColorMatching;
+      this.themeColor = themeInfo[theme].activeTextColor;
+      // console.log(themeInfo[theme]);
+    },
+  },
+  mounted() {
+    this.getThemeInfo();
+  },
+  computed: {
+    newTheme() {
+      return this.$store.state.app.theme;
+    },
+  },
+  watch: {
+    /**
+     * 监听主题变化
+     * @param {String} nval 新值
+     * @param {String} oval 旧值
+     */
+    newTheme(nval, oval) {
+      if (nval !== oval) {
+        this.getThemeInfo();
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.search-box {
+  margin: 20px auto;
+}
+
+.btn-box {
+  margin: 20px auto;
+}
+
+.control-btn {
+  color: #ffffff;
+}
+</style>

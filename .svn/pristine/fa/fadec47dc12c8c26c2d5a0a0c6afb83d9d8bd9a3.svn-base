@@ -1,0 +1,175 @@
+<template>
+  <div class="common-box" v-cloak>
+    <el-row>
+      <el-col :span="19"
+        ><div class="grid-content content-box" v-if="data">
+          <el-row>
+            <el-col :span="24"
+              ><div class="grid-content">
+                <el-button type="primary" @click="back" class="backBtn"
+                  >返回上一级</el-button
+                >
+              </div></el-col
+            >
+          </el-row>
+          <el-row style="margin: 5% 0">
+            <el-col :span="20"
+              ><div class="grid-content ellipsis" style="font-size: 24px">
+                {{ data.theme }}
+              </div></el-col
+            >
+            <el-col :span="4"
+              ><div
+                class="grid-content"
+                style="color: #989eb2; line-height: 40px"
+              >
+                {{ data.startDate }}
+              </div></el-col
+            >
+          </el-row>
+          <el-row>
+            <el-col :span="24"
+              ><div class="grid-content content" v-html="data.content"></div
+            ></el-col>
+          </el-row></div
+      ></el-col>
+      <el-col :span="5"
+        ><div class="grid-content">
+          <el-card class="box-card card-box">
+            <p class="box-title">
+              <img
+                style="margin: 0 15px 7px 0; width: auto; height: auto"
+                :src="pointImg"
+                alt=""
+              />更多公告
+            </p>
+            <div class="item-box">
+              <div
+                v-for="item in noticeList"
+                :key="item.id"
+                class="text item notice-item"
+                @click="loadDetail(item.id)"
+              >
+                <p class="title ellipsis">
+                  {{ item.theme ? item.theme : "暂无信息" }}
+                </p>
+                <p class="time">{{ item.startDate }}</p>
+                <p class="ellipsis2">
+                  {{ item.explain ? item.explain : "暂无信息" }}
+                </p>
+              </div>
+            </div>
+          </el-card>
+        </div></el-col
+      >
+    </el-row>
+  </div>
+</template>
+
+<script>
+import {
+  queryNoticeByWiseScreen,
+  queryNoticeListByWiseScreen,
+} from "@/api/notice.js";
+import {} from "@/api/notice.js";
+export default {
+  name: "detail",
+  data() {
+    return {
+      data: null,
+      pointImg: require("@/assets/img/wiseScreen/2.0/point.png"),
+      noticeList: [],
+    };
+  },
+  methods: {
+    /**
+     * 读取详情
+     * @param {number} id
+     */
+    loadDetail(id) {
+      this.queryInfo(id);
+    },
+    back() {
+      this.$router.go(-1);
+    },
+    queryInfo(id) {
+      queryNoticeByWiseScreen(id).then((res) => {
+        // console.log(res);
+        this.data = res;
+      });
+    },
+    // 初始化园区公告
+    queryNoticeList(type) {
+      queryNoticeListByWiseScreen({ type: type }).then((res) => {
+        // console.log(res);
+        this.noticeList = res.rows;
+      });
+    },
+  },
+  mounted() {
+    this.queryInfo(this.$route.query.id);
+    // console.log(this.$route.query.id);
+    this.queryNoticeList(this.$route.query.type);
+  },
+};
+</script>
+
+<style scoped>
+@import "../../../assets/global/wiseScreenCommon.css";
+.common-box .content-box {
+  color: #343f5e;
+  font-size: 16px;
+}
+
+.common-box .content-box .backBtn {
+  background-image: linear-gradient(90deg, #90ccfe 0%, #1b96fe 100%);
+  border: none;
+}
+.common-box .card-box {
+  height: calc(100vh - 2px);
+}
+.common-box .card-box .item-box {
+  height: 90vh;
+  overflow: auto;
+}
+.common-box .card-box .box-title {
+  color: #42a6f4;
+  font-size: 28px;
+  margin-bottom: 10%;
+}
+
+.common-box .card-box .notice-item {
+  color: #989eb2;
+  font-size: 16px;
+  margin-bottom: 15%;
+}
+
+.common-box .card-box .notice-item .title {
+  color: #343f5e;
+  font-size: 18px;
+}
+
+.common-box .card-box .notice-item .time {
+  margin-bottom: 25px;
+}
+
+.common-box .content-box .content {
+  height: calc(70vh);
+  overflow: auto;
+  padding: 0;
+}
+
+/* 设置滚动条的样式 */
+.common-box .content-box .content::-webkit-scrollbar {
+  display: none;
+  width: 15px;
+  background-color: #ecf5ff;
+  border-radius: 10px;
+}
+
+/* 滚动条滑块 */
+.common-box .content-box .content::-webkit-scrollbar-thumb {
+  background-color: #409eff;
+  border-radius: 10px;
+}
+</style>
